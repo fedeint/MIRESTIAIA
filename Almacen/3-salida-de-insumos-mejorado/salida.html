@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salida de Insumos - Mejorado</title>
+    <link rel="stylesheet" href="styles-salida.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container animate-fade-in">
+        <!-- Navegación entre módulos -->
+        <nav class="modulo-nav">
+            <a href="../1-inventario-mejorado/inventario.html">📋 Inventario</a>
+            <a href="../2-entrada-de-insumos-mejorado/entrada-de-insumos.html">📥 Entrada</a>
+            <a href="salida.html" class="active">📤 Salida</a>
+            <a href="../4-que-comprar-mejorado/que-comprar.html">🛒 Qué Comprar</a>
+            <a href="../5-proveedores-mejorado/proveedores.html">🚚 Proveedores</a>
+            <a href="../6-historial-mejorado/historial.html">📜 Historial</a>
+        </nav>
+
+        <header>
+            <div>
+                <h1 style="color: var(--primary);">📤 Salida de Insumos</h1>
+                <p style="color: var(--muted-foreground);">Gestión de egresos y control de almacén</p>
+            </div>
+            <div id="fechaActual" class="date-badge"></div>
+        </header>
+
+        <!-- Sección de Salida Automática -->
+        <div class="card">
+            <h2 class="card-title">⚙️ Salida automática</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Estado de Caja</span>
+                    <span id="cajaStatus" class="info-value">Cerrada</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Platos Enviados Hoy</span>
+                    <span id="platosHoy" class="info-value">0</span>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: center; margin-top: 1.5rem;">
+                <a href="../../Cocina-Anthony/cocina.html" class="btn btn-secondary">
+                    <span>🍳 Ir al módulo Cocina (Salida Automática)</span>
+                </a>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--muted-foreground); text-align: center; margin-top: 1rem;">
+                El stock se descuenta automáticamente del inventario al preparar comida en la cocina
+            </p>
+        </div>
+
+        <!-- Sección de Salida Rápida -->
+        <div class="card">
+            <h2 class="card-title">⚡ Salida rápida</h2>
+            <div class="entrada-rapida-container">
+                <div class="form-group">
+                    <label for="textoLibre">Registro libre (Texto)</label>
+                    <textarea id="textoLibre" rows="3" placeholder="Escribe aquí los detalles de la salida..."></textarea>
+                </div>
+                <div class="entrada-rapida-acciones">
+                    <button id="btnGrabarAudio" class="btn btn-secondary">
+                        <span class="icon">🎙️</span> <span id="textoGrabar">Grabar Audio</span>
+                    </button>
+                    <div class="form-group-file">
+                        <label for="archivosMultimedia" class="btn btn-secondary">
+                            <span class="icon">📁</span> Adjuntar Archivos
+                        </label>
+                        <input type="file" id="archivosMultimedia" multiple accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" style="display: none;">
+                    </div>
+                </div>
+                <div id="statusGrabacion" class="status-grabacion" style="display: none;">
+                    <span class="pulse-red"></span> Grabando... <span id="tiempoGrabacion">00:00</span>
+                </div>
+                <div id="listaArchivosAdjuntos" class="lista-archivos"></div>
+            </div>
+        </div>
+
+        <!-- Formulario de Salida Manual -->
+        <div class="card">
+            <h2 class="card-title">🛠️ Salida manual</h2>
+            <form id="formSalida">
+                <!-- BLOQUE 1: DATOS DEL REGISTRO (ARRIBA) -->
+                <div class="form-section">
+                    <h3 class="section-subtitle">Información del Registro</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="hora">Hora *</label>
+                            <input type="time" id="hora" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="motivo">Motivo *</label>
+                            <select id="motivo" required>
+                                <option value="">Seleccione un motivo</option>
+                                <option value="consumo cocina">consumo cocina</option>
+                                <option value="merma">merma</option>
+                                <option value="vencido">vencido</option>
+                                <option value="dañado">dañado</option>
+                                <option value="desperdicio">desperdicio</option>
+                                <option value="regalo">regalo</option>
+                                <option value="perdida">perdida</option>
+                                <option value="otro">otro (especificar en la justificación)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="justificacion">Justificación *</label>
+                            <input type="text" id="justificacion" placeholder="Describa detalladamente el motivo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comprobante">Nro Comprobante</label>
+                            <input type="text" id="comprobante" placeholder="Opcional">
+                        </div>
+                        <div class="form-group">
+                            <label for="usuario">Usuario *</label>
+                            <input type="text" id="usuario" value="admin" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña *</label>
+                            <input type="password" id="password" placeholder="admin123" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 2: DATOS DEL INSUMO (ABAJO) -->
+                <div class="form-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <h3 class="section-subtitle">Detalle de Insumos</h3>
+                    
+                    <!-- Insumo Principal -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="ingrediente">Insumo *</label>
+                            <select id="ingrediente" required>
+                                <option value="">Seleccione un insumo</option>
+                                <!-- Opciones cargadas por JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidad">Cantidad *</label>
+                            <input type="number" id="cantidad" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor">Proveedor *</label>
+                            <select id="proveedor" required>
+                                <option value="">Seleccione un proveedor</option>
+                                <!-- Opciones cargadas por JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="costoUnitario">Costo Unitario (S/)</label>
+                            <input type="number" id="costoUnitario" step="0.01" min="0" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="codigo">Código</label>
+                            <input type="text" id="codigo" readonly placeholder="Auto-generado">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria">Categoría</label>
+                            <input type="text" id="categoria" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="costoTotalIndividualPrincipal">Costo Total (S/)</label>
+                            <input type="number" id="costoTotalIndividualPrincipal" step="0.01" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor para Insumos Adicionales -->
+                    <div id="contenedorIngredientesExtra"></div>
+
+                    <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" id="btnAgregarIngrediente" class="btn btn-secondary">
+                            <span>➕ Agregar otro insumo</span>
+                        </button>
+                        <div class="total-registro-container">
+                            <span class="total-label">TOTAL SALIDA:</span>
+                            <span class="total-amount">S/ <span id="costoTotal">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary">
+                        <span>📤 Registrar salida completa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Historial Unificado -->
+        <div class="card">
+            <h2 class="card-title">📜 Registros de salida recientes</h2>
+            <div class="summary">
+                <div class="summary-item">
+                    <span class="summary-label">Total Salidas</span>
+                    <span id="totalSalidas" class="summary-value">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Costo Total Salidas</span>
+                    <span id="montoTotal" class="summary-value">S/ 0.00</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="tablaSalidas">
+                    <thead>
+                        <tr>
+                            <th>ID / Ref</th>
+                            <th>Tipo</th>
+                            <th>Código</th>
+                            <th>Insumo</th>
+                            <th>Categoría</th>
+                            <th>Costo Unit.</th>
+                            <th>Estado</th>
+                            <th>Costo Total</th>
+                            <th>Proveedor</th>
+                            <th>Hora</th>
+                            <th>Motivo</th>
+                            <th>Cantidad</th>
+                            <th>Comprobante</th>
+                            <th>Usuario</th>
+                            <th>Adjuntos / Notas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaSalidas">
+                        <!-- Filas cargadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../supabase-config.js"></script>
+    <script src="../almacen-db.js"></script>
+    <script src="../scripts/dalia-widget.js"></script>
+    <script src="salida.js"></script>
+</body>
+</html>

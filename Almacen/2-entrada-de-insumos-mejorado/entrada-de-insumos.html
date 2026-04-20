@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso Diario de Insumos - Mejorado</title>
+    <link rel="stylesheet" href="styles-entrada-de-insumos.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container animate-fade-in">
+        <!-- Navegación entre módulos -->
+        <nav class="modulo-nav">
+            <a href="../1-inventario-mejorado/inventario.html">📋 Inventario</a>
+            <a href="entrada-de-insumos.html" class="active">📥 Entrada</a>
+            <a href="../3-salida-de-insumos-mejorado/salida.html">📤 Salida</a>
+            <a href="../4-que-comprar-mejorado/que-comprar.html">🛒 Qué Comprar</a>
+            <a href="../5-proveedores-mejorado/proveedores.html">🚚 Proveedores</a>
+            <a href="../6-historial-mejorado/historial.html">📜 Historial</a>
+        </nav>
+
+        <header>
+            <div>
+                <h1 style="color: var(--primary);">📥 Ingreso Diario de Insumos</h1>
+                <p style="color: var(--muted-foreground);">Módulo mejorado de gestión de almacén</p>
+            </div>
+            <div id="fechaActual" class="date-badge"></div>
+        </header>
+
+        <!-- Sección de Entrada Rápida -->
+        <div class="card">
+            <h2 class="card-title">⚡ Entrada rápida</h2>
+            <div class="entrada-rapida-container">
+                <div class="form-group">
+                    <label for="textoLibre">Ingreso libre (Texto)</label>
+                    <textarea id="textoLibre" rows="3" placeholder="Escribe aquí los detalles del ingreso..."></textarea>
+                </div>
+                <div class="entrada-rapida-acciones">
+                    <button id="btnGrabarAudio" class="btn btn-secondary">
+                        <span class="icon">🎙️</span> <span id="textoGrabar">Grabar Audio</span>
+                    </button>
+                    <div class="form-group-file">
+                        <label for="archivosMultimedia" class="btn btn-secondary">
+                            <span class="icon">📁</span> Adjuntar Archivos
+                        </label>
+                        <input type="file" id="archivosMultimedia" multiple accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" style="display: none;">
+                    </div>
+                </div>
+                <div id="statusGrabacion" class="status-grabacion" style="display: none;">
+                    <span class="pulse-red"></span> Grabando... <span id="tiempoGrabacion">00:00</span>
+                </div>
+                <div id="listaArchivosAdjuntos" class="lista-archivos"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">📝 Formulario de Registro</h2>
+            <form id="formEntrada">
+                <!-- BLOQUE 1: DATOS DEL REGISTRO (ARRIBA) -->
+                <div class="form-section">
+                    <h3 class="section-subtitle">Información del Registro</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="hora">Hora *</label>
+                            <input type="time" id="hora" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comprobante">Nro Comprobante *</label>
+                            <input type="text" id="comprobante" placeholder="Ejem: FAC-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usuario">Usuario *</label>
+                            <input type="text" id="usuario" value="admin" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña de Seguridad *</label>
+                            <input type="password" id="password" placeholder="admin123" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 2: DATOS DEL INSUMO (ABAJO) -->
+                <div class="form-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <h3 class="section-subtitle">Detalle de Insumos</h3>
+                    
+                    <!-- Insumo Principal -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="ingrediente">Insumo *</label>
+                            <select id="ingrediente" required>
+                                <option value="">Seleccione un insumo</option>
+                                <!-- Opciones cargadas por JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidad">Cantidad *</label>
+                            <input type="number" id="cantidad" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor">Proveedor *</label>
+                            <select id="proveedor" required>
+                                <option value="">Seleccione un proveedor</option>
+                                <!-- Opciones cargadas por JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="costoUnitario">Costo Unitario (S/)</label>
+                            <input type="number" id="costoUnitario" step="0.01" min="0" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="codigo">Código</label>
+                            <input type="text" id="codigo" readonly placeholder="Auto-generado">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria">Categoría</label>
+                            <input type="text" id="categoria" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="ultimoIngreso">Último Ingreso</label>
+                            <input type="text" id="ultimoIngreso" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor para Ingredientes Adicionales -->
+                    <div id="contenedorIngredientesExtra"></div>
+
+                    <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" id="btnAgregarIngrediente" class="btn btn-secondary">
+                            <span>➕ Agregar otro insumo</span>
+                        </button>
+                        <div class="total-registro-container">
+                            <span class="total-label">TOTAL REGISTRO:</span>
+                            <span class="total-amount">S/ <span id="costoTotal">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary">
+                        <span>➕ Registrar ingreso completo</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">📜 Registros recientes</h2>
+            
+            <div class="summary">
+                <div class="summary-item">
+                    <span class="summary-label">Total Registros</span>
+                    <span id="totalRegistros" class="summary-value">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Inversión Total</span>
+                    <span id="montoTotal" class="summary-value">S/ 0.00</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="tablaEntradas">
+                    <thead>
+                        <tr>
+                            <th>ID / Ref</th>
+                            <th>Tipo</th>
+                            <th>Código</th>
+                            <th>Insumo</th>
+                            <th>Categoría</th>
+                            <th>Costo Unit.</th>
+                            <th>Último Ingreso</th>
+                            <th>Estado</th>
+                            <th>Costo Total</th>
+                            <th>Proveedor</th>
+                            <th>Hora</th>
+                            <th>Cantidad</th>
+                            <th>Comprobante</th>
+                            <th>Usuario</th>
+                            <th>Adjuntos / Notas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaEntradas">
+                        <!-- Filas cargadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../supabase-config.js"></script>
+    <script src="../almacen-db.js"></script>
+    <script src="../scripts/dalia-widget.js"></script>
+    <script src="entrada-de-insumos.js"></script>
+</body>
+</html>

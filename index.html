@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f07c2a" />
+    <title>MiRest con IA | Dashboard base</title>
+    <meta
+      name="description"
+      content="Dashboard base de MiRest con IA para navegación colaborativa entre módulos administrativos."
+    />
+    <script>
+      document.documentElement.classList.add("js");
+      document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="./Pwa/manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles/tokens.css" />
+    <link rel="stylesheet" href="./styles/base.css" />
+    <link rel="stylesheet" href="./styles/layout.css" />
+    <link rel="stylesheet" href="./styles/components.css" />
+    <link rel="stylesheet" href="./styles/dashboard.css" />
+    <link rel="stylesheet" href="./styles/premium-modules.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body data-root-path="./" data-page-type="dashboard" data-module-key="dashboard" data-theme="light">
+    <div class="app-shell">
+      <aside id="appSidebar" class="sidebar" aria-label="Panel lateral">
+        <div class="sidebar__brand">
+          <div class="brand-mark" aria-hidden="true">IA</div>
+          <div class="brand-copy">
+            <span class="brand-copy__eyebrow">MiRest</span>
+            <strong>MiRest con IA</strong>
+            <span>Dashboard administrativo base</span>
+          </div>
+        </div>
+
+        <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal"></nav>
+
+        <div class="sidebar__footer card card--sidebar">
+          <span class="sidebar__footer-label">Estado del shell</span>
+          <strong>Listo para trabajo en paralelo</strong>
+          <p>Navegación y estructura listas.</p>
+        </div>
+      </aside>
+
+      <button
+        class="sidebar-backdrop"
+        id="sidebarBackdrop"
+        type="button"
+        aria-label="Cerrar navegación lateral"
+      ></button>
+
+      <div class="app-main">
+        <header class="topbar">
+          <div class="topbar__lead">
+            <button
+              class="icon-button topbar__menu-toggle"
+              id="sidebarToggle"
+              type="button"
+              aria-label="Abrir navegación lateral"
+              aria-controls="appSidebar"
+              aria-expanded="false"
+            >
+              <i data-lucide="menu"></i>
+            </button>
+
+            <div class="topbar__copy">
+              <span class="eyebrow" id="pageEyebrow">Panel base</span>
+              <h1 id="pageTitle">Dashboard principal</h1>
+              <p id="pageSubtitle">Inicializando contexto del sistema...</p>
+            </div>
+          </div>
+
+          <div class="topbar__actions">
+            <span class="chip chip--soft" id="pageContextChip">Estructura MVP</span>
+            <button class="assistant-pill" type="button" onclick="window.location.href='./IA/ia.html'">DallIA listo</button>
+            <div class="avatar" aria-label="Administrador">AD</div>
+          </div>
+        </header>
+
+        <main class="dashboard">
+          <section class="hero-panel card">
+            <div class="hero-panel__content">
+              <span class="chip chip--accent">Skeleton frontend</span>
+              <h2>Base navegable del sistema lista para que cada equipo construya su módulo.</h2>
+
+              <div class="hero-panel__actions">
+                <a class="btn btn--primary" href="#moduleGrid">Ver módulos</a>
+                <a class="btn btn--secondary" href="./TECHNICAL_DOCS.md">Guía técnica</a>
+              </div>
+            </div>
+
+            <div class="hero-panel__metrics" id="dashboardMetrics" aria-label="Resumen general"></div>
+          </section>
+
+          <div class="dashboard__content">
+            <section class="dashboard__primary">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Navegación del sistema</span>
+                  <h2>Módulos disponibles</h2>
+                </div>
+              </div>
+
+              <div id="moduleGrid" class="module-grid" aria-live="polite"></div>
+            </section>
+
+            <aside class="dashboard__aside">
+              <section class="info-panel card">
+                <div class="panel-heading">
+                  <h3>Hoy en el sistema</h3>
+                  <span class="chip chip--soft">Snapshot</span>
+                </div>
+                <div id="systemHighlights" class="stack"></div>
+              </section>
+
+              <section class="info-panel card">
+                <div class="panel-heading">
+                  <h3>DallIA dice</h3>
+                  <span class="chip chip--soft">Consejos</span>
+                </div>
+                <ul id="insightsList" class="insight-list"></ul>
+              </section>
+
+              <section class="info-panel card">
+                <div class="panel-heading">
+                  <h3>Checklist base</h3>
+                </div>
+                <ul class="check-list">
+                  <li>Dashboard raíz.</li>
+                  <li>Módulos por carpeta.</li>
+                  <li>Design System global.</li>
+                  <li>Sin lógica de negocio.</li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+
+          <footer class="page-footer">
+            MiRest con IA · <span id="currentYear">2026</span> · Frontend base para trabajo colaborativo.
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
+      <i data-lucide="moon"></i>
+    </button>
+
+    <script type="module" src="./scripts/app.js"></script>
+    <script src="./scripts/dalia-widget.js"></script>
+  </body>
+</html>

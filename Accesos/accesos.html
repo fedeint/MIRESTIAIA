@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f07c2a" />
+    <title>Accesos | MiRest con IA</title>
+    <meta name="description" content="Gestión de usuarios y accesos" />
+    <script>
+      document.documentElement.classList.add("js");
+      document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="../Pwa/manifest.webmanifest" />
+    <link rel="stylesheet" href="../styles/tokens.css" />
+    <link rel="stylesheet" href="../styles/base.css" />
+    <link rel="stylesheet" href="../styles/layout.css" />
+    <link rel="stylesheet" href="../styles/components.css" />
+    <link rel="stylesheet" href="../styles/dashboard.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      .accesos-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-6);
+      }
+      .users-table-container {
+        overflow-x: auto;
+        border-radius: 16px;
+        border: 1px solid var(--color-border);
+      }
+      .users-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .users-table th, .users-table td {
+        padding: var(--space-4);
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+      }
+      .users-table th {
+        font-weight: 600;
+        color: var(--color-text-muted);
+        background: rgba(0,0,0,0.02);
+      }
+      body[data-theme="dark"] .users-table th {
+        background: rgba(255,255,255,0.02);
+      }
+      .action-btns {
+        display: flex;
+        gap: var(--space-2);
+      }
+      .admin-form-group {
+        display: grid;
+        gap: var(--space-2);
+        margin-bottom: var(--space-4);
+      }
+      .admin-form-group select, .admin-form-group input {
+        height: 48px;
+        padding: 0 var(--space-4);
+        border-radius: 12px;
+        border: 1px solid var(--color-border);
+        background: rgba(255, 255, 255, 0.5);
+        color: var(--color-text);
+        font-size: 15px;
+      }
+      body[data-theme="dark"] .admin-form-group select,
+      body[data-theme="dark"] .admin-form-group input {
+        background: rgba(10, 15, 29, 0.5);
+      }
+      
+      .modal-creation {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 100;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .modal-creation.active {
+        opacity: 1; pointer-events: auto;
+      }
+      .modal-content {
+        background: var(--color-bg);
+        width: 100%; max-width: 450px;
+        padding: var(--space-6);
+        border-radius: 24px;
+      }
+    </style>
+  </head>
+  <body data-root-path="../" data-page-type="module" data-module-key="accesos" data-theme="light">
+    <div class="app-shell">
+      <aside id="appSidebar" class="sidebar" aria-label="Panel lateral">
+        <div class="sidebar__brand">
+          <div class="brand-mark" aria-hidden="true">IA</div>
+          <div class="brand-copy">
+            <span class="brand-copy__eyebrow">MiRest</span>
+            <strong>MiRest con IA</strong>
+            <span>Manejo de Accesos</span>
+          </div>
+        </div>
+        <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal"></nav>
+      </aside>
+
+      <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Cerrar navegación lateral"></button>
+
+      <div class="app-main">
+        <header class="topbar">
+          <div class="topbar__lead">
+            <button class="icon-button topbar__menu-toggle" id="sidebarToggle" type="button" aria-expanded="false">
+              <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar__copy">
+              <span class="eyebrow" id="pageEyebrow">Módulo</span>
+              <h1 id="pageTitle">Control de Accesos</h1>
+              <p id="pageSubtitle">Gestión de usuarios y permisos del sistema.</p>
+            </div>
+          </div>
+          <div class="topbar__actions">
+            <span class="chip chip--soft" id="pageContextChip">AC</span>
+            <div class="avatar" aria-label="Administrador">AD</div>
+          </div>
+        </header>
+
+        <main class="dashboard">
+          <div class="accesos-header">
+            <div>
+              <h2>Usuarios del sistema</h2>
+              <p style="color:var(--color-text-muted); font-size: 14px;">Administra los empleados y sus roles</p>
+            </div>
+            <button class="btn btn--primary" onclick="window.toggleModal(true)">
+              <i data-lucide="plus"></i> Crear Nuevo Usuario
+            </button>
+          </div>
+
+          <div class="users-table-container">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Correo</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="4" style="text-align: center;">Cargando usuarios...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal de Creación -->
+    <div class="modal-creation" id="creationModal">
+      <div class="modal-content card">
+        <h3 style="margin-bottom: var(--space-4)">Nuevo Usuario</h3>
+        <p style="font-size: 14px; color: var(--color-text-muted); margin-bottom: var(--space-4);">El usuario recibirá un correo con instrucciones para iniciar sesión.</p>
+        
+        <form id="createUserForm">
+          <div class="admin-form-group">
+            <label for="new_email">Correo Electrónico</label>
+            <input type="email" id="new_email" required />
+          </div>
+          <div class="admin-form-group">
+            <label for="new_password">Contraseña (Temporal)</label>
+            <input type="text" id="new_password" required />
+          </div>
+          <div class="admin-form-group">
+            <label for="new_role">Rol Asignado</label>
+            <select id="new_role" required>
+              <option value="admin">Administrador Central</option>
+              <option value="caja">Caja</option>
+              <option value="chef">Chef / Cocina</option>
+              <option value="pedidos">Pedidos / Delivery</option>
+              <option value="almacen">Almacén</option>
+              <option value="marketing">Marketing / Fidelización</option>
+            </select>
+          </div>
+          
+          <div style="display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-6);">
+            <button type="button" class="btn btn--secondary" onclick="window.toggleModal(false)">Cancelar</button>
+            <button type="submit" class="btn btn--primary" id="btnCreateUser">Crear y Enviar Acceso</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
+      <i data-lucide="moon"></i>
+    </button>
+
+    <script type="module" src="../scripts/app.js"></script>
+    <script type="module" src="./accesos.js"></script>
+  </body>
+</html>

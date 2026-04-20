@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Mejorado - Gestión de Insumos</title>
+    <link rel="stylesheet" href="styles-inventario.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Navegación entre módulos -->
+        <nav class="modulo-nav">
+            <a href="inventario.html" class="active">📋 Inventario</a>
+            <a href="../2-entrada-de-insumos-mejorado/entrada-de-insumos.html">📥 Entrada</a>
+            <a href="../3-salida-de-insumos-mejorado/salida.html">📤 Salida</a>
+            <a href="../4-que-comprar-mejorado/que-comprar.html">🛒 Qué Comprar</a>
+            <a href="../5-proveedores-mejorado/proveedores.html">🚚 Proveedores</a>
+            <a href="../6-historial-mejorado/historial.html">📜 Historial</a>
+        </nav>
+
+        <header>
+            <div>
+                <h1 style="color: var(--primary);">📋 Control de Inventario</h1>
+                <p style="color: var(--muted-foreground);">Gestión centralizada de insumos y stock</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" id="btnAgregarInsumos">➕ Agregar insumos</button>
+            </div>
+        </header>
+
+        <!-- Panel de Información -->
+        <div class="summary-grid">
+            <div class="card summary-card">
+                <span class="summary-label">Total Insumos</span>
+                <span id="totalInsumos" class="summary-value">0</span>
+            </div>
+            <div class="card summary-card">
+                <span class="summary-label">Stock OK</span>
+                <span id="stockOk" class="summary-value text-ok">0</span>
+            </div>
+            <div class="card summary-card">
+                <span class="summary-label">Stock Bajo</span>
+                <span id="stockBajo" class="summary-value text-bajo">0</span>
+            </div>
+            <div class="card summary-card">
+                <span class="summary-label">Crítico</span>
+                <span id="stockCritico" class="summary-value text-critico">0</span>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card" style="padding: 1rem; margin-bottom: 1.5rem;">
+            <div class="filters-section">
+                <div class="search-group">
+                    <input type="text" id="buscador" placeholder="Buscar por nombre, código, categoría, ubicación...">
+                </div>
+                <div style="width: 250px;">
+                    <select id="filtroCategoria">
+                        <option value="">Todas las categorías</option>
+                        <!-- Opciones dinámicas -->
+                    </select>
+                </div>
+                <div style="width: 200px;">
+                    <select id="filtroEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="ok">OK</option>
+                        <option value="bajo">Bajo</option>
+                        <option value="critico">Crítico</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista Principal -->
+        <div class="table-container">
+            <table id="tablaInventario">
+                <thead>
+                    <tr>
+                        <th data-sort="codigo">Código ⇅</th>
+                        <th data-sort="nombre">Insumo ⇅</th>
+                        <th data-sort="categoria">Categoría ⇅</th>
+                        <th data-sort="proveedor">Proveedor ⇅</th>
+                        <th data-sort="costoUnitario">Costo Unit. ⇅</th>
+                        <th data-sort="costoTotal">Costo Total ⇅</th>
+                        <th data-sort="ultimoIngreso">Último Ingreso ⇅</th>
+                        <th data-sort="estado">Estado ⇅</th>
+                        <th data-sort="ubicacion">Ubicación ⇅</th>
+                        <th data-sort="stock">Stock Actual ⇅</th>
+                        <th data-sort="stockMinimo">Mínimo ⇅</th>
+                    </tr>
+                </thead>
+                <tbody id="listaInventario">
+                    <!-- Filas dinámicas -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../supabase-config.js"></script>
+    <script src="../almacen-db.js"></script>
+    <script src="../scripts/dalia-widget.js"></script>
+    <script src="inventario.js"></script>
+</body>
+</html>

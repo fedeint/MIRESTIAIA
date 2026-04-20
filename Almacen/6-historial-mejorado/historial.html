@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Movimientos - Mejorado</title>
+    <link rel="stylesheet" href="styles-historial.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Contenido del Historial (Visible directamente Requerimiento 4.1) -->
+    <div id="contenidoHistorial" class="container animate-fade-in">
+        <nav class="modulo-nav">
+            <a href="../1-inventario-mejorado/inventario.html">📋 Inventario</a>
+            <a href="../2-entrada-de-insumos-mejorado/entrada-de-insumos.html">📥 Entrada</a>
+            <a href="../3-salida-de-insumos-mejorado/salida.html">📤 Salida</a>
+            <a href="../4-que-comprar-mejorado/que-comprar.html">🛒 Qué Comprar</a>
+            <a href="../5-proveedores-mejorado/proveedores.html">🚚 Proveedores</a>
+            <a href="historial.html" class="active">📜 Historial</a>
+        </nav>
+
+        <header>
+            <div>
+                <h1 style="color: var(--primary);">📜 Historial de Movimientos</h1>
+                <p style="color: var(--muted-foreground);">Registro centralizado de todas las operaciones</p>
+            </div>
+            <div id="fechaActual" class="date-badge"></div>
+        </header>
+
+        <!-- Filtros -->
+        <div class="card">
+            <div class="filtros-grid">
+                <div class="form-group">
+                    <label>Desde</label>
+                    <input type="date" id="filtroDesde">
+                </div>
+                <div class="form-group">
+                    <label>Hasta</label>
+                    <input type="date" id="filtroHasta">
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="filtroTipo">
+                        <option value="">Todos</option>
+                        <option value="original">Original</option>
+                        <option value="corregido">Corregido</option>
+                        <option value="no-valido">No Válido</option>
+                        <option value="nuevo-insumo">Nuevo Insumo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <select id="filtroUsuario">
+                        <option value="">Todos</option>
+                        <!-- Cargados por JS -->
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Buscar insumo</label>
+                    <input type="text" id="busquedaInsumo" placeholder="Nombre o código...">
+                </div>
+                <div class="flex-end" style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                    <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
+                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="summary">
+            <div class="summary-item">
+                <span class="summary-label">Registros Encontrados</span>
+                <span id="totalEncontrados" class="summary-value">0</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Monto Total Filtrado</span>
+                <span id="montoFiltrado" class="summary-value">S/ 0.00</span>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card">
+            <div class="table-container">
+                <table id="tablaHistorial">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>ID / Ref</th>
+                            <th>Tipo</th>
+                            <th>Movimiento</th>
+                            <th>Detalle de Insumos</th>
+                            <th>Proveedor</th>
+                            <th>Monto</th>
+                            <th>Usuario</th>
+                            <th>Adjuntos / Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaHistorial">
+                        <!-- Filas cargadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../supabase-config.js"></script>
+    <script src="../almacen-db.js"></script>
+    <script src="../scripts/dalia-widget.js"></script>
+    <script src="historial.js"></script>
+</body>
+</html>

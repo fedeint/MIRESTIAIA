@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f07c2a" />
+    <title>MiRest con IA | Almacén</title>
+    <script>
+      document.documentElement.classList.add("js");
+      document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="../Pwa/manifest.webmanifest" />
+    <link rel="stylesheet" href="../styles/tokens.css" />
+    <link rel="stylesheet" href="../styles/base.css" />
+    <link rel="stylesheet" href="../styles/layout.css" />
+    <link rel="stylesheet" href="../styles/components.css" />
+    <link rel="stylesheet" href="../styles/premium-modules.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      .submenu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--space-4);
+        margin-top: var(--space-6);
+      }
+      .submenu-card {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-5);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-xl);
+        text-decoration: none;
+        color: var(--color-text);
+        transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+      }
+      .submenu-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+        border-color: var(--color-accent);
+      }
+      .submenu-card__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-lg);
+        background: var(--color-accent-soft, rgba(240,124,42,0.12));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-accent);
+      }
+      .submenu-card__label {
+        font-weight: 700;
+        font-size: 1rem;
+      }
+      .submenu-card__desc {
+        font-size: 0.85rem;
+        color: var(--color-text-soft);
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body data-root-path="../" data-page-type="module" data-module-key="almacen">
+    <div class="app-shell">
+      <aside class="sidebar" id="appSidebar" aria-label="Panel lateral">
+        <div class="sidebar__brand">
+          <div class="brand-mark" aria-hidden="true">IA</div>
+          <div class="brand-copy">
+            <span class="brand-copy__eyebrow">MiRest</span>
+            <strong>MiRest con IA</strong>
+            <span>Dashboard administrativo</span>
+          </div>
+        </div>
+        <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal"></nav>
+        <div class="sidebar__footer card card--sidebar">
+          <span class="sidebar__footer-label" id="moduleStatusLabel">Módulo activo</span>
+          <strong id="moduleTitle">Almacén</strong>
+          <p id="moduleDescription">Control de stock, insumos y movimientos.</p>
+        </div>
+      </aside>
+
+      <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Cerrar navegación lateral"></button>
+
+      <div class="app-main">
+        <header class="topbar">
+          <div class="topbar__lead">
+            <button class="icon-button topbar__menu-toggle" id="sidebarToggle" type="button"
+              aria-label="Abrir navegación lateral" aria-controls="appSidebar" aria-expanded="false">
+              <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar__copy">
+              <span class="eyebrow" id="pageEyebrow">Módulo</span>
+              <h1 id="pageTitle">Almacén</h1>
+              <p id="pageSubtitle">Control base de stock, insumos y movimientos internos.</p>
+            </div>
+          </div>
+          <div class="topbar__actions">
+            <span class="chip chip--soft" id="pageContextChip">AL</span>
+            <div class="avatar" id="pageAvatar" aria-label="Almacén">AL</div>
+          </div>
+        </header>
+
+        <main class="module-page">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="../index.html" id="breadcrumbHome">Dashboard</a>
+            <span>/</span>
+            <span id="moduleBreadcrumbCurrent">Almacén</span>
+          </nav>
+
+          <div class="module-stack">
+            <section class="card" style="padding: var(--space-6);">
+              <h2 style="margin-bottom: var(--space-2);">Submódulos de Almacén</h2>
+              <p style="color: var(--color-text-soft);">Selecciona una sección para gestionar el almacén.</p>
+
+              <div class="submenu-grid">
+                <a class="submenu-card" href="./1-inventario-mejorado/inventario.html">
+                  <div class="submenu-card__icon"><i data-lucide="clipboard-list"></i></div>
+                  <span class="submenu-card__label">Inventario</span>
+                  <span class="submenu-card__desc">Consulta y gestión del stock actual de insumos.</span>
+                </a>
+                <a class="submenu-card" href="./2-entrada-de-insumos-mejorado/entrada-de-insumos.html">
+                  <div class="submenu-card__icon"><i data-lucide="package-plus"></i></div>
+                  <span class="submenu-card__label">Entrada de Insumos</span>
+                  <span class="submenu-card__desc">Registro de ingresos y compras al almacén.</span>
+                </a>
+                <a class="submenu-card" href="./3-salida-de-insumos-mejorado/salida.html">
+                  <div class="submenu-card__icon"><i data-lucide="package-minus"></i></div>
+                  <span class="submenu-card__label">Salida de Insumos</span>
+                  <span class="submenu-card__desc">Control de egresos y consumo interno.</span>
+                </a>
+                <a class="submenu-card" href="./4-que-comprar-mejorado/que-comprar.html">
+                  <div class="submenu-card__icon"><i data-lucide="shopping-cart"></i></div>
+                  <span class="submenu-card__label">¿Qué Comprar?</span>
+                  <span class="submenu-card__desc">Sugerencias de reposición basadas en stock mínimo.</span>
+                </a>
+                <a class="submenu-card" href="./5-proveedores-mejorado/proveedores.html">
+                  <div class="submenu-card__icon"><i data-lucide="truck"></i></div>
+                  <span class="submenu-card__label">Proveedores</span>
+                  <span class="submenu-card__desc">Directorio y gestión de proveedores activos.</span>
+                </a>
+                <a class="submenu-card" href="./6-historial-mejorado/historial.html">
+                  <div class="submenu-card__icon"><i data-lucide="history"></i></div>
+                  <span class="submenu-card__label">Historial</span>
+                  <span class="submenu-card__desc">Registro histórico de movimientos del almacén.</span>
+                </a>
+              </div>
+            </section>
+          </div>
+
+          <footer class="page-footer">
+            MiRest con IA · <span id="currentYear">2026</span> · Módulo de Almacén.
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
+      <i data-lucide="moon"></i>
+    </button>
+
+    <script type="module" src="../scripts/app.js"></script>
+  </body>
+</html>

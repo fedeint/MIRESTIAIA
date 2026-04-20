@@ -1,0 +1,50 @@
+{
+  "orders": [
+    {
+      "id": "delivery-101",
+      "code": "DL-101",
+      "customer": "Ana Torres",
+      "status": "pendiente",
+      "courierId": "courier-1",
+      "placedAt": "12:10",
+      "elapsedMinutes": 8,
+      "etaMinutes": 28,
+      "total": 74,
+      "channel": "Rappi",
+      "address": "Av. Pardo 421, Chimbote",
+      "phone": "999 321 451",
+      "paymentLabel": "Yape",
+      "itemsCount": 3,
+      "documentType": "boleta",
+      "documentIssued": false,
+      "paymentConfirmed": false,
+      "customerDocument": "74219833",
+      "businessName": "",
+      "timeline": ["pendiente"],
+      "note": "Sin cebolla y llamar al llegar."
+    },
+    {
+      "id": "delivery-103",
+      "code": "DL-103",
+      "customer": "Marisol Peña",
+      "status": "listo-salir",
+      "courierId": "courier-3",
+      "placedAt": "11:52",
+      "elapsedMinutes": 24,
+      "etaMinutes": 22,
+      "total": 96,
+      "channel": "App MiRest",
+      "address": "Malecón Grau 240",
+      "phone": "944 120 778",
+      "paymentLabel": "Tarjeta",
+      "itemsCount": 4,
+      "documentType": "factura",
+      "documentIssued": true,
+      "paymentConfirmed": true,
+      "customerDocument": "20481234567",
+      "businessName": "Mar Azul Eventos SAC",
+      "timeline": ["pendiente", "preparando", "listo-salir"],
+      "note": "Cliente pidió extra limón."
+    }
+  ]
+}

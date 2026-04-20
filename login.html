@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f07c2a" />
+  <title>Login | MiRest con IA</title>
+  
+  <script>
+    document.documentElement.classList.add("js");
+    document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+  </script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="./styles/tokens.css" />
+  <link rel="stylesheet" href="./styles/base.css" />
+  <link rel="stylesheet" href="./styles/components.css" />
+  <link rel="stylesheet" href="./styles/login.css" />
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body data-theme="light">
+  <div class="login-container">
+    <div class="login-card card">
+      <div class="login-header">
+        <div class="brand-mark" aria-hidden="true">IA</div>
+        <h1>Bienvenido a MiRest</h1>
+        <p>Inicia sesión con tu cuenta corporativa</p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <div id="errorMessage" class="error-banner" style="display: none;"></div>
+        
+        <div class="form-group">
+          <label for="email">Correo Electrónico</label>
+          <div class="input-wrapper">
+            <i data-lucide="mail"></i>
+            <input type="email" id="email" required placeholder="tu-correo@mirest.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock"></i>
+            <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary login-btn" id="submitBtn">
+          Ingresar al Sistema
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
+    <i data-lucide="moon"></i>
+  </button>
+
+  <script type="module">
+    import { supabase } from './scripts/supabase.js';
+    import { initializeThemeToggle } from './scripts/navigation.js';
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      window.lucide.createIcons();
+      initializeThemeToggle(document.getElementById("themeToggle"));
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        window.location.replace("./index.html");
+      }
+
+      const form = document.getElementById('loginForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const errorMsg = document.getElementById('errorMessage');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Verificando...';
+        window.lucide.createIcons();
+        errorMsg.style.display = 'none';
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Ingresar al Sistema';
+          errorMsg.textContent = 'Correo o contraseña incorrectos. Si olvidaste tu contraseña pide al administrador que te reestablezca el acceso.';
+          errorMsg.style.display = 'block';
+        } else {
+          submitBtn.textContent = '¡Bienvenido!';
+          setTimeout(() => {
+            window.location.replace("./index.html");
+          }, 300);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

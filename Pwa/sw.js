@@ -1,0 +1,87 @@
+const CACHE_VERSION = "mirest-pwa-v2";
+
+const CORE_ASSETS = [
+  "/",
+  "/index.html",
+  "/styles/tokens.css",
+  "/styles/base.css",
+  "/styles/layout.css",
+  "/styles/components.css",
+  "/styles/dashboard.css",
+  "/styles/premium-modules.css",
+  "/scripts/app.js",
+  "/scripts/navigation.js",
+  "/Pwa/manifest.webmanifest",
+  "/Pedidos/assets/icons/icon-192.svg",
+  "/Pedidos/assets/icons/icon-512.svg"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE_VERSION)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_VERSION)
+            .map((key) => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(req)
+        .then((resp) => {
+          const isCacheable = resp && resp.ok && !url.pathname.startsWith("/api/");
+          if (isCacheable) {
+            const clone = resp.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
+          }
+          return resp;
+        })
+        .catch(() => cached)
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification?.data?.url || "/index.html";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientsArr) => {
+        for (const client of clientsArr) {
+          if (client.url && "focus" in client) {
+            client.navigate(target);
+            return client.focus();
+          }
+        }
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(target);
+        }
+      })
+  );
+});

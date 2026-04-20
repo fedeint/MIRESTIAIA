@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f07c2a" />
+    <title>MiRest con IA | Gestión de Clientes</title>
+    <script>
+      document.documentElement.classList.add("js");
+      document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="../Pwa/manifest.webmanifest" />
+    
+    <link rel="stylesheet" href="../styles/tokens.css" />
+    <link rel="stylesheet" href="../styles/base.css" />
+    <link rel="stylesheet" href="../styles/layout.css" />
+    <link rel="stylesheet" href="../styles/components.css" />
+    <link rel="stylesheet" href="../styles/premium-modules.css" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body data-root-path="../" data-page-type="module" data-module-key="clientes">
+    <div class="app-shell">
+      <aside class="sidebar" id="appSidebar" aria-label="Panel lateral">
+        <div class="sidebar__brand">
+          <div class="brand-mark" aria-hidden="true">IA</div>
+          <div class="brand-copy">
+            <span class="brand-copy__eyebrow">MiRest</span>
+            <strong>MiRest con IA</strong>
+            <span>Dashboard administrativo</span>
+          </div>
+        </div>
+        <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal"></nav>
+
+        <div class="sidebar__footer card card--sidebar">
+          <span class="sidebar__footer-label" id="moduleStatusLabel">Módulo activo</span>
+          <strong id="moduleTitleDisplay">Clientes</strong>
+          <p id="moduleDescriptionDisplay">Gestión de base de datos y fidelización.</p>
+        </div>
+      </aside>
+
+      <button
+        class="sidebar-backdrop"
+        id="sidebarBackdrop"
+        type="button"
+        aria-label="Cerrar navegación lateral"
+      ></button>
+
+      <div class="app-main">
+        <header class="topbar">
+          <div class="topbar__lead">
+            <button
+              class="icon-button topbar__menu-toggle"
+              id="sidebarToggle"
+              type="button"
+              aria-label="Abrir navegación lateral"
+              aria-controls="appSidebar"
+              aria-expanded="false"
+            >
+              <i data-lucide="menu"></i>
+            </button>
+
+            <div class="topbar__copy">
+              <span class="eyebrow" id="pageEyebrow">Gestión</span>
+              <h1 id="pageTitle">Clientes</h1>
+              <p id="pageSubtitle">Base de datos y fidelización</p>
+            </div>
+          </div>
+
+          <div class="topbar__actions">
+            <span class="chip chip--soft" id="pageContextChip">CL</span>
+            <div class="avatar" id="pageAvatar" aria-label="Iniciales del módulo">CL</div>
+          </div>
+        </header>
+
+        <main class="module-page">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="../index.html" id="breadcrumbHome">Dashboard</a>
+            <span>/</span>
+            <span id="moduleBreadcrumbCurrent">Clientes</span>
+          </nav>
+
+          <div class="module-stack">
+            <div class="clientes-container">
+              <header class="module-header" style="margin-bottom: 2.5rem;">
+                <div class="header-left">
+                  <h2 id="moduleTitle"><i data-lucide="users"></i> Clientes</h2>
+                  <div class="header-stats">
+                    <span class="stat-badge"><i data-lucide="user-check"></i> <span id="count-total-clientes">2</span> clientes</span>
+                    <span class="stat-badge"><i data-lucide="star" style="color: #f59e0b"></i> <span id="count-vip-clientes">1</span> VIP</span>
+                  </div>
+                </div>
+
+                <div class="header-center">
+                  <div class="search-box">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="inputBusquedaClientes" placeholder="Buscar cliente...">
+                  </div>
+
+                  <div class="dropdown-container">
+                    <button class="btn-orange-gradient" id="btnNuevoRegistro">
+                      <i data-lucide="plus"></i> Nuevo Registro 
+                    </button>
+                  </div>
+                </div>
+
+                <div class="header-right">
+                  <button class="btn-icon-refresh" id="btnRefreshClientes"><i data-lucide="refresh-cw"></i></button>
+                </div>
+              </header>
+
+              <div class="filter-bar" style="margin-bottom: 2rem;">
+                <div class="filter-pills">
+                  <select id="filtroTipoCliente" class="pill-select">
+                    <option value="todos">Todos los tipos</option>
+                    <option value="clientes">Clientes</option>
+                    <option value="proveedores">Proveedores</option>
+                    <option value="fiel">Cliente Fiel</option>
+                  </select>
+                </div>
+                <div class="view-toggle">
+                  <button class="btn-toggle-view" id="btnViewList" title="Vista de Lista"><i data-lucide="list"></i></button>
+                  <button class="btn-toggle-view active" id="btnViewGrid" title="Vista de Cuadrícula"><i data-lucide="layout-grid"></i></button>
+                </div>
+              </div>
+
+              <div class="views-wrapper">
+                <div id="container-clientes-lista" class="view-content" style="display: none;">
+                  <div class="table-wrapper">
+                    <table class="clientes-table">
+                      <thead>
+                        <tr>
+                          <th>CLIENTE</th>
+                          <th>DOCUMENTO</th>
+                          <th>EMAIL</th>
+                          <th>TELÉFONO</th>
+                          <th>TIPO</th>
+                          <th>ESTADO</th>
+                          <th>ACCIONES</th>
+                        </tr>
+                      </thead>
+                      <tbody id="listClientes">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div id="container-clientes-grid" class="view-content grid-layout">
+                  <div class="client-grid" id="gridClientes">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <footer class="page-footer">
+            MiRest con IA · <span id="currentYear">2026</span> · Módulo de Clientes.
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
+      <i data-lucide="moon"></i>
+    </button>
+
+    <script type="module" src="../scripts/app.js"></script>
+    <script type="module" src="clientes.js"></script>
+
+    <div id="modalEditCliente" class="modal-overlay">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3><i data-lucide="user-plus"></i> Editar Cliente</h3>
+                <button class="btn-icon" id="btnCloseModal"><i data-lucide="x"></i></button>
+            </header>
+            <form id="formEditCliente">
+                <input type="hidden" id="editClientId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editNombre">Nombre Completo</label>
+                        <input type="text" id="editNombre" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDocumento">N° Documento (DNI/RUC)</label>
+                        <input type="text" id="editDocumento" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Correo Electrónico</label>
+                        <input type="email" id="editEmail" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTelefono">Teléfono / WhatsApp</label>
+                        <input type="text" id="editTelefono" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTipo">Tipo de Registro</label>
+                        <select id="editTipo" class="form-control">
+                            <option value="cliente">Cliente</option>
+                            <option value="proveedor">Proveedor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEstado">Estado / Categoría</label>
+                        <select id="editEstado" class="form-control">
+                            <option value="Regular">Regular</option>
+                            <option value="VIP">VIP</option>
+                        </select>
+                    </div>
+                </div>
+                <br>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--secondary" id="btnCancelEdit">Cancelar</button>
+                    <button type="submit" class="btn btn--primary btn-orange-gradient">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalConfirmDelete" class="modal-overlay">
+        <div class="modal-confirm-content">
+            <div class="confirm-icon">
+                <i data-lucide="alert-triangle"></i>
+            </div>
+            <h3>¿Estás seguro?</h3>
+            <p>Esta acción no se puede deshacer. Se eliminará permanentemente este registro.</p>
+            <div class="confirm-footer">
+                <button class="btn-cancel" id="btnCancelDelete">Cancelar</button>
+                <button class="btn-confirm-del" id="btnConfirmDeleteAction">Eliminar ahora</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR VISTA PREVIA CLIENTE -->
+    <div id="clientSidebarOverlay" class="client-sidebar-overlay"></div>
+    <aside id="clientSidebar" class="client-sidebar">
+      <header class="client-sidebar-header">
+        <h3><i data-lucide="user" style="color: var(--color-primary-500); margin-right: 8px;"></i> Vista Previa</h3>
+        <button class="btn-icon" id="btnCloseSidebar"><i data-lucide="x"></i></button>
+      </header>
+
+      <div class="client-sidebar-profile">
+        <div class="initials-box" id="sidebarClientInitials">CL</div>
+        <div class="client-sidebar-info">
+          <h4 id="sidebarClientName">Nombre Cliente</h4>
+          <p id="sidebarClientPhone"><i data-lucide="phone" style="font-size:0.8rem; margin-right:4px; color:var(--color-text-soft);"></i> +51 999 999 999</p>
+        </div>
+      </div>
+
+      <div class="client-sidebar-tabs">
+        <button class="sidebar-tab active" data-target="panelHistory"><i data-lucide="history"></i> Historial</button>
+        <button class="sidebar-tab" data-target="panelChat"><i data-lucide="message-circle"></i> Chat</button>
+      </div>
+
+      <div class="client-sidebar-content">
+        <!-- PANEL HISTORIAL -->
+        <div id="panelHistory" class="sidebar-panel active">
+          <div class="history-summary">
+            <div class="summary-card">
+              <span>Visitas</span>
+              <strong id="sidebarClientVisits">0</strong>
+            </div>
+            <div class="summary-card">
+              <span>Total Gastado</span>
+              <strong id="sidebarClientSpent">S/ 0.00</strong>
+            </div>
+          </div>
+
+          <h5 style="margin-top: 0; margin-bottom: 16px; color: var(--color-text); font-size: 1rem;"><i data-lucide="clipboard-list" style="color: var(--color-text-muted); margin-right: 8px;"></i>Últimos Movimientos</h5>
+          
+          <div class="history-timeline">
+            <div class="history-item">
+              <span class="history-date">12 Abril 2026</span>
+              <h4 class="history-title">Compra en Salón</h4>
+              <p class="history-desc">Lomo Saltado x2, Chicha Morada Jarra</p>
+              <span class="history-amount">S/ 85.00</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">05 Abril 2026</span>
+              <h4 class="history-title">Delivery</h4>
+              <p class="history-desc">Pollo a la Brasa Entero, Gaseosa 1.5L</p>
+              <span class="history-amount">S/ 72.00</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">15 Marzo 2026</span>
+              <h4 class="history-title">Reserva Especial</h4>
+              <p class="history-desc">Cumpleaños - Mesa 4 personas. Excelente cliente.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL CHAT -->
+        <div id="panelChat" class="sidebar-panel">
+          <div class="chat-container">
+            <div class="chat-header">
+              <i data-lucide="message-square"></i>
+              <div>
+                <strong id="chatClientName">Nombre Cliente</strong>
+                <span>en línea</span>
+              </div>
+            </div>
+            <div class="chat-messages">
+              <div class="chat-bubble received">
+                Hola, quisiera reservar una mesa para esta noche a las 8pm. Somos 4 personas.
+                <span class="chat-time">10:30 AM</span>
+              </div>
+              <div class="chat-bubble sent">
+                ¡Hola! Claro que sí, con mucho gusto. Ya tengo registrada su reserva para hoy a las 8:00 PM a nombre de <strong class="chat-name-insert">Nombre Cliente</strong>.
+                <span class="chat-time">10:35 AM</span>
+              </div>
+              <div class="chat-bubble received">
+                Excelente, ¿pueden preparar algo especial por un cumpleaños?
+                <span class="chat-time">10:36 AM</span>
+              </div>
+              <div class="chat-bubble sent">
+                ¡Por supuesto! Le daremos un postre de cortesía. ¡Los esperamos!
+                <span class="chat-time">10:38 AM</span>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <i data-lucide="smile" style="color: #667781; font-size: 1.5rem; cursor: pointer;"></i>
+              <input type="text" placeholder="Escribe un mensaje..." disabled style="background: white; border-radius: 8px; padding: 10px; font-size: 0.9rem;">
+              <button class="btn-send-chat" disabled><i data-lucide="send"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </body>
+</html>

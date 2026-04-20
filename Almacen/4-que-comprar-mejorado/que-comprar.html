@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qué Comprar - MiRest</title>
+    <link rel="stylesheet" href="que-comprar.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container animate-fade-in">
+        <!-- Navegación entre módulos -->
+        <nav class="modulo-nav">
+            <a href="../1-inventario-mejorado/inventario.html">📋 Inventario</a>
+            <a href="../2-entrada-de-insumos-mejorado/entrada-de-insumos.html">📥 Entrada</a>
+            <a href="../3-salida-de-insumos-mejorado/salida.html">📤 Salida</a>
+            <a href="que-comprar.html" class="active">🛒 Qué Comprar</a>
+            <a href="../5-proveedores-mejorado/proveedores.html">🚚 Proveedores</a>
+            <a href="../6-historial-mejorado/historial.html">📜 Historial</a>
+        </nav>
+
+        <header>
+            <div>
+                <h1 style="color: var(--primary);">🛒 Insumos por Comprar</h1>
+                <p style="color: var(--muted-foreground);">Insumos que necesitan reposición según inventario</p>
+            </div>
+            <div id="fechaActual" class="date-badge"></div>
+        </header>
+
+        <main class="main-content">
+            <div class="summary-cards">
+                <div class="card summary-card">
+                    <span class="card-icon">📦</span>
+                    <div class="card-info">
+                        <span class="card-label">Por comprar</span>
+                        <h2 id="totalPorComprar">0</h2>
+                    </div>
+                </div>
+                <div class="card summary-card destructive">
+                    <span class="card-icon">⚠️</span>
+                    <div class="card-info">
+                        <span class="card-label">Críticos</span>
+                        <h2 id="totalCriticos">0</h2>
+                    </div>
+                </div>
+                <div class="card summary-card warning">
+                    <span class="card-icon">📉</span>
+                    <div class="card-info">
+                        <span class="card-label">Bajos</span>
+                        <h2 id="totalBajos">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-bar card">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="busquedaInsumo" placeholder="Buscar insumo...">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="todos">Todos</button>
+                    <button class="filter-btn" data-filter="critico">Críticos</button>
+                    <button class="filter-btn" data-filter="bajo">Bajos</button>
+                </div>
+            </div>
+
+            <div class="table-container card">
+                <table id="tablaQueComprar">
+                    <thead>
+                        <tr>
+                            <th>Insumo</th>
+                            <th>Categoría</th>
+                            <th>Stock Actual</th>
+                            <th>Mínimo</th>
+                            <th>Sugerido</th>
+                            <th>Costo Est.</th>
+                            <th>Proveedor</th>
+                            <th>Ubicación</th>
+                            <th>Últ. Ingreso</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaQueComprar">
+                        <!-- Cargado por JS -->
+                    </tbody>
+                </table>
+                <div id="mensajeVacio" class="empty-state" style="display: none;">
+                    <div class="empty-icon">✅</div>
+                    <p>No hay insumos que requieran reposición</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../supabase-config.js"></script>
+    <script src="../almacen-db.js"></script>
+    <script src="../scripts/dalia-widget.js"></script>
+    <script src="que-comprar.js"></script>
+</body>
+</html>

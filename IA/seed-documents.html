@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>DallIA — Cargar documentos de inventario</title>
+  <style>
+    body { font-family: monospace; background: #0f0f0f; color: #e0e0e0; padding: 24px; max-width: 800px; margin: 0 auto; }
+    h1 { color: #f07c2a; font-size: 18px; }
+    #log { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; height: 400px; overflow-y: auto; font-size: 13px; line-height: 1.8; }
+    .ok  { color: #4ade80; }
+    .err { color: #f87171; }
+    .inf { color: #60a5fa; }
+    .warn{ color: #fbbf24; }
+    button { background: #f07c2a; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 16px; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    #progress { margin-top: 12px; font-size: 13px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>🌱 DallIA — Seed de documentos de inventario</h1>
+  <p style="color:#9ca3af; font-size:13px;">
+    Este script convierte el inventario, proveedores y categorías en documentos de texto,
+    genera embeddings con Gemini y los carga en Supabase.
+  </p>
+  <button id="btnStart">Iniciar carga</button>
+  <div id="progress"></div>
+  <div id="log"></div>
+
+  <!-- Cargar config de Supabase -->
+  <script src="./config.js"></script>
+  <script>
+    // ── Configuración ──────────────────────────────────────────────────────────
+    const EMBEDDING_ENDPOINT = "/api/ai-embedding";
+
+    function getSupabaseConfig() {
+      const cfg = window.MIREST_CONFIG || {};
+      return {
+        url: cfg.supabaseUrl || cfg.SUPABASE_URL || "",
+        key: cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || "",
+      };
+    }
+
+    // ── Logger ─────────────────────────────────────────────────────────────────
+    const logEl = document.getElementById("log");
+    const progressEl = document.getElementById("progress");
+
+    function log(msg, type = "inf") {
+      const line = document.createElement("div");
+      line.className = type;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function setProgress(current, total) {
+      progressEl.textContent = `Progreso: ${current} / ${total}`;
+    }
+
+    // ── Construir documentos desde el inventario ───────────────────────────────
+    function buildDocuments() {
+      const inventario = JSON.parse(localStorage.getItem("inventario_mirest")) || [];
+      const proveedores = JSON.parse(localStorage.getItem("inventario_mirest_proveedores")) || [];
+      const docs = [];
+
+      // 1. Un documento por insumo del inventario
+      for (const item of inventario) {
+        const estadoTexto = item.estado === "critico" ? "CRÍTICO (bajo mínimo)"
+          : item.estado === "bajo" ? "BAJO (cerca del mínimo)"
+          : "OK";
+
+        const content =
+          `Insumo: ${item.nombre} (código ${item.codigo})\n` +
+          `Categoría: ${item.categoria}\n` +
+          `Ubicación en almacén: ${item.ubicacion}\n` +
+          `Stock actual: ${item.stockActual} ${item.unidad}\n` +
+          `Stock mínimo: ${item.stockMinimo} ${item.unidad}\n` +
+          `Costo unitario: S/ ${item.costoUnitario}\n` +
+          `Costo total en stock: S/ ${(item.stockActual * item.costoUnitario).toFixed(2)}\n` +
+          `Estado de stock: ${estadoTexto}\n` +
+          `Último ingreso: ${item.ultimoIngreso || "sin registro"}`;
+
+        docs.push({
+          content,
+          metadata: { source: "inventario", codigo: item.codigo, nombre: item.nombre },
+        });
+      }
+
+      // 2. Un documento resumen por categoría
+      const categorias = [...new Set(inventario.map(i => i.categoria))];
+      for (const cat of categorias) {
+        const items = inventario.filter(i => i.categoria === cat);
+        const criticos = items.filter(i => i.estado === "critico").map(i => i.nombre);
+        const content =
+          `Categoría de inventario: ${cat}\n` +
+          `Total de insumos en esta categoría: ${items.length}\n` +
+          `Insumos: ${items.map(i => `${i.nombre} (${i.stockActual} ${i.unidad})`).join(", ")}\n` +
+          (criticos.length ? `⚠️ Insumos con stock crítico: ${criticos.join(", ")}` : "Todos los insumos tienen stock adecuado.");
+
+        docs.push({
+          content,
+          metadata: { source: "categoria-inventario", categoria: cat },
+        });
+      }
+
+      // 3. Un documento por proveedor
+      for (const p of proveedores) {
+        const cats = Array.isArray(p.categoria) ? p.categoria.join(", ") : (p.categoria || "sin categoría");
+        const dir = typeof p.ubicacion === "object" ? p.ubicacion.direccion : (p.ubicacion || "sin dirección");
+        const content =
+          `Proveedor: ${p.nombre}\n` +
+          `RUC: ${p.ruc || "no registrado"}\n` +
+          `Teléfono: ${p.telefono || "no registrado"}\n` +
+          `Categorías que suministra: ${cats}\n` +
+          `Dirección: ${dir}\n` +
+          `Días de crédito: ${p.diasCredito || 0} días\n` +
+          `Estado: ${p.estado || "Activo"}\n` +
+          `Último ingreso registrado: ${p.ultimoIngreso || "sin registro"}`;
+
+        docs.push({
+          content,
+          metadata: { source: "proveedores", nombre: p.nombre, ruc: p.ruc },
+        });
+      }
+
+      return docs;
+    }
+
+    // ── Obtener embedding ──────────────────────────────────────────────────────
+    async function getEmbedding(text) {
+      const resp = await fetch(EMBEDDING_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!resp.ok) throw new Error(`Embedding error: ${resp.status}`);
+      const data = await resp.json();
+      return data.embedding;
+    }
+
+    // ── Insertar en Supabase ───────────────────────────────────────────────────
+    async function insertDocument(supabaseUrl, supabaseKey, content, embedding, metadata) {
+      const resp = await fetch(`${supabaseUrl}/rest/v1/documents`, {
+        method: "POST",
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ content, embedding, metadata }),
+      });
+      if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`Supabase insert error ${resp.status}: ${err}`);
+      }
+    }
+
+    // ── Limpiar documentos existentes ──────────────────────────────────────────
+    async function clearDocuments(supabaseUrl, supabaseKey) {
+      const resp = await fetch(`${supabaseUrl}/rest/v1/documents?id=neq.00000000-0000-0000-0000-000000000000`, {
+        method: "DELETE",
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      });
+      if (!resp.ok) throw new Error(`Error al limpiar documentos: ${resp.status}`);
+    }
+
+    // ── Main ───────────────────────────────────────────────────────────────────
+    document.getElementById("btnStart").addEventListener("click", async () => {
+      const btn = document.getElementById("btnStart");
+      btn.disabled = true;
+      logEl.innerHTML = "";
+
+      const { url: supabaseUrl, key: supabaseKey } = getSupabaseConfig();
+
+      if (!supabaseUrl || !supabaseKey) {
+        log("❌ SUPABASE_URL o SUPABASE_ANON_KEY no están configuradas en IA/config.js", "err");
+        btn.disabled = false;
+        return;
+      }
+
+      log(`Supabase URL: ${supabaseUrl}`, "inf");
+      log("Construyendo documentos desde localStorage...", "inf");
+
+      const docs = buildDocuments();
+      log(`Total de documentos a cargar: ${docs.length}`, "inf");
+
+      if (docs.length === 0) {
+        log("⚠️ No se encontraron datos en localStorage. Abre primero el módulo de Almacén para que se carguen los datos base.", "warn");
+        btn.disabled = false;
+        return;
+      }
+
+      // Limpiar documentos anteriores
+      try {
+        log("Limpiando documentos anteriores en Supabase...", "inf");
+        await clearDocuments(supabaseUrl, supabaseKey);
+        log("✓ Documentos anteriores eliminados", "ok");
+      } catch (e) {
+        log(`⚠️ No se pudo limpiar: ${e.message} (continuando de todas formas)`, "warn");
+      }
+
+      let ok = 0;
+      let errors = 0;
+
+      for (let i = 0; i < docs.length; i++) {
+        const doc = docs[i];
+        setProgress(i + 1, docs.length);
+
+        try {
+          log(`[${i + 1}/${docs.length}] Generando embedding: ${doc.metadata.nombre || doc.metadata.categoria || doc.metadata.source}...`, "inf");
+          const embedding = await getEmbedding(doc.content);
+
+          log(`  → Insertando en Supabase...`, "inf");
+          await insertDocument(supabaseUrl, supabaseKey, doc.content, embedding, doc.metadata);
+
+          log(`  ✓ OK`, "ok");
+          ok++;
+
+          // Pequeña pausa para no saturar la API
+          await new Promise(r => setTimeout(r, 300));
+        } catch (e) {
+          log(`  ✗ Error: ${e.message}`, "err");
+          errors++;
+        }
+      }
+
+      log("─────────────────────────────────────────", "inf");
+      log(`✅ Carga completada: ${ok} documentos insertados, ${errors} errores.`, ok > 0 ? "ok" : "err");
+      if (ok > 0) {
+        log("DallIA ahora conoce el inventario del restaurante 🎉", "ok");
+      }
+
+      btn.disabled = false;
+      setProgress(docs.length, docs.length);
+    });
+  </script>
+</body>
+</html>

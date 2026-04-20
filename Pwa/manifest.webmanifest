@@ -1,0 +1,40 @@
+{
+  "name": "MiRest con IA",
+  "short_name": "MiRest",
+  "description": "Dashboard administrativo y módulos operativos para restaurante.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1324",
+  "theme_color": "#f07c2a",
+  "icons": [
+    {
+      "src": "/IA/DalIA.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedidos",
+      "short_name": "Pedidos",
+      "url": "/Pedidos/implementacion/pedidos.html"
+    },
+    {
+      "name": "Almacén",
+      "short_name": "Almacén",
+      "url": "/Almacen/almacen.html"
+    },
+    {
+      "name": "Clientes",
+      "short_name": "Clientes",
+      "url": "/Clientes/clientes.html"
+    },
+    {
+      "name": "Recetas",
+      "short_name": "Recetas",
+      "url": "/Recetas/recetas.html"
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>MiRest con IA · Pedidos</title>
+    <meta name="description" content="Módulo Pedidos de MiRest con IA para salón, delivery y para llevar con enfoque operativo unificado." />
+    <meta name="theme-color" content="#de5a25" />
+    <script>
+      document.documentElement.classList.add("js");
+      document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="../../Pwa/manifest.webmanifest" />
+    
+    <link rel="stylesheet" href="./styles.css" />
+    
+    <link rel="stylesheet" href="../../styles/tokens.css" />
+    <link rel="stylesheet" href="../../styles/base.css" />
+    <link rel="stylesheet" href="../../styles/layout.css" />
+    <link rel="stylesheet" href="../../styles/components.css" />
+    <link rel="stylesheet" href="../../styles/dashboard.css" />
+    <link rel="stylesheet" href="../../styles/premium-modules.css" />
+    <style>
+      @media (min-width: 1181px) {
+        body[data-page-type="module"] #appSidebar {
+          transform: none;
+          width: auto;
+          position: sticky;
+          inset: auto;
+          height: auto;
+          min-height: 100vh;
+        }
+
+        body[data-page-type="module"] .app-shell {
+          grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+        }
+
+        body[data-page-type="module"] .page-content {
+          padding: var(--space-5);
+          gap: var(--space-5);
+        }
+
+        body[data-page-type="module"] .breadcrumb {
+          padding: 0;
+        }
+
+        body[data-page-type="module"] #summaryStats {
+          padding: 0;
+        }
+      }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+    <body data-theme="light" data-mode="salon" data-module="pedidos" data-root-path="../../" data-page-type="module" data-module-key="pedidos">
+        <div class="app-shell" id="appShell">
+            <aside class="sidebar" id="appSidebar" aria-label="Navegación principal">
+                <div class="sidebar__brand">
+                  <div class="brand-mark" aria-hidden="true">IA</div>
+                  <div class="brand-copy">
+                    <span class="brand-copy__eyebrow">MiRest</span>
+                    <strong>MiRest con IA</strong>
+                    <span>Dashboard administrativo</span>
+                  </div>
+                </div>
+
+                <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal"></nav>
+
+                <div class="sidebar__footer card card--sidebar">
+                  <span class="sidebar__footer-label" id="moduleStatusLabel">Módulo activo</span>
+                  <strong id="moduleTitleDisplay">Pedidos</strong>
+                  <p id="moduleDescriptionDisplay">Gestión de atención y ventas.</p>
+                </div>
+            </aside>
+
+        <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Cerrar navegación"></button>
+
+        <div class="app-main">
+            <header class="topbar">
+                <div class="topbar__lead">
+                    <button class="icon-button topbar__menu-toggle mobile-only" id="sidebarToggle" type="button" aria-label="Abrir navegación lateral" aria-controls="appSidebar" aria-expanded="false">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <!-- Este es el ID usado en app.js pero le daremos display none para no romper la UI local -->
+                    <button type="button" class="icon-button icon-button--ghost mobile-only" id="mobileSidebarToggle" style="display:none;"></button>
+                    <div class="topbar__copy">
+                        <span class="eyebrow" id="topbarEyebrow">Operación</span>
+                        <h1 id="topbarTitle">Pedidos</h1>
+                    </div>
+                </div>
+
+                <div class="topbar__center" id="modeSwitcher"></div>
+
+                <div class="topbar__actions">
+                    <span class="chip chip--soft" id="pageContextChip">PD</span>
+                    <label class="theme-toggle" for="themeToggleLocal" aria-label="Alternar modo oscuro" style="display:none;">
+                        <input id="themeToggleLocal" type="checkbox" />
+                    </label>
+                    <div class="avatar" id="pageAvatar" aria-label="Iniciales del módulo">DA</div>
+                </div>
+            </header>
+
+            <main class="page-content">
+                <nav class="breadcrumb" aria-label="Breadcrumb" style="padding: 1rem 1.5rem 0;">
+                    <a href="../../index.html" id="breadcrumbHome">Dashboard</a>
+                    <span>/</span>
+                    <span id="moduleBreadcrumbCurrent">Pedidos</span>
+                </nav>
+
+                <section id="modeHero"></section>
+                <section class="mod-metrics-grid" id="summaryStats" style="padding: 0 1.5rem;" aria-label="Resumen del módulo Pedidos"></section>
+
+                <section class="workspace-layout" id="workspaceLayout" data-mode="salon">
+                    <div class="workspace-main">
+                        <section class="card-surface workspace-card">
+                            <header class="workspace-card__header" id="workspaceHeader"></header>
+                            <div id="workspaceToolbar"></div>
+                            <div class="workspace-region" id="workspaceContent" aria-live="polite"></div>
+                        </section>
+                    </div>
+
+                    <aside class="management-panel card-surface" id="managementPanel" aria-label="Panel contextual"></aside>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="modalRoot"></div>
+    <div id="drawerRoot"></div>
+    <div id="onboardingRoot"></div>
+    <div id="toastRoot" class="toast-stack" aria-live="assertive" aria-atomic="true"></div>
+
+    <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
+        <i data-lucide="moon"></i>
+    </button>
+
+    <script type="module" src="../../scripts/app.js"></script>
+    <script type="module" src="./app.js"></script>
+</body>
+
+</html>

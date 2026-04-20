@@ -49,15 +49,17 @@ export function normalizeAccessRequestPayload(payload) {
 }
 
 export async function submitAccessRequest(payload) {
+  // Nota: no usamos .select() aquí porque la RLS de access_requests sólo permite
+  // SELECT al superadmin autenticado. El insert público está permitido, pero
+  // leer la fila recién creada desde el cliente anónimo fallaría con 401.
+  const normalized = normalizeAccessRequestPayload(payload);
   const insertResult = await supabase
     .from("access_requests")
-    .insert(normalizeAccessRequestPayload(payload))
-    .select("id")
-    .single();
+    .insert(normalized);
 
-  if (!insertResult.error && insertResult.data?.id) {
+  if (!insertResult.error) {
     // Notificación best-effort: confirma al solicitante + avisa al superadmin.
-    // Si falla el envío de correo no rompemos el alta de la solicitud.
+    // La Edge Function resuelve el id a partir del email (con service role).
     try {
       await fetch(`${supabaseUrl}/functions/v1/notify-access-request`, {
         method: "POST",
@@ -66,7 +68,7 @@ export async function submitAccessRequest(payload) {
           Authorization: `Bearer ${supabaseKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ type: "created", requestId: insertResult.data.id }),
+        body: JSON.stringify({ type: "created", email: normalized.email }),
       });
     } catch (err) {
       console.warn("No se pudo enviar la notificación de solicitud recibida:", err);

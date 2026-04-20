@@ -7,7 +7,7 @@ import {
   listAccessRequests,
   notifyAccessRequestEvent,
   updateAccessRequest,
-} from "../scripts/access-requests.js?v=20260420-resend1";
+} from "../scripts/access-requests.js?v=20260420-rls401fix";
 import {
   deleteUser,
   listUsers,

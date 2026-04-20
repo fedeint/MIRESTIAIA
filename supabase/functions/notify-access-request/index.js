@@ -54,12 +54,13 @@ Deno.serve(async (request) => {
 
   const type = body?.type;
   const requestId = body?.requestId;
+  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : null;
 
   if (!type || (!PUBLIC_TYPES.has(type) && !SUPERADMIN_TYPES.has(type))) {
     return jsonResponse({ message: "Tipo de notificación no soportado" }, 400);
   }
-  if (!requestId) {
-    return jsonResponse({ message: "Falta requestId" }, 400);
+  if (!requestId && !email) {
+    return jsonResponse({ message: "Falta requestId o email" }, 400);
   }
 
   if (SUPERADMIN_TYPES.has(type)) {
@@ -83,11 +84,20 @@ Deno.serve(async (request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: accessRequest, error } = await adminClient
-    .from("access_requests")
-    .select("*")
-    .eq("id", requestId)
-    .single();
+  // Resolvemos la solicitud por id (cuando lo tenemos) o por email (caso "created"
+  // disparado desde el cliente anónimo, que no puede leer la tabla por RLS).
+  let accessRequestQuery = adminClient.from("access_requests").select("*");
+  if (requestId) {
+    accessRequestQuery = accessRequestQuery.eq("id", requestId).single();
+  } else {
+    accessRequestQuery = accessRequestQuery
+      .eq("email", email)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  }
+
+  const { data: accessRequest, error } = await accessRequestQuery;
 
   if (error || !accessRequest) {
     return jsonResponse({ message: "No se encontró la solicitud" }, 404);

@@ -35,7 +35,7 @@ Deno.serve(async (request) => {
     return jsonResponse({ message: "Configuración incompleta de Supabase" }, 500);
   }
 
-  if (!authHeader) {
+  if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
     return jsonResponse({ message: "Falta encabezado de autorización" }, 401);
   }
 
@@ -51,12 +51,29 @@ Deno.serve(async (request) => {
   } = await sessionClient.auth.getUser();
 
   if (sessionError || !user) {
-    return jsonResponse({ message: "Sesión inválida o expirada" }, 401);
+    return jsonResponse(
+      { message: "Sesión inválida o expirada", detail: sessionError?.message ?? null },
+      401,
+    );
   }
 
-  const { requestId, role, action = "approve" } = await request.json();
+  let body: { requestId?: string; role?: string; action?: string } | null = null;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ message: "Cuerpo JSON inválido" }, 400);
+  }
+
+  const requestId = body?.requestId;
+  const role = body?.role;
+  const action = body?.action ?? "approve";
+
   if (!requestId || !role) {
     return jsonResponse({ message: "Faltan requestId o role" }, 400);
+  }
+
+  if (action !== "approve" && action !== "resend") {
+    return jsonResponse({ message: "Acción no permitida" }, 400);
   }
 
   const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -76,12 +93,11 @@ Deno.serve(async (request) => {
     return jsonResponse({ message: "No se encontró la solicitud de acceso" }, 404);
   }
 
-  if (action !== "approve" && action !== "resend") {
-    return jsonResponse({ message: "Acción no permitida" }, 400);
-  }
-
   if (action === "approve" && accessRequest.status === "approved") {
-    return jsonResponse({ message: "La solicitud ya fue aprobada. Usa reenvío si necesitas reenviar la activación." }, 409);
+    return jsonResponse(
+      { message: "La solicitud ya fue aprobada. Usa reenvío si necesitas reenviar la activación." },
+      409,
+    );
   }
 
   const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(accessRequest.email, {

@@ -16,6 +16,11 @@ function jsonResponse(body, status = 200) {
   });
 }
 
+function isSuperadmin(user) {
+  const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : undefined;
+  return role === "superadmin";
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -53,6 +58,13 @@ Deno.serve(async (request) => {
     return jsonResponse(
       { message: "Sesión inválida o expirada", detail: sessionError?.message ?? null },
       401,
+    );
+  }
+
+  if (!isSuperadmin(user)) {
+    return jsonResponse(
+      { message: "Solo el superadmin puede aprobar o reenviar activaciones." },
+      403,
     );
   }
 

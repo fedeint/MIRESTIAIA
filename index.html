@@ -17,12 +17,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" rel="stylesheet" />
     <link rel="manifest" href="./Pwa/manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles/tokens.css" />
-    <link rel="stylesheet" href="./styles/base.css" />
-    <link rel="stylesheet" href="./styles/layout.css" />
-    <link rel="stylesheet" href="./styles/components.css" />
-    <link rel="stylesheet" href="./styles/dashboard.css" />
-    <link rel="stylesheet" href="./styles/premium-modules.css" />
+    <link rel="stylesheet" href="./styles/tokens.css?v=20260420-dashv2" />
+    <link rel="stylesheet" href="./styles/base.css?v=20260420-dashv2" />
+    <link rel="stylesheet" href="./styles/layout.css?v=20260420-dashv2" />
+    <link rel="stylesheet" href="./styles/components.css?v=20260420-dashv2" />
+    <link rel="stylesheet" href="./styles/dashboard.css?v=20260420-dashv2" />
+    <link rel="stylesheet" href="./styles/premium-modules.css?v=20260420-dashv2" />
+    <link rel="stylesheet" href="./styles/mobile.css?v=20260420-mobilev1" />
     <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body data-root-path="./" data-page-type="dashboard" data-module-key="dashboard" data-theme="light">
@@ -110,28 +111,49 @@
             </section>
 
             <aside class="dashboard__aside">
-              <section class="info-panel card">
+              <section class="info-panel info-panel--ops card">
                 <div class="panel-heading">
-                  <h3>Hoy en tu restaurante</h3>
-                  <span class="chip chip--soft">En vivo</span>
+                  <div>
+                    <span class="eyebrow">Operación actual</span>
+                    <h3>Hoy en tu restaurante</h3>
+                  </div>
+                  <span class="live-chip">
+                    <span class="live-chip__dot"></span>
+                    En vivo
+                  </span>
                 </div>
-                <div id="systemHighlights" class="stack"></div>
+                <div id="systemHighlights" class="ops-grid"></div>
               </section>
 
-              <section class="info-panel card">
+              <section class="info-panel info-panel--dalia card">
                 <div class="panel-heading">
-                  <h3>DalIA dice</h3>
+                  <div class="dalia-heading">
+                    <span class="dalia-heading__avatar" aria-hidden="true">
+                      <i data-lucide="sparkles"></i>
+                    </span>
+                    <div>
+                      <span class="eyebrow">Asistente IA</span>
+                      <h3>DalIA dice</h3>
+                    </div>
+                  </div>
                   <span class="chip chip--soft">Consejos</span>
                 </div>
                 <ul id="insightsList" class="insight-list"></ul>
+                <a class="btn btn--secondary dalia-cta" href="./IA/ia.html">
+                  <i data-lucide="message-circle"></i>
+                  Preguntar a DalIA
+                </a>
               </section>
 
-              <section class="info-panel card">
+              <section class="info-panel info-panel--checklist card">
                 <div class="panel-heading">
-                  <h3>Próximas acciones</h3>
-                  <span class="chip chip--soft">Tu turno</span>
+                  <div>
+                    <span class="eyebrow">Tu turno</span>
+                    <h3>Próximas acciones</h3>
+                  </div>
                 </div>
-                <ul id="operationalChecklist" class="check-list"></ul>
+                <div id="checklistProgress" class="checklist-progress"></div>
+                <ul id="operationalChecklist" class="action-list"></ul>
               </section>
             </aside>
           </div>
@@ -147,7 +169,7 @@
       <i data-lucide="moon"></i>
     </button>
 
-    <script type="module" src="./scripts/app.js"></script>
-    <script src="./scripts/dalia-widget.js"></script>
+    <script type="module" src="./scripts/app.js?v=20260420-dashv2"></script>
+    <script src="./scripts/dalia-widget.js?v=20260420-dashv2"></script>
   </body>
 </html>

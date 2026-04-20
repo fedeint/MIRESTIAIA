@@ -6,19 +6,19 @@ import {
   getStatusLabel,
   listAccessRequests,
   updateAccessRequest,
-} from "../scripts/access-requests.js?v=20260420-perms1";
+} from "../scripts/access-requests.js?v=20260420-perms5";
 import {
   deleteUser,
   listUsers,
   restoreUser,
   revokeUser,
   updateUserPermissions,
-} from "../scripts/user-access.js?v=20260420-perms1";
+} from "../scripts/user-access.js?v=20260420-perms5";
 import {
   getAssignableModules,
   getRoleLabel,
   ROLE_PERMISSIONS,
-} from "../scripts/navigation.js?v=20260420-perms1";
+} from "../scripts/navigation.js?v=20260420-perms5";
 
 const tableBody = document.getElementById("requestsTableBody");
 const feedback = document.getElementById("requestFeedback");
@@ -150,65 +150,97 @@ function readPermissions(contextId) {
     .map((el) => el.value);
 }
 
+function summarizeRequestPermissions(request) {
+  const role = request.approved_role || "admin";
+  const perms = Array.isArray(request.approved_permissions) && request.approved_permissions.length > 0
+    ? request.approved_permissions
+    : permissionsForRole(role);
+
+  if (role === "admin" || role === "superadmin") {
+    return "Todos los módulos";
+  }
+  if (!perms.length) return "Sin módulos asignados";
+  if (perms.length <= 3) {
+    return perms
+      .map((key) => ASSIGNABLE_MODULES.find((m) => m.key === key)?.label || key)
+      .join(", ");
+  }
+  return `${perms.length} módulos habilitados`;
+}
+
+function getInitials(name) {
+  if (!name) return "?";
+  const words = String(name).trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
 function buildRow(request) {
-  const applicant = escapeHtml(request.full_name);
+  const applicant = escapeHtml(request.full_name || "Sin nombre");
+  const initials = escapeHtml(getInitials(request.full_name));
   const email = escapeHtml(request.email);
-  const phone = request.phone ? `<small>${escapeHtml(request.phone)}</small>` : "";
+  const phone = request.phone ? escapeHtml(request.phone) : "";
   const businessCount = request.business_count === 1 ? "1 negocio" : `${request.business_count} negocios`;
   const location = [request.city, request.country].filter(Boolean).map(escapeHtml).join(" · ");
   const businessMeta = [businessCount, location].filter(Boolean).join(" · ");
   const notes = request.notes ? `<small>${escapeHtml(request.notes)}</small>` : "<small>Sin notas registradas.</small>";
-  const roleValue = request.approved_role || "admin";
-  const selectedPerms = resolveInitialPermissions(request);
-  const contextId = request.id;
+  const roleLabel = escapeHtml(getRoleLabel(request.approved_role || "admin") || "Administrador");
+  const permsSummary = escapeHtml(summarizeRequestPermissions(request));
 
   const activationCta = request.status === ACCESS_REQUEST_STATUS.APPROVED
     ? `<button class="btn btn--secondary" type="button" onclick="window.resendActivation('${request.id}')">Reenviar activación</button>`
     : `<button class="btn btn--primary" type="button" onclick="window.approveRequest('${request.id}')">Aprobar y enviar activación</button>`;
 
-  const roleOptionsHtml = ROLE_OPTIONS.map((opt) =>
-    `<option value="${opt.value}" ${roleValue === opt.value ? "selected" : ""}>${opt.label}</option>`
-  ).join("");
-
   return `
     <tr>
-      <td>
-        <div class="request-meta">
-          <strong>${applicant}</strong>
-          <span>${email}</span>
-          ${phone}
+      <td data-label="Solicitante">
+        <div class="applicant-card">
+          <div class="applicant-avatar" aria-hidden="true">${initials}</div>
+          <div class="applicant-body">
+            <strong>${applicant}</strong>
+            <span class="applicant-body__email">${email}</span>
+            ${phone ? `<small>${phone}</small>` : ""}
+          </div>
         </div>
       </td>
-      <td>
+      <td data-label="Negocio">
         <div class="request-meta">
           <strong>${escapeHtml(request.restaurant_name)}</strong>
           <span>${escapeHtml(request.legal_owner_name || "Sin razón social")}</span>
           <small>${escapeHtml(businessMeta || "Sin ubicación registrada")}</small>
         </div>
       </td>
-      <td>
+      <td data-label="Seguimiento">
         <div class="request-meta">
           <span>Creada: ${escapeHtml(formatRequestDate(request.created_at))}</span>
           <small>${escapeHtml(request.applicant_role || "Rol no especificado")}</small>
           ${notes}
         </div>
       </td>
-      <td>
-        <div class="request-meta">
+      <td data-label="Estado">
+        <div class="request-status">
           <span class="${getStatusClass(request.status)}">${escapeHtml(getStatusLabel(request.status))}</span>
           <small>${escapeHtml(request.invite_sent_at ? `Invitación: ${formatRequestDate(request.invite_sent_at)}` : "Sin invitación enviada")}</small>
+          <div class="request-access-summary">
+            <span class="request-access-summary__label">Acceso configurado</span>
+            <strong>${roleLabel}</strong>
+            <small>${permsSummary}</small>
+          </div>
         </div>
       </td>
-      <td>
-        <div class="request-actions">
-          <select class="request-role-select" data-role-select="${contextId}">
-            ${roleOptionsHtml}
-          </select>
-          ${renderPermGrid({ contextId, selected: selectedPerms })}
-          <div class="perm-actions" style="margin-top:8px;">
+      <td data-label="Acciones">
+        <div class="request-actions--stack">
+          <button class="btn btn--primary request-actions__wide" type="button" onclick="window.configureRequestPermissions('${request.id}')">
+            <i data-lucide="shield-check" style="width:16px;height:16px;"></i>
+            Definir permisos
+          </button>
+          <div class="request-actions__row">
             <button class="btn btn--secondary" type="button" onclick="window.setRequestStatus('${request.id}', 'reviewing')">En revisión</button>
-            ${activationCta}
             <button class="btn btn--secondary" type="button" onclick="window.setRequestStatus('${request.id}', 'rejected')">Rechazar</button>
+          </div>
+          <div class="request-actions__wide">
+            ${activationCta}
           </div>
         </div>
       </td>
@@ -246,6 +278,7 @@ async function loadRequests() {
 
   accessRequests = data ?? [];
   renderTable(accessRequests);
+  if (window.lucide) window.lucide.createIcons();
   refreshBtn.disabled = false;
   isRendering = false;
 }
@@ -266,39 +299,95 @@ window.setRequestStatus = async (requestId, status) => {
   await loadRequests();
 };
 
-window.approveRequest = async (requestId) => {
-  const roleSelect = document.querySelector(`[data-role-select="${requestId}"]`);
-  const role = roleSelect?.value || "admin";
-  const permissions = readPermissions(requestId);
+async function saveRequestPermissions(requestId, role, permissions) {
+  const updates = {
+    approved_role: role,
+    approved_permissions: permissions,
+  };
 
-  if (permissions.length === 0) {
-    setFeedback("Selecciona al menos un módulo antes de aprobar.", "error");
-    return;
-  }
-
-  const { data, error } = await approveAccessRequest(requestId, role, "approve", permissions);
+  const { error } = await updateAccessRequest(requestId, updates);
   if (error) {
-    setFeedback(error.message || "No se pudo aprobar la solicitud ni enviar la activación.", "error");
-    return;
+    throw new Error("No se pudo guardar la configuración de permisos.");
   }
 
-  setFeedback(data?.message || "Solicitud aprobada. La activación fue enviada por correo.", "success");
-  await loadRequests();
+  const request = accessRequests.find((item) => item.id === requestId);
+  if (request) {
+    request.approved_role = role;
+    request.approved_permissions = permissions;
+  }
+}
+
+window.configureRequestPermissions = (requestId) => {
+  const request = accessRequests.find((item) => item.id === requestId);
+  if (!request) return;
+
+  openConfigModal({
+    title: "Configurar permisos",
+    subject: `Solicitud de ${request.full_name} · ${request.email}`,
+    initialRole: request.approved_role || "admin",
+    initialPerms: resolveInitialPermissions(request),
+    confirmLabel: "Guardar permisos",
+    onConfirm: async (role, permissions) => {
+      try {
+        await saveRequestPermissions(requestId, role, permissions);
+        setFeedback("Permisos guardados para esta solicitud.", "success");
+        await loadRequests();
+        return true;
+      } catch (error) {
+        setFeedback(error.message || "No se pudo guardar la configuración.", "error");
+        return false;
+      }
+    },
+  });
 };
 
-window.resendActivation = async (requestId) => {
-  const roleSelect = document.querySelector(`[data-role-select="${requestId}"]`);
-  const role = roleSelect?.value || "admin";
-  const permissions = readPermissions(requestId);
+window.approveRequest = (requestId) => {
+  const request = accessRequests.find((item) => item.id === requestId);
+  if (!request) return;
 
-  const { data, error } = await approveAccessRequest(requestId, role, "resend", permissions);
-  if (error) {
-    setFeedback(error.message || "No se pudo reenviar la activación.", "error");
+  const role = request.approved_role || "admin";
+  const permissions = resolveInitialPermissions(request);
+
+  if (permissions.length === 0 && role !== "admin" && role !== "superadmin") {
+    setFeedback("Primero configura los permisos de esta solicitud desde el botón Permisos.", "error");
     return;
   }
 
-  setFeedback(data?.message || "La activación fue reenviada por correo.", "success");
-  await loadRequests();
+  if (!window.confirm(`¿Aprobar la solicitud de ${request.email} con la configuración actual?`)) {
+    return;
+  }
+
+  (async () => {
+    const { data, error } = await approveAccessRequest(requestId, role, "approve", permissions);
+    if (error) {
+      setFeedback(error.message || "No se pudo aprobar la solicitud ni enviar la activación.", "error");
+      return;
+    }
+    setFeedback(data?.message || "Solicitud aprobada. La activación fue enviada por correo.", "success");
+    await loadRequests();
+  })();
+};
+
+window.resendActivation = (requestId) => {
+  const request = accessRequests.find((item) => item.id === requestId);
+  if (!request) return;
+
+  const role = request.approved_role || "admin";
+  const permissions = resolveInitialPermissions(request);
+
+  if (!window.confirm(`¿Reenviar activación a ${request.email} usando la configuración actual?`)) {
+    return;
+  }
+
+  (async () => {
+    const { data, error } = await approveAccessRequest(requestId, role, "resend", permissions);
+    if (error) {
+      setFeedback(error.message || "No se pudo reenviar la activación.", "error");
+      return;
+    }
+    setFeedback(data?.message || "La activación fue reenviada por correo.", "success");
+    await loadRequests();
+  })();
 };
 
 function isBanned(user) {
@@ -365,31 +454,31 @@ function buildUserRow(user) {
 
   return `
     <tr>
-      <td>
+      <td data-label="Usuario">
         <div class="request-meta">
           <strong>${name}</strong>
           <span>${email}</span>
           <small>Creado: ${escapeHtml(createdAt)}</small>
         </div>
       </td>
-      <td>
+      <td data-label="Rol">
         <div class="request-meta">
           <strong>${role}</strong>
           <small>${permsSummary}</small>
         </div>
       </td>
-      <td>
+      <td data-label="Último ingreso">
         <div class="request-meta">
           <span>${escapeHtml(lastSignIn)}</span>
         </div>
       </td>
-      <td>
+      <td data-label="Estado">
         <div class="request-meta">
           ${getUserStatusPill(user)}
           ${banned ? `<small>Hasta ${escapeHtml(formatRequestDate(user.banned_until))}</small>` : ""}
         </div>
       </td>
-      <td>
+      <td data-label="Acciones">
         <div class="request-actions">
           ${actions}
         </div>
@@ -481,29 +570,46 @@ window.editUserPermissions = (userId) => {
     ? user.permissions
     : permissionsForRole(initialRole);
 
-  openPermissionsModal(user, initialRole, initialPerms);
+  openConfigModal({
+    title: "Editar módulos del usuario",
+    subject: `Usuario: ${user.email}`,
+    initialRole,
+    initialPerms,
+    confirmLabel: "Guardar cambios",
+    onConfirm: async (role, permissions) => {
+      try {
+        const data = await updateUserPermissions(user.id, permissions, role);
+        setUsersFeedback(data?.message || "Módulos actualizados.", "success");
+        await loadUsers();
+        return true;
+      } catch (error) {
+        setUsersFeedback(error.message || "No pudimos actualizar los módulos.", "error");
+        return false;
+      }
+    },
+  });
 };
 
-function openPermissionsModal(user, initialRole, initialPerms) {
-  const contextId = `user-${user.id}`;
+function openConfigModal({ title, subject, initialRole, initialPerms, confirmLabel, onConfirm }) {
+  const contextId = `modal-${Date.now()}`;
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
-    <div class="modal-card" role="dialog" aria-label="Editar módulos del usuario">
-      <h3>Editar módulos</h3>
-      <p>Usuario: <strong>${escapeHtml(user.email)}</strong></p>
+    <div class="modal-card" role="dialog" aria-label="${escapeHtml(title)}">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(subject)}</p>
 
-      <label style="display:block; font-size: 12px; font-weight:700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin-bottom: 6px;">Rol principal</label>
+      <label class="modal-label">Rol principal</label>
       <select class="request-role-select" data-role-select="${contextId}" style="width:100%; max-width: 320px; margin-bottom: var(--space-4);">
         ${ROLE_OPTIONS.map((opt) => `<option value="${opt.value}" ${opt.value === initialRole ? "selected" : ""}>${opt.label}</option>`).join("")}
       </select>
 
-      <label style="display:block; font-size: 12px; font-weight:700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); margin-bottom: 6px;">Módulos habilitados</label>
+      <label class="modal-label">Módulos habilitados</label>
       ${renderPermGrid({ contextId, selected: initialPerms })}
 
       <div class="modal-actions">
         <button class="btn btn--secondary" type="button" data-modal-cancel>Cancelar</button>
-        <button class="btn btn--primary" type="button" data-modal-save>Guardar cambios</button>
+        <button class="btn btn--primary" type="button" data-modal-save>${escapeHtml(confirmLabel)}</button>
       </div>
     </div>
   `;
@@ -511,27 +617,37 @@ function openPermissionsModal(user, initialRole, initialPerms) {
   document.body.appendChild(backdrop);
 
   const close = () => backdrop.remove();
+  const saveBtn = backdrop.querySelector("[data-modal-save]");
 
   backdrop.addEventListener("click", (event) => {
     if (event.target === backdrop) close();
   });
   backdrop.querySelector("[data-modal-cancel]").addEventListener("click", close);
-  backdrop.querySelector("[data-modal-save]").addEventListener("click", async () => {
+  saveBtn.addEventListener("click", async () => {
     const role = backdrop.querySelector(`[data-role-select="${contextId}"]`).value;
     const permissions = readPermissions(contextId);
 
     if (permissions.length === 0 && role !== "admin" && role !== "superadmin") {
       setUsersFeedback("Selecciona al menos un módulo o cambia el rol a Administrador.", "error");
+      setFeedback("Selecciona al menos un módulo o cambia el rol a Administrador.", "error");
       return;
     }
 
-    try {
-      const data = await updateUserPermissions(user.id, permissions, role);
-      setUsersFeedback(data?.message || "Módulos actualizados.", "success");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Procesando…";
+    const ok = await onConfirm(role, permissions);
+    if (ok) {
       close();
-      await loadUsers();
-    } catch (error) {
-      setUsersFeedback(error.message || "No pudimos actualizar los módulos.", "error");
+    } else {
+      saveBtn.disabled = false;
+      saveBtn.textContent = confirmLabel;
+    }
+  });
+
+  document.addEventListener("keydown", function escHandler(event) {
+    if (event.key === "Escape") {
+      close();
+      document.removeEventListener("keydown", escHandler);
     }
   });
 }

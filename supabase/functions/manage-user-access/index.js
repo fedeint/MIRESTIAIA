@@ -16,10 +16,9 @@ function jsonResponse(body, status = 200) {
   });
 }
 
-function isAdmin(user) {
+function isSuperadmin(user) {
   const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : undefined;
-  if (role === "admin" || role === "superadmin") return true;
-  return false;
+  return role === "superadmin";
 }
 
 Deno.serve(async (request) => {
@@ -60,9 +59,9 @@ Deno.serve(async (request) => {
     );
   }
 
-  if (!isAdmin(user)) {
+  if (!isSuperadmin(user)) {
     return jsonResponse(
-      { message: "No tienes permisos de administrador para gestionar accesos." },
+      { message: "Solo el superadmin puede gestionar accesos." },
       403,
     );
   }

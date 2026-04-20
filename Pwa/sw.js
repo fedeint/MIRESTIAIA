@@ -1,4 +1,4 @@
-const CACHE_VERSION = "mirest-pwa-v5";
+const CACHE_VERSION = "mirest-pwa-v8";
 
 const CORE_ASSETS = [
   "/",
@@ -9,6 +9,7 @@ const CORE_ASSETS = [
   "/styles/components.css",
   "/styles/dashboard.css",
   "/styles/premium-modules.css",
+  "/styles/mobile.css",
   "/scripts/app.js",
   "/scripts/navigation.js",
   "/Pwa/manifest.webmanifest",

@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="../styles/layout.css?v=20260420-accessfix" />
     <link rel="stylesheet" href="../styles/components.css?v=20260420-accessfix" />
     <link rel="stylesheet" href="../styles/dashboard.css?v=20260420-accessfix" />
+    <link rel="stylesheet" href="../styles/mobile.css?v=20260420-mobilev1" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
       .accesos-header {
@@ -85,6 +86,23 @@
         width: 100%;
         border-collapse: collapse;
       }
+      .users-table--requests {
+        min-width: 960px;
+      }
+      .users-table--requests th:nth-child(1),
+      .users-table--requests td:nth-child(1) { width: 24%; min-width: 220px; vertical-align: top; }
+      .users-table--requests th:nth-child(2),
+      .users-table--requests td:nth-child(2) { width: 18%; vertical-align: top; }
+      .users-table--requests th:nth-child(3),
+      .users-table--requests td:nth-child(3) { width: 16%; vertical-align: top; }
+      .users-table--requests th:nth-child(4),
+      .users-table--requests td:nth-child(4) { width: 18%; vertical-align: top; }
+      .users-table--requests th:nth-child(5),
+      .users-table--requests td:nth-child(5) {
+        width: 24%;
+        min-width: 240px;
+        vertical-align: top;
+      }
       .users-table th, .users-table td {
         padding: var(--space-4);
         text-align: left;
@@ -141,10 +159,100 @@
         color: var(--color-text-muted);
         line-height: 1.5;
       }
+      .applicant-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .applicant-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(240, 124, 42, 0.2), rgba(240, 124, 42, 0.08));
+        color: var(--color-accent);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+        border: 1px solid rgba(240, 124, 42, 0.25);
+      }
+      body[data-theme="dark"] .applicant-avatar {
+        background: linear-gradient(135deg, rgba(240, 124, 42, 0.28), rgba(240, 124, 42, 0.12));
+      }
+      .applicant-body {
+        display: grid;
+        gap: 3px;
+        min-width: 0;
+      }
+      .applicant-body strong {
+        font-size: 15px;
+        line-height: 1.25;
+      }
+      .applicant-body__email {
+        font-size: 13px;
+        color: var(--color-text-muted);
+        word-break: break-all;
+        line-height: 1.4;
+      }
+      .applicant-body small {
+        color: var(--color-text-muted);
+        font-size: 12px;
+      }
       .request-actions {
         display: flex;
         flex-wrap: wrap;
         gap: var(--space-2);
+      }
+      .request-actions--stack {
+        display: grid;
+        gap: 10px;
+        min-width: 210px;
+      }
+      .request-actions--stack .btn {
+        width: 100%;
+        justify-content: center;
+        gap: 6px;
+      }
+      .request-actions__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .request-actions__wide {
+        display: block;
+      }
+      .request-status {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+      .request-access-summary {
+        display: grid;
+        gap: 4px;
+        padding: 12px 14px;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.58);
+      }
+      .request-access-summary__label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-text-muted);
+      }
+      .request-access-summary strong {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+      .request-access-summary small {
+        color: var(--color-text-muted);
+      }
+      body[data-theme="dark"] .request-access-summary {
+        background: rgba(10, 15, 29, 0.52);
       }
       .request-role-select {
         height: 40px;
@@ -241,6 +349,15 @@
       .modal-card h3 { margin: 0 0 6px; }
       .modal-card p { color: var(--color-text-muted); font-size: 14px; margin: 0 0 var(--space-4); }
       .modal-card .perm-grid { max-width: none; }
+      .modal-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--color-text-muted);
+        margin-bottom: 6px;
+      }
       .modal-actions {
         display: flex;
         gap: var(--space-2);
@@ -329,7 +446,7 @@
           <div id="requestFeedback" class="request-feedback" style="display: none;"></div>
 
           <div class="users-table-container">
-            <table class="users-table">
+            <table class="users-table users-table--requests">
               <thead>
                 <tr>
                   <th>Solicitante</th>
@@ -381,7 +498,7 @@
       <i data-lucide="moon"></i>
     </button>
 
-    <script type="module" src="../scripts/app.js?v=20260420-perms1"></script>
-    <script type="module" src="./accesos.js?v=20260420-perms1"></script>
+    <script type="module" src="../scripts/app.js?v=20260420-mobilev1"></script>
+    <script type="module" src="./accesos.js?v=20260420-mobilev1"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ import {
   getRoleLabel,
   initializeThemeToggle,
   isDemoRole,
+  isSuperadminRole,
   renderSidebar,
   resolveUserPermissions,
   resolveUserRole,
@@ -41,6 +42,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const userRole = resolveUserRole(user);
   const userPermissions = resolveUserPermissions(user, userRole);
   const profile = buildUserProfile(user, userRole, userPermissions);
+
+  if (activeKey === "accesos" && !isSuperadminRole(userRole)) {
+    window.location.href = rootPath ? `${rootPath}/index.html` : "index.html";
+    return;
+  }
+
   window.currentUserRole = userRole;
   window.currentUserPermissions = userPermissions;
   window.currentUserProfile = profile;

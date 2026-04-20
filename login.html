@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f07c2a" />
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=20260420-loginfix" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=20260420-loginfix2" />
   <title>Login | MiRest con IA</title>
 
   <script>
@@ -19,10 +19,11 @@
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="./styles/tokens.css?v=20260420-loginfix" />
-  <link rel="stylesheet" href="./styles/base.css?v=20260420-loginfix" />
-  <link rel="stylesheet" href="./styles/components.css?v=20260420-loginfix" />
-  <link rel="stylesheet" href="./styles/login.css?v=20260420-loginfix" />
+  <link rel="stylesheet" href="./styles/tokens.css?v=20260420-loginfix2" />
+  <link rel="stylesheet" href="./styles/base.css?v=20260420-loginfix2" />
+  <link rel="stylesheet" href="./styles/components.css?v=20260420-loginfix2" />
+  <link rel="stylesheet" href="./styles/login.css?v=20260420-loginfix2" />
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260420-mobilev1" />
 
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -336,9 +337,9 @@
   </div>
 
   <script type="module">
-    import { supabase } from './scripts/supabase.js?v=20260420-loginfix';
-    import { submitAccessRequest } from './scripts/access-requests.js?v=20260420-loginfix';
-    import { initializeThemeToggle } from './scripts/navigation.js?v=20260420-loginfix';
+    import { supabase } from './scripts/supabase.js?v=20260420-loginfix2';
+    import { submitAccessRequest } from './scripts/access-requests.js?v=20260420-loginfix2';
+    import { initializeThemeToggle } from './scripts/navigation.js?v=20260420-loginfix2';
 
     document.addEventListener("DOMContentLoaded", async () => {
       // CRÍTICO: Activa la visibilidad del body si el CSS lo oculta inicialmente
@@ -571,7 +572,7 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim().toLowerCase();
         const password = document.getElementById('password').value;
 
         submitBtn.disabled = true;
@@ -585,6 +586,7 @@
         });
 
         if (error) {
+          console.error('[Login] Error de autenticación:', error.message);
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<i data-lucide="log-in"></i> Ingresar al Sistema';
           window.lucide.createIcons();

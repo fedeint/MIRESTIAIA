@@ -205,6 +205,10 @@ export const NAV_ITEMS = [
   ...MODULES,
 ];
 
+const ADMIN_MODULE_KEYS = MODULES
+  .filter((item) => item.key !== "accesos")
+  .map((item) => item.key);
+
 const STORAGE_KEY = "mirest-ui-theme";
 
 export function getRootPath() {
@@ -238,7 +242,7 @@ export function getGreeting() {
 
 export const ROLE_PERMISSIONS = {
   superadmin: ["*"],
-  admin: ["*"],
+  admin: ADMIN_MODULE_KEYS,
   caja: ["caja", "pedidos"],
   chef: ["cocina", "recetas"],
   pedidos: ["pedidos", "delivery-afiliados"],
@@ -279,6 +283,10 @@ export function resolveUserPermissions(user, role) {
 
 export function isDemoRole(role) {
   return role === "demo";
+}
+
+export function isSuperadminRole(role) {
+  return role === "superadmin";
 }
 
 export function getModulesByRole(role, permissions) {

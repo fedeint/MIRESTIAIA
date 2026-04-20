@@ -1,0 +1,30 @@
+---
+description: Global architecture, routing, UI consistency, and maintenance standards
+alwaysApply: true
+---
+
+# Core Principles & Standards
+
+## Architecture & File Hygiene
+- Write modular, reusable code: split UI into atomic components and shared logic into hooks or utilities.
+- Prefer lean solutions: flag redundant files, duplicated logic, and unused dependencies during edits or reviews.
+- Protect sensitive assets: never expose `.env`, secrets, or private config files in code, logs, or client bundles.
+- Before creating a new file, check whether the change fits an existing module to avoid fragmentation.
+
+## Path & Routing Consistency
+- Keep a predictable folder hierarchy and preserve existing architectural boundaries.
+- Prefer absolute imports or aliases such as `@/components` and `@/hooks` over deep relative paths like `../../..`.
+- Apply naming conventions consistently across files, folders, and routes. Prefer one style per area and do not mix patterns without reason.
+
+## Visual Consistency & UI/UX
+- Respect the established design system: palette, typography, icon style, spacing, and layout rhythm must stay consistent.
+- Keep margins and padding aligned across equivalent containers, cards, sections, and forms.
+- Reuse the same visual tokens for shadows, gradients, border radius, alignment, and elevation unless a deliberate exception is required.
+
+## Maintenance
+- Suggest deleting dead code, stale files, and unnecessary abstractions when refactoring improves clarity.
+- Favor extending existing components or modules over introducing near-duplicate files.
+
+## Quick Examples
+- Good import: `import Button from "@/components/ui/button"`
+- Avoid: `import Button from "../../../components/ui/button"`

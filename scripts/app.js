@@ -19,10 +19,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const rootPath = (document.body.dataset.rootPath || "").replace(/\/+$/, "");
 
   // Guardia de Autenticación
-  const isLoginPage = window.location.pathname.endsWith("login.html");
-  const user = await getCurrentUser();
+  const isLoginPage = window.location.pathname.includes("login.html") ||
+    window.location.pathname.endsWith("/login");
+
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch (err) {
+    console.error("[App] Error al verificar sesión:", err);
+  }
 
   if (!user && !isLoginPage) {
+    console.log("[App] Usuario no detectado, redirigiendo a login...");
     window.location.href = rootPath ? `${rootPath}/login.html` : "login.html";
     return;
   }

@@ -46,7 +46,8 @@
 
       <ol style="margin: 0 0 var(--space-6); padding-left: 1.25rem; color: var(--color-text-muted); font-size: 14px; line-height: 1.65;">
         <li>Escribe abajo el mismo correo que usas para entrar.</li>
-        <li>Pulsa <strong>Enviar enlace</strong>. El correo llega desde nuestro sistema (revisa spam).</li>
+        <li>Pulsa <strong>Enviar enlace</strong>. Revisa <strong>spam</strong>, <strong>Promociones</strong> (Gmail) y “Todos los correos”.</li>
+        <li>En Gmail, si el remitente es nuevo, a veces debes <strong>aceptar</strong> el mensaje o marcar “No es spam” para que los siguientes lleguen a la bandeja principal.</li>
         <li>Abre el correo y pulsa <strong>Definir nueva contraseña</strong>; se abrirá la página de activación segura.</li>
         <li>Elige una contraseña nueva y confírmala. Luego ya puedes iniciar sesión en <a href="./login.html">login</a>.</li>
       </ol>
@@ -83,7 +84,7 @@
   </button>
 
   <script type="module">
-    import { supabaseUrl, supabaseKey } from "./scripts/supabase.js?v=20260422-recovery";
+    import { requestPasswordRecoveryEmail } from "./scripts/password-recovery-client.js?v=20260423-recovery-hybrid";
     import { initializeThemeToggle } from "./scripts/navigation.js?v=20260422-recovery";
 
     document.body.classList.add("page-ready");
@@ -104,27 +105,15 @@
       window.lucide.createIcons();
 
       try {
-        const res = await fetch(`${supabaseUrl}/functions/v1/send-recovery-email`, {
-          method: "POST",
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(payload?.message || "No se pudo enviar el correo.");
-        }
-        msg.textContent =
-          payload?.message ||
-          "Si el correo está registrado, enviamos un enlace. Revisa la bandeja de entrada y la carpeta de spam.";
+        const { message } = await requestPasswordRecoveryEmail(email);
+        msg.textContent = message;
         msg.className = "request-banner request-banner--success";
         msg.style.display = "block";
       } catch (err) {
         console.error("[recovery-page]", err);
-        msg.textContent = err?.message || "Intenta de nuevo en unos minutos.";
+        msg.textContent =
+          err?.message ||
+          "Intenta de nuevo en unos minutos. Si administras el proyecto, revisa Resend y el SMTP de Supabase (Authentication → Emails).";
         msg.className = "request-banner request-banner--error";
         msg.style.display = "block";
       } finally {

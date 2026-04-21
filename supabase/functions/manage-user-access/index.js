@@ -5,6 +5,7 @@ import {
   sendPermissionsUpdatedToUser,
 } from "../_shared/mailer.js";
 import { deliverPasswordRecoveryViaSupabaseAuth } from "../_shared/recovery-delivery.js";
+import { isSuperadmin } from "../_shared/auth-roles.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,11 +21,6 @@ function jsonResponse(body, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-}
-
-function isSuperadmin(user) {
-  const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : undefined;
-  return role === "superadmin";
 }
 
 function getFullName(user) {
@@ -107,7 +103,9 @@ Deno.serve(async (request) => {
         email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,
         invited_at: u.invited_at ?? null,
         banned_until: u.banned_until ?? null,
-        role: typeof u.user_metadata?.role === "string" ? u.user_metadata.role : null,
+        role:
+          (typeof u.app_metadata?.role === "string" ? u.app_metadata.role : null) ||
+          (typeof u.user_metadata?.role === "string" ? u.user_metadata.role : null),
         permissions: Array.isArray(u.user_metadata?.permissions)
           ? u.user_metadata.permissions
           : [],
@@ -210,7 +208,9 @@ Deno.serve(async (request) => {
     if (!newRole) return jsonResponse({ message: "Falta role" }, 400);
 
     const currentMetadata = targetData.user.user_metadata ?? {};
+    const currentApp = targetData.user.app_metadata ?? {};
     const { error } = await adminClient.auth.admin.updateUserById(targetId, {
+      app_metadata: { ...currentApp, role: newRole },
       user_metadata: { ...currentMetadata, role: newRole },
     });
     if (error) return jsonResponse({ message: error.message }, 500);
@@ -241,12 +241,16 @@ Deno.serve(async (request) => {
       .filter((value) => value.length > 0);
 
     const currentMetadata = targetData.user.user_metadata ?? {};
-    const nextRole = body?.role?.trim() || currentMetadata.role;
+    const currentApp = targetData.user.app_metadata ?? {};
+    const nextRole = body?.role?.trim() || currentMetadata.role || currentApp.role;
     const nextMetadata = { ...currentMetadata, permissions: cleaned };
     if (nextRole) nextMetadata.role = nextRole;
+    const nextApp = { ...currentApp };
+    if (nextRole) nextApp.role = nextRole;
 
     const { error } = await adminClient.auth.admin.updateUserById(targetId, {
       user_metadata: nextMetadata,
+      app_metadata: nextApp,
     });
     if (error) return jsonResponse({ message: error.message }, 500);
 

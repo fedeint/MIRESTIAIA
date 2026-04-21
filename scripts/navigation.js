@@ -267,7 +267,10 @@ export function resolveUserRole(user) {
   const email = (user.email || "").toLowerCase();
   if (DEMO_EMAILS.has(email)) return "demo";
 
-  const metaRole = user.user_metadata?.role;
+  const metaRole =
+    (typeof user.app_metadata?.role === "string" && user.app_metadata.role.trim()) ||
+    (typeof user.user_metadata?.role === "string" && user.user_metadata.role.trim()) ||
+    "";
   if (metaRole && ROLE_PERMISSIONS[metaRole]) return metaRole;
 
   return "demo";

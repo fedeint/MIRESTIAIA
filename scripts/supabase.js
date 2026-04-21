@@ -43,7 +43,7 @@ async function clearBrokenSession() {
 // Metadatos del usuario logueado. Tras un cambio de permisos vía Admin API,
 // el objeto `session.user` en localStorage puede seguir desactualizado: el
 // JWT no se regenera solo. `getUser()` consulta a GoTrue y devuelve el
-// user_metadata vigente (incl. `permissions`), que es lo que usa el sidebar.
+// Rol: app_metadata primero (alineado con RLS); permisos siguen en user_metadata para el sidebar.
 export async function getCurrentUser() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error) {

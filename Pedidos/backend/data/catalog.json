@@ -8,18 +8,5 @@
     { "id": "postres", "name": "Postres" },
     { "id": "extras", "name": "Extras" }
   ],
-  "products": [
-    { "id": "prod-1", "name": "Ceviche clásico", "category": "platos", "categoryLabel": "Platos de fondo", "price": 32, "badge": "Más pedido", "emoji": "🐟", "palette": "ocean" },
-    { "id": "prod-2", "name": "Chaufa de mariscos", "category": "platos", "categoryLabel": "Platos de fondo", "price": 28, "badge": "Disponible", "emoji": "🍛", "palette": "sunset" },
-    { "id": "prod-3", "name": "Jalea mixta", "category": "platos", "categoryLabel": "Platos de fondo", "price": 39, "badge": "Destacado", "emoji": "🦐", "palette": "amber" },
-    { "id": "prod-4", "name": "Leche de tigre", "category": "entradas", "categoryLabel": "Sopas y entradas", "price": 18, "badge": "Frío", "emoji": "🥣", "palette": "mint" },
-    { "id": "prod-5", "name": "Chicharrón de calamar", "category": "entradas", "categoryLabel": "Sopas y entradas", "price": 24, "badge": "Para compartir", "emoji": "🦑", "palette": "violet" },
-    { "id": "prod-6", "name": "Inca Kola 500ml", "category": "bebidas", "categoryLabel": "Bebidas", "price": 6, "badge": "Fría", "emoji": "🥤", "palette": "lime" },
-    { "id": "prod-7", "name": "Chicha morada jarra", "category": "bebidas", "categoryLabel": "Bebidas", "price": 12, "badge": "Compartible", "emoji": "🍹", "palette": "berry" },
-    { "id": "prod-8", "name": "Pisco sour", "category": "bebidas", "categoryLabel": "Bebidas", "price": 18, "badge": "Barra", "emoji": "🍸", "palette": "gold" },
-    { "id": "prod-9", "name": "Suspiro a la limeña", "category": "postres", "categoryLabel": "Postres", "price": 16, "badge": "Dulce", "emoji": "🍮", "palette": "rose" },
-    { "id": "prod-10", "name": "Porción de arroz extra", "category": "extras", "categoryLabel": "Extras", "price": 5, "badge": "Extra", "emoji": "🍚", "palette": "sand" },
-    { "id": "prod-11", "name": "Papas fritas artesanales", "category": "extras", "categoryLabel": "Extras", "price": 8, "badge": "Rápido", "emoji": "🍟", "palette": "amber" },
-    { "id": "prod-12", "name": "Conchitas a la parmesana", "category": "frecuentes", "categoryLabel": "Frecuentes", "price": 26, "badge": "Premium", "emoji": "🦪", "palette": "ocean" }
-  ]
+  "products": []
 }

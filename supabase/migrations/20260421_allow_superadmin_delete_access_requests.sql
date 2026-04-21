@@ -6,4 +6,4 @@ create policy access_requests_authenticated_delete
   on public.access_requests
   for delete
   to authenticated
-  using (coalesce(auth.jwt() -> 'user_metadata' ->> 'role', '') = 'superadmin');
+  using (coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'superadmin');

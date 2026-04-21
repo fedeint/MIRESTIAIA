@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isSuperadmin } from "../_shared/auth-roles.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,11 +15,6 @@ function jsonResponse(body, status = 200) {
       "Content-Type": "application/json",
     },
   });
-}
-
-function isSuperadmin(user) {
-  const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : undefined;
-  return role === "superadmin";
 }
 
 // Busca un usuario existente en auth.users por email. Supabase no expone un
@@ -215,7 +211,7 @@ Deno.serve(async (request) => {
     JSON.stringify({ email: accessRequest.email, redirectTo }),
   );
 
-  const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     accessRequest.email,
     {
       data: inviteMetadata,
@@ -247,6 +243,24 @@ Deno.serve(async (request) => {
       },
       502,
     );
+  }
+
+  const invitedUser = inviteData?.user;
+  if (invitedUser?.id) {
+    const nextApp = { ...(invitedUser.app_metadata ?? {}), role };
+    const { error: appMetaError } = await adminClient.auth.admin.updateUserById(invitedUser.id, {
+      app_metadata: nextApp,
+    });
+    if (appMetaError) {
+      console.error("[approve-access-request] app_metadata", appMetaError);
+      return jsonResponse(
+        {
+          message: "La invitación se envió pero no se pudo registrar el rol en app_metadata (requerido por RLS).",
+          detail: appMetaError.message ?? null,
+        },
+        500,
+      );
+    }
   }
 
   console.log("[approve-access-request] invite OK", JSON.stringify({ email: accessRequest.email }));

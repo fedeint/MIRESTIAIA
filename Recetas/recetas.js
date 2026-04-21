@@ -288,8 +288,6 @@ class RecetasController {
     descargarPlantillaExcel() {
         const data = [
             ["nombre", "categoria", "costo", "precioVenta", "tiempo", "porciones", "version", "estado"],
-            ["Lomo Saltado", "Platos de fondo", 12.50, 35.00, "20 min", 1, "v1", "Activa"],
-            ["Ceviche Clásico", "Sopas y Entradas", 15.00, 42.00, "15 min", 1, "v1", "Activa"]
         ];
         
         const ws = XLSX.utils.aoa_to_sheet(data);

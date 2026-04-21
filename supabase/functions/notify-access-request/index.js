@@ -5,6 +5,7 @@ import {
   sendRequestReviewingToApplicant,
   sendRequestRejectedToApplicant,
 } from "../_shared/mailer.js";
+import { isSuperadmin } from "../_shared/auth-roles.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,11 +25,6 @@ function jsonResponse(body, status = 200) {
 // `reviewing` y `rejected` requieren sesión de superadmin.
 const PUBLIC_TYPES = new Set(["created"]);
 const SUPERADMIN_TYPES = new Set(["reviewing", "rejected"]);
-
-function isSuperadmin(user) {
-  const role = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role : undefined;
-  return role === "superadmin";
-}
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {

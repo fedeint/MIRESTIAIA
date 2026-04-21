@@ -123,6 +123,31 @@ body[data-theme="dark"] .topbar {
   gap: var(--space-3);
 }
 
+.topbar-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.topbar-logout-btn__label {
+  font-size: 14px;
+}
+
+@media (max-width: 520px) {
+  .topbar-logout-btn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
 .topbar__menu-toggle,
 .sidebar-backdrop {
   display: none;

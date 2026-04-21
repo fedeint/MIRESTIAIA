@@ -121,14 +121,32 @@ function applyUserIdentity(profile) {
 }
 
 function setupLogoutBtn(rootPath) {
-  const avatar = document.querySelector('.avatar');
-  if (avatar) {
-    avatar.style.cursor = 'pointer';
-    avatar.title = 'Cerrar sesión';
-    avatar.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      window.location.href = rootPath ? `${rootPath}/login.html` : "login.html";
-    });
+  const loginHref = rootPath ? `${rootPath.replace(/\/+$/, "")}/login.html` : "login.html";
+
+  const signOutAndGoLogin = async () => {
+    await supabase.auth.signOut();
+    window.location.href = loginHref;
+  };
+
+  const actions = document.querySelector(".topbar__actions");
+  if (actions && !document.getElementById("topbarLogoutBtn")) {
+    const btn = document.createElement("button");
+    btn.id = "topbarLogoutBtn";
+    btn.type = "button";
+    btn.className = "btn btn--ghost btn--sm topbar-logout-btn";
+    btn.setAttribute("aria-label", "Cerrar sesión");
+    btn.innerHTML = '<i data-lucide="log-out"></i><span class="topbar-logout-btn__label">Salir</span>';
+    btn.addEventListener("click", signOutAndGoLogin);
+    actions.insertBefore(btn, actions.firstChild);
+    window.lucide?.createIcons?.();
+  }
+
+  const avatar = document.querySelector(".avatar");
+  if (avatar && !avatar.dataset.logoutBound) {
+    avatar.dataset.logoutBound = "1";
+    avatar.style.cursor = "pointer";
+    avatar.title = "Cerrar sesión";
+    avatar.addEventListener("click", signOutAndGoLogin);
   }
 }
 

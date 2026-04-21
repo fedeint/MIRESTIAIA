@@ -19,14 +19,49 @@ function showFallback() {
   fallbackEl.hidden = false;
 }
 
-function parseHashParams() {
-  const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
-  const params = new URLSearchParams(hash);
+/** Lee parámetros típicos del callback de Supabase (hash y/o query). */
+function parseAuthCallbackParams() {
+  const query = new URLSearchParams(window.location.search || "");
+  const hashRaw = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+  const hash = new URLSearchParams(hashRaw);
+  const pick = (key) => hash.get(key) ?? query.get(key);
+
+  let errorDescription = pick("error_description");
+  if (errorDescription) {
+    try {
+      errorDescription = decodeURIComponent(String(errorDescription).replace(/\+/g, " "));
+    } catch {
+      // mantener texto crudo
+    }
+  }
+
   return {
-    type: params.get("type"),
-    error: params.get("error"),
-    errorDescription: params.get("error_description"),
+    error: pick("error"),
+    errorCode: pick("error_code"),
+    errorDescription,
+    type: pick("type"),
   };
+}
+
+function isAuthFailureParams(parsed) {
+  if (parsed.error) return true;
+  const code = String(parsed.errorCode || "").toLowerCase();
+  return code === "otp_expired" || code === "flow_state_not_found";
+}
+
+async function clearLocalAuth() {
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // ignorar
+  }
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("sb-") && key.endsWith("-auth-token"))
+      .forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // ignorar
+  }
 }
 
 function bindPasswordToggles() {
@@ -42,11 +77,6 @@ function bindPasswordToggles() {
   });
 }
 
-// El cliente de Supabase tiene `detectSessionInUrl: true`, así que al cargar
-// esta página el SDK parsea automáticamente los tokens del hash/query y crea
-// la sesión. Nuestro trabajo es esperar a que la sesión esté disponible y
-// mostrar el formulario. Como la operación puede ser asíncrona (especialmente
-// con PKCE), esperamos hasta 5 segundos combinando getSession + onAuthStateChange.
 function waitForSession(timeoutMs = 5000) {
   return new Promise((resolve) => {
     let settled = false;
@@ -81,11 +111,27 @@ async function bootstrap() {
   bindPasswordToggles();
   if (window.lucide) window.lucide.createIcons();
 
-  const { type, error, errorDescription } = parseHashParams();
+  const parsed = parseAuthCallbackParams();
 
-  if (error) {
-    setStatus(errorDescription || "El enlace de activación no es válido o expiró.", "error");
+  // Si el enlace expiró o es inválido, NO debemos reutilizar otra sesión abierta
+  // en el mismo navegador (p. ej. superadmin): eso mostraba el formulario equivocado
+  // o redirigía al panel sin activar la cuenta nueva.
+  if (isAuthFailureParams(parsed)) {
+    await clearLocalAuth();
+
+    const desc = (parsed.errorDescription || "").toLowerCase();
+    const expired =
+      String(parsed.errorCode || "").toLowerCase() === "otp_expired" ||
+      desc.includes("expired") ||
+      desc.includes("invalid");
+
+    const msg = expired
+      ? "El enlace de activación caducó o ya se usó. Pide al administrador que reenvíe la invitación desde «Accesos». Si tu cuenta ya existe, usa «Olvidé mi contraseña» en el inicio de sesión."
+      : parsed.errorDescription || "El enlace de activación no es válido. Solicita un nuevo enlace al administrador.";
+
+    setStatus(msg, "error");
     showFallback();
+    window.history.replaceState({}, document.title, window.location.pathname);
     return;
   }
 
@@ -103,7 +149,7 @@ async function bootstrap() {
   emailEl.value = session.user.email ?? "";
   formEl.hidden = false;
 
-  const label = type === "recovery" ? "Restablece tu contraseña" : "Activa tu cuenta";
+  const label = parsed.type === "recovery" ? "Restablece tu contraseña" : "Activa tu cuenta";
   const titleEl = document.getElementById("activateTitle");
   if (titleEl) titleEl.textContent = label;
 
@@ -137,10 +183,20 @@ formEl.addEventListener("submit", async (event) => {
     return;
   }
 
-  setStatus("¡Listo! Redirigiendo al panel...", "success");
+  setStatus("¡Listo! Te llevamos al inicio de sesión para que entres con tu correo y contraseña.", "success");
+
+  const mail = emailEl.value.trim();
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // seguimos igual: el login forzará credenciales nuevas
+  }
+
+  const next = new URLSearchParams({ activado: "1" });
+  if (mail) next.set("email", mail);
 
   window.setTimeout(() => {
-    window.location.href = "./index.html";
+    window.location.href = `./login.html?${next.toString()}`;
   }, 900);
 });
 

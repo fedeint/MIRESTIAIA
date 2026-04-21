@@ -43,7 +43,16 @@
         <p>Tu correo es tu usuario. Si ya activaste tu cuenta, inicia sesión para continuar con el flujo operativo.</p>
       </div>
 
+      <div id="loginSessionBar" class="login-session-bar" hidden>
+        <p>Sesión activa como <strong id="loginSessionEmail"></strong></p>
+        <div class="login-session-bar__actions">
+          <button type="button" class="btn btn--primary btn--sm" id="loginSessionContinue">Ir al panel</button>
+          <button type="button" class="btn btn--secondary btn--sm" id="loginSessionLogout">Cerrar sesión</button>
+        </div>
+      </div>
+
       <form id="loginForm" class="login-form">
+        <div id="postActivateBanner" class="error-banner error-banner--success" style="display: none;" role="status"></div>
         <div id="errorMessage" class="error-banner" style="display: none;"></div>
 
         <div class="form-group">
@@ -348,9 +357,42 @@
       window.lucide.createIcons();
       initializeThemeToggle(document.getElementById("themeToggle"));
 
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("activado") === "1") {
+        const postBanner = document.getElementById("postActivateBanner");
+        const emailInput = document.getElementById("email");
+        if (postBanner) {
+          postBanner.textContent =
+            "Contraseña configurada. Ingresa con tu correo y la contraseña que acabas de elegir para acceder a tus módulos.";
+          postBanner.style.display = "block";
+        }
+        const preEmail = urlParams.get("email");
+        if (preEmail && emailInput) {
+          try {
+            emailInput.value = decodeURIComponent(preEmail);
+          } catch {
+            emailInput.value = preEmail;
+          }
+        }
+        emailInput?.focus();
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        window.location.replace("./index.html");
+      const sessionBar = document.getElementById("loginSessionBar");
+      const sessionEmail = document.getElementById("loginSessionEmail");
+      const sessionContinue = document.getElementById("loginSessionContinue");
+      const sessionLogout = document.getElementById("loginSessionLogout");
+      if (session && sessionBar) {
+        sessionBar.hidden = false;
+        if (sessionEmail) sessionEmail.textContent = session.user?.email || "usuario";
+        sessionContinue?.addEventListener("click", () => {
+          window.location.replace("./index.html");
+        });
+        sessionLogout?.addEventListener("click", async () => {
+          await supabase.auth.signOut();
+          window.location.reload();
+        });
       }
 
       const form = document.getElementById('loginForm');

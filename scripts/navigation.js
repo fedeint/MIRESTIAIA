@@ -337,6 +337,19 @@ export function renderSidebar(target, activeKey, userRole = "admin", permissions
         ${moduleItems.map((item) => renderNavItem(item, activeKey)).join("")}
       </div>
     </section>
+    <section class="sidebar-group">
+      <span class="sidebar-group__label">Cuenta</span>
+      <div class="sidebar-list">
+        <button type="button" class="nav-item nav-item--logout" id="sidebarLogoutBtn">
+          <span class="nav-item__icon" aria-hidden="true">
+            <i data-lucide="log-out" style="width:20px;height:20px;color:var(--color-accent)"></i>
+          </span>
+          <span class="nav-item__text">
+            <strong>Cerrar sesión</strong>
+          </span>
+        </button>
+      </div>
+    </section>
   `;
 
   if (window.lucide) {

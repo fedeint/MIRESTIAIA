@@ -60,9 +60,31 @@
 
   .topbar__actions {
     width: auto;
+    max-width: 100%;
     flex-shrink: 0;
     justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-2);
+  }
+
+  /* Texto «Salir» legible en móvil (layout.css lo ocultaba por debajo de 520px). */
+  .topbar-logout-btn__label {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 0 0 4px !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  #topbarLogoutBtn.topbar-logout-btn {
+    width: auto !important;
+    min-height: 40px;
+    flex-shrink: 0;
   }
 
   .topbar__actions .chip,

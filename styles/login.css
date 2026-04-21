@@ -1,8 +1,16 @@
 .login-container {
-  display: grid;
-  place-items: center;
+  /* flex-start: en móvil el contenido puede superar 100dvh; el grid + place-items:center
+     centraba en una “ventana” de altura fija y impedía hacer scroll hasta el final. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
   min-height: 100dvh;
-  padding: var(--space-6);
+  padding: max(var(--space-6), env(safe-area-inset-top))
+    max(var(--space-6), env(safe-area-inset-right))
+    max(var(--space-6), env(safe-area-inset-bottom))
+    max(var(--space-6), env(safe-area-inset-left));
   background: 
     radial-gradient(circle at 16% 18%, rgba(249, 115, 22, 0.18), transparent 34%),
     radial-gradient(circle at 84% 82%, rgba(14, 165, 233, 0.12), transparent 36%),
@@ -11,7 +19,8 @@
 
 .login-card {
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   width: 100%;
   max-width: 460px;
   padding: var(--space-8);

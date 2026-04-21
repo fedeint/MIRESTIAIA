@@ -207,6 +207,17 @@ body[data-theme="dark"] .card {
   gap: var(--space-2);
 }
 
+button.nav-item {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
 .nav-item {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -475,8 +486,15 @@ body[data-theme="dark"] .module-card {
     width: 100%;
   }
 
+  /* El topbar sigue en fila en móvil: ancho 100% en .btn empujaba «Salir» fuera de vista. */
+  .topbar .btn,
+  .topbar .assistant-pill {
+    width: auto;
+  }
+
   .topbar__actions {
-    width: 100%;
+    width: auto;
+    max-width: 100%;
   }
 
   .icon-button {

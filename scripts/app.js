@@ -16,6 +16,13 @@ import { initializeDashboard } from "./dashboard.js";
 import { registerServiceWorker, requestWakeLock, enableWakeLockAutoReacquire, vibrate } from "../Pwa/pwa.js";
 
 import { supabase, getCurrentUser } from "./supabase.js";
+import { startSessionIdleTimeout } from "./session-idle-timeout.js";
+
+function resolveLoginHref(rootPath) {
+  const p = (rootPath || "").trim();
+  if (!p) return "login.html";
+  return `${p.replace(/\/+$/, "")}/login.html`;
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const pageType = document.body.dataset.pageType || "dashboard";
@@ -59,6 +66,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   requestWakeLock();
   enableWakeLockAutoReacquire();
   initializeHapticFeedback();
+
+  startSessionIdleTimeout({
+    getLoginHref: () => resolveLoginHref(rootPath),
+    signOut: () => supabase.auth.signOut(),
+  });
 
   renderSidebar(document.getElementById("sidebarNav"), activeKey, userRole, userPermissions);
   initializeThemeToggle(document.getElementById("themeToggle"));
@@ -121,7 +133,7 @@ function applyUserIdentity(profile) {
 }
 
 function setupLogoutBtn(rootPath) {
-  const loginHref = rootPath ? `${rootPath.replace(/\/+$/, "")}/login.html` : "login.html";
+  const loginHref = resolveLoginHref(rootPath);
 
   const signOutAndGoLogin = async () => {
     await supabase.auth.signOut();
@@ -140,6 +152,8 @@ function setupLogoutBtn(rootPath) {
     actions.insertBefore(btn, actions.firstChild);
     window.lucide?.createIcons?.();
   }
+
+  document.getElementById("sidebarLogoutBtn")?.addEventListener("click", signOutAndGoLogin);
 
   const avatar = document.querySelector(".avatar");
   if (avatar && !avatar.dataset.logoutBound) {

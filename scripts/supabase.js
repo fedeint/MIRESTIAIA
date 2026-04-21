@@ -36,12 +36,10 @@ async function clearBrokenSession() {
   }
 }
 
-// Obtenemos los metadatos del usuario logueado actualmente.
-// Evitamos llamar a supabase.auth.getUser() (que pega a /auth/v1/user y puede
-// devolver 401 visible en consola si el token fue revocado). Si la sesión
-// local es válida, devolvemos session.user directamente; si alguna llamada
-// real a Supabase falla más tarde con 401, la lógica de cada módulo se
-// encarga de redirigir a login.
+// Metadatos del usuario logueado. Tras un cambio de permisos vía Admin API,
+// el objeto `session.user` en localStorage puede seguir desactualizado: el
+// JWT no se regenera solo. `getUser()` consulta a GoTrue y devuelve el
+// user_metadata vigente (incl. `permissions`), que es lo que usa el sidebar.
 export async function getCurrentUser() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error) {
@@ -60,7 +58,19 @@ export async function getCurrentUser() {
     return null;
   }
 
-  return session.user ?? null;
+  const { data: userPayload, error: userError } = await supabase.auth.getUser();
+  if (userError) {
+    const msg = String(userError.message || "").toLowerCase();
+    const unauthorized =
+      userError.status === 401 || msg.includes("jwt") || msg.includes("invalid");
+    if (unauthorized) {
+      await clearBrokenSession();
+      return null;
+    }
+    return session.user ?? null;
+  }
+
+  return userPayload?.user ?? session.user ?? null;
 }
 
 // Cerramos sesión Global

@@ -72,10 +72,6 @@ export const ICON = {
 /** Spinner CSS puro (sin Lucide loader-2) */
 export const ICON_SPINNER = '<span class="btn-inline-spinner" aria-hidden="true"></span>';
 
-export function iconThemeFab(isDark) {
-  return isDark ? ICON.sun : ICON.moon;
-}
-
 /**
  * Sustituye cada <i data-lucide="…"> por el SVG equivalente si existe en ICON.
  */

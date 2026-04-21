@@ -55,7 +55,8 @@ function resolveIconSrc(rootPath) {
 }
 
 function isMobileUi() {
-  return window.matchMedia("(max-width: 640px)").matches;
+  /* Alineado con Pwa/install.js (beforeinstallprompt solo se difiere en vista estrecha) */
+  return window.matchMedia("(max-width: 768px)").matches;
 }
 
 export function initPwaInstallWidget({ rootPath = "" } = {}) {
@@ -192,7 +193,7 @@ export function initPwaInstallWidget({ rootPath = "" } = {}) {
     else if (visible) hide();
   });
 
-  const mql = window.matchMedia("(max-width: 640px)");
+  const mql = window.matchMedia("(max-width: 768px)");
   const onViewport = () => {
     if (!mql.matches) {
       window.clearTimeout(androidTimer);

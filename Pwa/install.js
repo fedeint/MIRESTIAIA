@@ -20,10 +20,21 @@ export function onInstallPromptAvailable(fn) {
   return () => deferredListeners.delete(fn);
 }
 
+function shouldDeferInstallUi() {
+  try {
+    return window.matchMedia("(max-width: 768px)").matches;
+  } catch {
+    return true;
+  }
+}
+
 export function initInstallPrompt() {
   if (installListenerAttached) return;
   installListenerAttached = true;
   window.addEventListener("beforeinstallprompt", (e) => {
+    // En escritorio no interceptamos: si preventDefault() nunca va seguido de prompt(), Chrome avisa
+    // ("Banner not shown…") y el usuario percibe regresión / ruido en consola.
+    if (!shouldDeferInstallUi()) return;
     e.preventDefault();
     deferredPrompt = e;
     emitDeferred();

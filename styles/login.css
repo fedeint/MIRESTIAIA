@@ -23,6 +23,51 @@
   box-shadow: 0 28px 72px rgba(15, 23, 42, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.72);
 }
 
+/* activate.html: capa visible mientras el JS valida el enlace del correo */
+.activate-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.94);
+  text-align: center;
+}
+
+body[data-theme="dark"] .activate-loading-overlay {
+  background: rgba(23, 29, 51, 0.94);
+}
+
+.activate-loading-overlay[hidden] {
+  display: none !important;
+}
+
+.activate-loading-overlay__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 280px;
+}
+
+.activate-loading-overlay__inner p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.activate-loading-overlay__dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(249, 115, 22, 0.25);
+  border-top-color: #f97316;
+  animation: spin 0.85s linear infinite;
+}
+
 body[data-theme="dark"] .login-card {
   border-color: rgba(240, 124, 42, 0.14);
   background: rgba(23, 29, 51, 0.88);

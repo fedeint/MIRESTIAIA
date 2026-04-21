@@ -8,6 +8,11 @@ const passwordEl = document.getElementById("password");
 const passwordConfirmEl = document.getElementById("passwordConfirm");
 const submitBtn = document.getElementById("activateSubmit");
 
+function hideLoadingOverlay() {
+  const el = document.getElementById("activateLoadingPanel");
+  if (el) el.hidden = true;
+}
+
 function getActivateSnapshot() {
   const raw = globalThis.__MIREST_ACTIVATE_RAW__;
   if (raw && typeof raw.hash === "string") {
@@ -142,6 +147,7 @@ async function pollForSession(maxMs = 2500, stepMs = 80) {
 
 async function bootstrap() {
   try {
+    document.body.classList.add("page-ready");
     bindPasswordToggles();
     if (window.lucide) window.lucide.createIcons();
 
@@ -159,6 +165,7 @@ async function bootstrap() {
         : parsed.errorDescription || "El enlace de activación no es válido. Solicita un nuevo enlace al administrador.";
       setStatus(msg, "error");
       showFallback();
+      hideLoadingOverlay();
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
@@ -174,6 +181,7 @@ async function bootstrap() {
           "error",
         );
         showFallback();
+        hideLoadingOverlay();
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
       }
@@ -207,11 +215,13 @@ async function bootstrap() {
         );
       }
       showFallback();
+      hideLoadingOverlay();
       return;
     }
 
     emailEl.value = session.user.email ?? "";
     formEl.hidden = false;
+    hideLoadingOverlay();
 
     const label = parsed.type === "recovery" ? "Restablece tu contraseña" : "Activa tu cuenta";
     const titleEl = document.getElementById("activateTitle");
@@ -225,6 +235,7 @@ async function bootstrap() {
     console.error("[activate]", err);
     setStatus("Ocurrió un error al cargar la activación. Recarga la página o abre el enlace del correo de nuevo.", "error");
     showFallback();
+    hideLoadingOverlay();
   }
 }
 

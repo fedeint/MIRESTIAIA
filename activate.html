@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="./styles/tokens.css?v=20260420-activate" />
   <link rel="stylesheet" href="./styles/base.css?v=20260420-activate" />
   <link rel="stylesheet" href="./styles/components.css?v=20260420-activate" />
-  <link rel="stylesheet" href="./styles/login.css?v=20260421-activate-banners" />
+  <link rel="stylesheet" href="./styles/login.css?v=20260421-activate-overlay" />
   <link rel="stylesheet" href="./styles/mobile.css?v=20260420-mobilev1" />
 
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -35,9 +35,17 @@
   </script>
 </head>
 
-<body data-theme="light">
+<!-- page-ready: sin esto, base.css deja body en opacity:0 (html.js body) y la página se ve “en blanco”. -->
+<body data-theme="light" class="page-ready">
   <div class="login-container">
     <div class="login-card card">
+      <div id="activateLoadingPanel" class="activate-loading-overlay" aria-live="polite">
+        <div class="activate-loading-overlay__inner">
+          <span class="activate-loading-overlay__dot" aria-hidden="true"></span>
+          <p>Validando tu enlace del correo…</p>
+        </div>
+      </div>
+
       <div class="login-card__accent login-card__accent--warm" aria-hidden="true"></div>
       <div class="login-card__accent login-card__accent--cool" aria-hidden="true"></div>
 
@@ -120,7 +128,7 @@
     <i data-lucide="moon"></i>
   </button>
 
-  <script type="module" src="./scripts/activate.js?v=20260421-activate-hashfix"></script>
+  <script type="module" src="./scripts/activate.js?v=20260421-activate-opacity-fix"></script>
 </body>
 
 </html>

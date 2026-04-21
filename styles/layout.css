@@ -160,8 +160,11 @@ body[data-theme="dark"] .topbar {
 }
 
 @media (max-width: 1180px) {
+  /* Bloque en lugar de grid de 1 columna: el aside position:fixed seguiría
+     reservando ~100vh de fila en grid y empujaba .app-main fuera de vista en móvil. */
   .app-shell {
-    grid-template-columns: 1fr;
+    display: block;
+    min-height: 100vh;
   }
 
   .app-main {

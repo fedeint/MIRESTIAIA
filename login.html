@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="./styles/tokens.css?v=20260420-loginfix2" />
   <link rel="stylesheet" href="./styles/base.css?v=20260420-loginfix2" />
   <link rel="stylesheet" href="./styles/components.css?v=20260420-loginfix2" />
-  <link rel="stylesheet" href="./styles/login.css?v=20260420-loginfix2" />
+  <link rel="stylesheet" href="./styles/login.css?v=20260421-phone-digits" />
   <link rel="stylesheet" href="./styles/mobile.css?v=20260420-mobilev1" />
 
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -187,12 +187,22 @@
             </div>
 
             <div class="form-group">
-              <label for="request_phone">Teléfono</label>
+              <label for="request_phone">Teléfono <span class="form-group__hint">(solo números)</span></label>
               <div class="input-wrapper">
                 <span class="input-icon" aria-hidden="true">
                   <i data-lucide="phone"></i>
                 </span>
-                <input type="text" id="request_phone" placeholder="+51 999 999 999" />
+                <input
+                  type="text"
+                  id="request_phone"
+                  name="phone"
+                  inputmode="numeric"
+                  autocomplete="tel"
+                  maxlength="15"
+                  pattern="[0-9]*"
+                  title="Usa solo números, sin letras ni símbolos."
+                  placeholder="51987654321"
+                />
               </div>
             </div>
 
@@ -267,32 +277,6 @@
             <div class="form-group">
               <label for="request_notes">Cuéntanos qué necesitas</label>
               <textarea id="request_notes" class="request-textarea" rows="4" placeholder="Ejemplo: necesito controlar caja, pedidos y almacén en dos locales."></textarea>
-            </div>
-
-            <div class="request-review">
-              <span class="request-review__eyebrow">Resumen antes de enviar</span>
-              <div class="request-review__grid">
-                <div class="request-review__item">
-                  <span>Contacto</span>
-                  <strong id="requestReviewContact">-</strong>
-                </div>
-                <div class="request-review__item">
-                  <span>Negocio</span>
-                  <strong id="requestReviewBusiness">-</strong>
-                </div>
-                <div class="request-review__item">
-                  <span>Ubicación</span>
-                  <strong id="requestReviewLocation">-</strong>
-                </div>
-                <div class="request-review__item">
-                  <span>Rol actual</span>
-                  <strong id="requestReviewRole">-</strong>
-                </div>
-                <div class="request-review__item">
-                  <span>Acceso</span>
-                  <strong>Tu correo será tu usuario y tú definirás la contraseña.</strong>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -417,14 +401,19 @@
       const openRequestModalBtn = document.getElementById('openRequestModal');
       const requestCityInput = document.getElementById('request_city');
       const requestCountryInput = document.getElementById('request_country');
+      const requestPhoneInput = document.getElementById('request_phone');
+      const sanitizeRequestPhone = () => {
+        if (!requestPhoneInput) return;
+        requestPhoneInput.value = requestPhoneInput.value.replace(/\D/g, '').slice(0, 15);
+      };
+      requestPhoneInput?.addEventListener('input', sanitizeRequestPhone);
+      requestPhoneInput?.addEventListener('paste', () => {
+        window.setTimeout(sanitizeRequestPhone, 0);
+      });
       const requestSteps = Array.from(document.querySelectorAll('.request-form__step'));
       const requestStepIndicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
       const requestPrevBtn = document.getElementById('requestPrevBtn');
       const requestNextBtn = document.getElementById('requestNextBtn');
-      const requestReviewContact = document.getElementById('requestReviewContact');
-      const requestReviewBusiness = document.getElementById('requestReviewBusiness');
-      const requestReviewLocation = document.getElementById('requestReviewLocation');
-      const requestReviewRole = document.getElementById('requestReviewRole');
       const recoveryModal = document.getElementById('recoveryModal');
       const recoveryForm = document.getElementById('recoveryForm');
       const recoveryMessage = document.getElementById('recoveryMessage');
@@ -432,13 +421,6 @@
       const openRecoveryModalBtn = document.getElementById('openRecoveryModal');
       const recoveryEmailInput = document.getElementById('recovery_email');
       let currentRequestStep = 0;
-
-      const updateRequestReview = () => {
-        requestReviewContact.textContent = `${document.getElementById('request_full_name').value || '-'} · ${document.getElementById('request_email').value || '-'}`;
-        requestReviewBusiness.textContent = `${document.getElementById('request_restaurant_name').value || '-'} · ${document.getElementById('request_business_count').value || '1'} negocio(s)`;
-        requestReviewLocation.textContent = [requestCityInput.value, requestCountryInput.value].filter(Boolean).join(', ') || '-';
-        requestReviewRole.textContent = document.getElementById('request_applicant_role').value || '-';
-      };
 
       const setRequestStep = (nextStep) => {
         currentRequestStep = nextStep;
@@ -456,10 +438,6 @@
         requestPrevBtn.hidden = currentRequestStep === 0;
         requestNextBtn.hidden = currentRequestStep === requestSteps.length - 1;
         requestSubmitBtn.hidden = currentRequestStep !== requestSteps.length - 1;
-
-        if (currentRequestStep === requestSteps.length - 1) {
-          updateRequestReview();
-        }
       };
 
       const validateCurrentRequestStep = () => {

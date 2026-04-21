@@ -25,40 +25,51 @@
   // ── Inyectar CSS ──────────────────────────────────────────────────────────
   const style = document.createElement("style");
   style.textContent = `
-    /* ── Toggle DallA ── */
-    #dalia-topbar-toggle {
+    /* ── Dock DallA (misma zona que el antiguo FAB circular: esquina inferior) ── */
+    #dalia-dock {
       position: fixed;
-      top: 16px;
-      right: 72px;
-      z-index: 9100;
+      right: max(12px, env(safe-area-inset-right));
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      max-width: min(100vw - 24px, 320px);
+      pointer-events: none;
+    }
+    #dalia-dock > * {
+      pointer-events: auto;
+    }
+    #dalia-toggle-bar {
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 6px 12px 6px 8px;
-      border-radius: 20px;
+      padding: 8px 12px 8px 8px;
+      border-radius: 22px;
       background: var(--color-surface, #fff);
       border: 1.5px solid var(--color-border, #e5e7eb);
-      box-shadow: 0 2px 12px rgba(0,0,0,.12);
+      box-shadow: 0 4px 20px rgba(0,0,0,.14);
       cursor: pointer;
       transition: all .15s;
       user-select: none;
     }
-    #dalia-topbar-toggle:hover {
+    #dalia-toggle-bar:hover {
       border-color: #f07c2a;
-      box-shadow: 0 4px 16px rgba(240,124,42,.25);
+      box-shadow: 0 6px 22px rgba(240,124,42,.22);
     }
-    #dalia-topbar-toggle img {
+    #dalia-toggle-bar img {
       width: 22px;
       height: 22px;
       border-radius: 50%;
       object-fit: cover;
       border: 1.5px solid #f07c2a;
     }
-    #dalia-topbar-toggle .dalia-toggle-label {
+    #dalia-toggle-bar .dalia-toggle-label {
       font-size: 12px;
       font-weight: 700;
       color: var(--color-text, #111);
-      font-family: sans-serif;
+      font-family: var(--font-sans, system-ui, sans-serif);
     }
     .dalia-switch {
       width: 34px;
@@ -84,24 +95,28 @@
     }
     .dalia-switch.on::before { transform: translateX(16px); }
 
-    /* ── Botón flotante DallA ── */
+    /* ── Botón circular: abrir chat (solo si el interruptor está activo) ── */
+    #dalia-fab-wrap {
+      position: relative;
+      display: none;
+    }
+    #dalia-fab-wrap.dalia-fab-wrap--visible {
+      display: block;
+    }
     #dalia-fab {
-      position: fixed;
-      bottom: 90px;
-      right: 24px;
+      position: relative;
       width: 56px;
       height: 56px;
       border-radius: 50%;
       border: none;
       cursor: pointer;
-      z-index: 9000;
       padding: 0;
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(240,124,42,.5);
       transition: transform .2s, box-shadow .2s;
       background: linear-gradient(135deg,#f07c2a,#d96a1a);
     }
-    #dalia-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(240,124,42,.65); }
+    #dalia-fab:hover { transform: scale(1.06); box-shadow: 0 6px 28px rgba(240,124,42,.65); }
     #dalia-fab img { width: 100%; height: 100%; object-fit: cover; }
     #dalia-fab .dalia-fab-fallback {
       width: 100%; height: 100%;
@@ -109,31 +124,11 @@
       font-size: 24px;
     }
 
-    /* ── Notificación badge ── */
-    #dalia-fab-badge {
-      position: fixed;
-      bottom: 68px;
-      right: 20px;
-      background: #f07c2a;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-      z-index: 9001;
-      pointer-events: none;
-      animation: dalia-badge-in .3s ease;
-    }
-    @keyframes dalia-badge-in {
-      from { opacity:0; transform:translateY(6px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-
     /* ── Widget mini chat ── */
     #dalia-widget {
       position: fixed;
-      bottom: 160px;
-      right: 24px;
+      bottom: calc(200px + env(safe-area-inset-bottom));
+      right: max(12px, env(safe-area-inset-right));
       width: 360px;
       height: 560px;
       background: var(--color-surface, #1a1a1a);
@@ -387,9 +382,17 @@
     .dalia-w-send:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 
     /* ── Responsive ── */
-    @media (max-width: 480px) {
-      #dalia-widget { width: calc(100vw - 24px); right: 12px; bottom: 80px; }
-      #dalia-fab    { right: 16px; bottom: 16px; }
+    @media (max-width: 640px) {
+      #dalia-dock {
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(82px + env(safe-area-inset-bottom));
+      }
+      #dalia-widget {
+        width: calc(100vw - 20px);
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(188px + env(safe-area-inset-bottom));
+        max-height: min(560px, 72dvh);
+      }
     }
   `;
   document.head.appendChild(style);
@@ -439,43 +442,53 @@
     const pageName  = document.title.replace("MiRest con IA | ", "") || "este módulo";
     const STORAGE_KEY = "mirest_dalia_active";
 
-    // ── Toggle en topbar ──────────────────────────────────────────────────
+    // ── Dock inferior: interruptor (siempre) + FAB circular para chat (si está activo) ──
+    const dock = document.createElement("div");
+    dock.id = "dalia-dock";
+
     const toggleWrap = document.createElement("div");
-    toggleWrap.id = "dalia-topbar-toggle";
-    toggleWrap.title = "Activar/desactivar DallA";
+    toggleWrap.id = "dalia-toggle-bar";
+    toggleWrap.title = "Activar o desactivar DallA";
     toggleWrap.innerHTML = `
       <img src="${avatarSrc}" alt="DallA" onerror="this.style.display='none'" />
       <span class="dalia-toggle-label">DallA</span>
       <div class="dalia-switch" id="dalia-switch-pill"></div>
     `;
-    document.body.appendChild(toggleWrap);
+
+    const fabWrap = document.createElement("div");
+    fabWrap.id = "dalia-fab-wrap";
+
+    const fab = document.createElement("button");
+    fab.id = "dalia-fab";
+    fab.title = "Abrir chat con DallA";
+    fab.innerHTML = `<img src="${avatarSrc}" alt="DallA" onerror="this.parentElement.innerHTML='<div class=dalia-fab-fallback>🤖</div>'" />`;
+
+    fabWrap.appendChild(fab);
+    dock.appendChild(fabWrap);
+    dock.appendChild(toggleWrap);
+    document.body.appendChild(dock);
 
     const switchPill = toggleWrap.querySelector("#dalia-switch-pill");
     const isActive = () => localStorage.getItem(STORAGE_KEY) === "1";
 
-    // Restaurar estado guardado
+    function syncFabVisibility() {
+      fabWrap.classList.toggle("dalia-fab-wrap--visible", isActive());
+    }
+
     if (isActive()) switchPill.classList.add("on");
-
-    // FAB
-    const fab = document.createElement("button");
-    fab.id = "dalia-fab";
-    fab.title = "Hablar con DallA";
-    fab.innerHTML = `<img src="${avatarSrc}" alt="DallA" onerror="this.parentElement.innerHTML='<div class=dalia-fab-fallback>🤖</div>'" />`;
-    fab.style.display = isActive() ? "block" : "none";
-    document.body.appendChild(fab);
-
-    // Toggle activa/desactiva el FAB
-    toggleWrap.addEventListener("click", () => {
-      const active = !isActive();
-      localStorage.setItem(STORAGE_KEY, active ? "1" : "0");
-      switchPill.classList.toggle("on", active);
-      fab.style.display = active ? "block" : "none";
-      if (!active && widgetEl) closeWidget();
-    });
+    syncFabVisibility();
 
     let widgetEl = null;
     let history  = [];
     let isOpen   = false;
+
+    toggleWrap.addEventListener("click", () => {
+      const active = !isActive();
+      localStorage.setItem(STORAGE_KEY, active ? "1" : "0");
+      switchPill.classList.toggle("on", active);
+      syncFabVisibility();
+      if (!active && widgetEl) closeWidget();
+    });
 
     function openWidget() {
       if (isOpen) return;

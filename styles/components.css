@@ -620,6 +620,11 @@ body[data-theme="dark"] .module-card {
 
 /* ── IA Widget ──────────────────────────────────────────────────────────────── */
 
+/* Si el mini-widget DallA (dalia-widget.js) está montado, no duplicar el acceso en el topbar */
+body:has(#dalia-dock) .ia-widget-btn {
+  display: none !important;
+}
+
 /* Botón topbar con avatar de DalIA */
 .ia-widget-btn {
   position: relative;

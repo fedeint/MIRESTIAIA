@@ -723,3 +723,132 @@ body[data-theme="dark"] .checklist-progress {
     margin-bottom: var(--space-4);
   }
 }
+
+/* ========== Skeleton layouts (dashboard inicial) ========== */
+.sidebar-nav-skeleton {
+  display: grid;
+  gap: 10px;
+  padding: var(--space-2) 0;
+}
+
+.sidebar-nav-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-3);
+  border-radius: 14px;
+  border: 1px solid transparent;
+}
+
+.sidebar-nav-skeleton__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.sidebar-nav-skeleton__text {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stat-card-skeleton {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  min-height: 118px;
+}
+
+.stat-card-skeleton__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+
+.module-card-skeleton {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, var(--color-surface) 0%, #fcfdfe 100%);
+  min-height: 168px;
+}
+
+body[data-theme="dark"] .module-card-skeleton {
+  background: linear-gradient(180deg, var(--color-surface), var(--color-surface-muted));
+}
+
+.module-card-skeleton__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ops-card-skeleton {
+  display: grid;
+  gap: 12px;
+  padding: var(--space-4);
+  border-radius: 18px;
+  border: 1px solid var(--color-border);
+  background: linear-gradient(160deg, var(--color-surface), rgba(255, 255, 255, 0.78));
+  min-height: 132px;
+}
+
+body[data-theme="dark"] .ops-card-skeleton {
+  background: linear-gradient(160deg, var(--color-surface), var(--color-surface-muted));
+}
+
+.ops-card-skeleton__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.insight-skeleton {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body[data-theme="dark"] .insight-skeleton {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.insight-list li.insight-skeleton {
+  padding-left: 0;
+}
+
+.insight-list li.insight-skeleton::before {
+  content: none !important;
+  display: none !important;
+}
+
+.checklist-skeleton__bar {
+  height: 8px;
+  border-radius: 999px;
+  margin-bottom: var(--space-4);
+}
+
+.action-row-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body[data-theme="dark"] .action-row-skeleton {
+  background: rgba(255, 255, 255, 0.04);
+}

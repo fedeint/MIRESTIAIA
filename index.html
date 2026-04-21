@@ -20,8 +20,8 @@
     <link rel="stylesheet" href="./styles/tokens.css?v=20260420-dashv2" />
     <link rel="stylesheet" href="./styles/base.css?v=20260420-dashv2" />
     <link rel="stylesheet" href="./styles/layout.css?v=20260423-mobile-scroll" />
-    <link rel="stylesheet" href="./styles/components.css?v=20260422-dalia-dock" />
-    <link rel="stylesheet" href="./styles/dashboard.css?v=20260423-mobile-scroll" />
+    <link rel="stylesheet" href="./styles/components.css?v=20260421-skeleton" />
+    <link rel="stylesheet" href="./styles/dashboard.css?v=20260421-skeleton" />
     <link rel="stylesheet" href="./styles/premium-modules.css?v=20260420-dashv2" />
     <link rel="stylesheet" href="./styles/mobile.css?v=20260426-pwa-widget" />
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -38,7 +38,52 @@
           </div>
         </div>
 
-        <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal"></nav>
+        <nav id="sidebarNav" class="sidebar__nav" aria-label="Navegación principal">
+          <div class="sidebar-nav-skeleton" aria-hidden="true">
+            <div class="sidebar-nav-skeleton__row">
+              <div class="skeleton sidebar-nav-skeleton__icon"></div>
+              <div class="sidebar-nav-skeleton__text">
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </div>
+            </div>
+            <div class="sidebar-nav-skeleton__row">
+              <div class="skeleton sidebar-nav-skeleton__icon"></div>
+              <div class="sidebar-nav-skeleton__text">
+                <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </div>
+            </div>
+            <div class="sidebar-nav-skeleton__row">
+              <div class="skeleton sidebar-nav-skeleton__icon"></div>
+              <div class="sidebar-nav-skeleton__text">
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </div>
+            </div>
+            <div class="sidebar-nav-skeleton__row">
+              <div class="skeleton sidebar-nav-skeleton__icon"></div>
+              <div class="sidebar-nav-skeleton__text">
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </div>
+            </div>
+            <div class="sidebar-nav-skeleton__row">
+              <div class="skeleton sidebar-nav-skeleton__icon"></div>
+              <div class="sidebar-nav-skeleton__text">
+                <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </div>
+            </div>
+            <div class="sidebar-nav-skeleton__row">
+              <div class="skeleton sidebar-nav-skeleton__icon"></div>
+              <div class="sidebar-nav-skeleton__text">
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </div>
+            </div>
+          </div>
+        </nav>
 
         <div class="sidebar__footer card card--sidebar">
           <span class="sidebar__footer-label">Estado del shell</span>
@@ -95,7 +140,32 @@
               </div>
             </div>
 
-            <div class="hero-panel__metrics" id="dashboardMetrics" aria-label="Métricas del día"></div>
+            <div class="hero-panel__metrics" id="dashboardMetrics" aria-label="Métricas del día">
+              <article class="stat-card-skeleton" aria-hidden="true">
+                <div class="skeleton stat-card-skeleton__icon"></div>
+                <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </article>
+              <article class="stat-card-skeleton" aria-hidden="true">
+                <div class="skeleton stat-card-skeleton__icon"></div>
+                <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </article>
+              <article class="stat-card-skeleton" aria-hidden="true">
+                <div class="skeleton stat-card-skeleton__icon"></div>
+                <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </article>
+              <article class="stat-card-skeleton" aria-hidden="true">
+                <div class="skeleton stat-card-skeleton__icon"></div>
+                <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                <div class="skeleton skeleton-line skeleton-line--md"></div>
+                <div class="skeleton skeleton-line skeleton-line--sm"></div>
+              </article>
+            </div>
           </section>
 
           <div class="dashboard__content">
@@ -107,7 +177,62 @@
                 </div>
               </div>
 
-              <div id="moduleGrid" class="module-grid" aria-live="polite"></div>
+              <div id="moduleGrid" class="module-grid" aria-live="polite">
+                <div class="module-card-skeleton" aria-hidden="true">
+                  <div class="module-card-skeleton__head">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton skeleton-pill skeleton-pill--small"></div>
+                  </div>
+                  <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                </div>
+                <div class="module-card-skeleton" aria-hidden="true">
+                  <div class="module-card-skeleton__head">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton skeleton-pill skeleton-pill--small"></div>
+                  </div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                </div>
+                <div class="module-card-skeleton" aria-hidden="true">
+                  <div class="module-card-skeleton__head">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton skeleton-pill skeleton-pill--small"></div>
+                  </div>
+                  <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                </div>
+                <div class="module-card-skeleton" aria-hidden="true">
+                  <div class="module-card-skeleton__head">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton skeleton-pill skeleton-pill--small"></div>
+                  </div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                </div>
+                <div class="module-card-skeleton" aria-hidden="true">
+                  <div class="module-card-skeleton__head">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton skeleton-pill skeleton-pill--small"></div>
+                  </div>
+                  <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                </div>
+                <div class="module-card-skeleton" aria-hidden="true">
+                  <div class="module-card-skeleton__head">
+                    <div class="skeleton skeleton-circle"></div>
+                    <div class="skeleton skeleton-pill skeleton-pill--small"></div>
+                  </div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                  <div class="skeleton skeleton-line skeleton-line--md"></div>
+                </div>
+              </div>
             </section>
 
             <aside class="dashboard__aside">
@@ -122,7 +247,38 @@
                     En vivo
                   </span>
                 </div>
-                <div id="systemHighlights" class="ops-grid"></div>
+                <div id="systemHighlights" class="ops-grid">
+                  <div class="ops-card-skeleton" aria-hidden="true">
+                    <div class="ops-card-skeleton__head">
+                      <div class="skeleton skeleton-circle"></div>
+                      <div class="skeleton skeleton-badge"></div>
+                    </div>
+                    <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                    <div class="skeleton skeleton-block"></div>
+                    <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  </div>
+                  <div class="ops-card-skeleton" aria-hidden="true">
+                    <div class="ops-card-skeleton__head">
+                      <div class="skeleton skeleton-circle"></div>
+                      <div class="skeleton skeleton-badge"></div>
+                    </div>
+                    <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    <div class="skeleton skeleton-line skeleton-line--md"></div>
+                    <div class="skeleton skeleton-block"></div>
+                    <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                  </div>
+                  <div class="ops-card-skeleton" aria-hidden="true">
+                    <div class="ops-card-skeleton__head">
+                      <div class="skeleton skeleton-circle"></div>
+                      <div class="skeleton skeleton-badge"></div>
+                    </div>
+                    <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                    <div class="skeleton skeleton-block"></div>
+                    <div class="skeleton skeleton-line skeleton-line--md"></div>
+                  </div>
+                </div>
               </section>
 
               <section class="info-panel info-panel--dalia card">
@@ -138,7 +294,32 @@
                   </div>
                   <span class="chip chip--soft">Consejos</span>
                 </div>
-                <ul id="insightsList" class="insight-list"></ul>
+                <ul id="insightsList" class="insight-list">
+                  <li class="insight-skeleton" aria-hidden="true">
+                    <div class="skeleton skeleton-circle" style="width: 36px; height: 36px"></div>
+                    <div style="flex: 1; display: grid; gap: 8px; min-width: 0">
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                      <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton skeleton-line skeleton-line--md"></div>
+                    </div>
+                  </li>
+                  <li class="insight-skeleton" aria-hidden="true">
+                    <div class="skeleton skeleton-circle" style="width: 36px; height: 36px"></div>
+                    <div style="flex: 1; display: grid; gap: 8px; min-width: 0">
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                      <div class="skeleton skeleton-line skeleton-line--md"></div>
+                      <div class="skeleton skeleton-line skeleton-line--md"></div>
+                    </div>
+                  </li>
+                  <li class="insight-skeleton" aria-hidden="true">
+                    <div class="skeleton skeleton-circle" style="width: 36px; height: 36px"></div>
+                    <div style="flex: 1; display: grid; gap: 8px; min-width: 0">
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                      <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    </div>
+                  </li>
+                </ul>
                 <a class="btn btn--secondary dalia-cta" href="./IA/ia.html">
                   <i data-lucide="message-circle"></i>
                   Preguntar a DalIA
@@ -152,8 +333,35 @@
                     <h3>Próximas acciones</h3>
                   </div>
                 </div>
-                <div id="checklistProgress" class="checklist-progress"></div>
-                <ul id="operationalChecklist" class="action-list"></ul>
+                <div id="checklistProgress" class="checklist-progress">
+                  <div class="skeleton checklist-skeleton__bar" aria-hidden="true"></div>
+                </div>
+                <ul id="operationalChecklist" class="action-list">
+                  <li class="action-row-skeleton" aria-hidden="true">
+                    <div class="skeleton skeleton-circle" style="width: 32px; height: 32px"></div>
+                    <div class="skeleton skeleton-circle" style="width: 32px; height: 32px"></div>
+                    <div style="flex: 1; display: grid; gap: 8px">
+                      <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    </div>
+                  </li>
+                  <li class="action-row-skeleton" aria-hidden="true">
+                    <div class="skeleton skeleton-circle" style="width: 32px; height: 32px"></div>
+                    <div class="skeleton skeleton-circle" style="width: 32px; height: 32px"></div>
+                    <div style="flex: 1; display: grid; gap: 8px">
+                      <div class="skeleton skeleton-line skeleton-line--md"></div>
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    </div>
+                  </li>
+                  <li class="action-row-skeleton" aria-hidden="true">
+                    <div class="skeleton skeleton-circle" style="width: 32px; height: 32px"></div>
+                    <div class="skeleton skeleton-circle" style="width: 32px; height: 32px"></div>
+                    <div style="flex: 1; display: grid; gap: 8px">
+                      <div class="skeleton skeleton-line skeleton-line--lg"></div>
+                      <div class="skeleton skeleton-line skeleton-line--sm"></div>
+                    </div>
+                  </li>
+                </ul>
               </section>
             </aside>
           </div>
@@ -169,7 +377,7 @@
       <i data-lucide="moon"></i>
     </button>
 
-    <script type="module" src="./scripts/app.js?v=20260426-pwa-widget"></script>
+    <script type="module" src="./scripts/app.js?v=20260421-skeleton-dash"></script>
     <script src="./scripts/dalia-widget.js?v=20260422-dalia-dock"></script>
   </body>
 </html>

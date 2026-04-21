@@ -84,8 +84,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyUserIdentity(profile);
 
   if (pageType === "dashboard") {
-    initializeDashboardPage(profile);
-    initializeDashboard(profile);
+    // Deja pintar un frame los skeletons (shimmer) antes de hidratar métricas y grillas
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        initializeDashboardPage(profile);
+        initializeDashboard(profile);
+      });
+    });
     return;
   }
 

@@ -1013,3 +1013,105 @@ body:has(#dalia-dock) .ia-widget-btn {
   .ia-widget-panel { bottom: 0; right: 0; width: 100%; max-width: 100%; border-radius: 20px 20px 0 0; height: 80dvh; }
   .ia-widget-hint { display: none; }
 }
+
+/* ========== Skeleton + shimmer (carga / placeholders) ========== */
+:root {
+  --mirest-sk-base: rgba(148, 163, 184, 0.22);
+  --mirest-sk-shine: rgba(255, 255, 255, 0.55);
+}
+
+body[data-theme="dark"] {
+  --mirest-sk-base: rgba(148, 163, 184, 0.14);
+  --mirest-sk-shine: rgba(255, 255, 255, 0.12);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--mirest-sk-base);
+  border-radius: var(--radius-md, 10px);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mirest-sk-shine),
+    transparent
+  );
+  animation: mirest-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes mirest-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    transform: none;
+    opacity: 0.35;
+  }
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 999px;
+}
+
+.skeleton-line--sm {
+  width: 34%;
+}
+
+.skeleton-line--md {
+  width: 62%;
+}
+
+.skeleton-line--lg {
+  width: 84%;
+  height: 15px;
+}
+
+.skeleton-pill {
+  width: 160px;
+  height: 36px;
+  border-radius: var(--radius-full, 999px);
+}
+
+.skeleton-pill--small {
+  width: 108px;
+  height: 30px;
+}
+
+.skeleton-card {
+  min-height: 88px;
+  border-radius: var(--radius-lg, 16px);
+}
+
+.skeleton-card--tall {
+  min-height: 120px;
+}
+
+.skeleton-block {
+  min-height: 44px;
+  border-radius: var(--radius-lg, 14px);
+}
+
+.skeleton-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-badge {
+  width: 52px;
+  height: 26px;
+  border-radius: 999px;
+}

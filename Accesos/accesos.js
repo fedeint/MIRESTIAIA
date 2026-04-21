@@ -8,7 +8,7 @@ import {
   listAccessRequests,
   notifyAccessRequestEvent,
   updateAccessRequest,
-} from "../scripts/access-requests.js?v=20260421-approvefix";
+} from "../scripts/access-requests.js?v=20260421-jwtfix";
 import {
   deleteUser,
   listUsers,
@@ -623,12 +623,19 @@ function isBanned(user) {
   return bannedUntil > Date.now();
 }
 
+function isPendingActivation(user) {
+  return !user?.email_confirmed_at && !user?.last_sign_in_at;
+}
+
 function getUserStatusPill(user) {
   if (user.protected) {
     return `<span class="request-pill request-pill--reviewing">Demo</span>`;
   }
   if (isBanned(user)) {
     return `<span class="request-pill request-pill--rejected">Revocado</span>`;
+  }
+  if (isPendingActivation(user)) {
+    return `<span class="request-pill request-pill--pending">Pendiente activación</span>`;
   }
   return `<span class="request-pill request-pill--approved">Activo</span>`;
 }

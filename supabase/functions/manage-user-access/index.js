@@ -103,6 +103,8 @@ Deno.serve(async (request) => {
         email: u.email,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at ?? null,
+        email_confirmed_at: u.email_confirmed_at ?? u.confirmed_at ?? null,
+        invited_at: u.invited_at ?? null,
         banned_until: u.banned_until ?? null,
         role: typeof u.user_metadata?.role === "string" ? u.user_metadata.role : null,
         permissions: Array.isArray(u.user_metadata?.permissions)

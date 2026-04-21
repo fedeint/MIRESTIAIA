@@ -12,3 +12,5 @@ $sep = "`n`n/* --- mirest bundle --- */`n`n"
 $text = "/* auth-bundle: generado por scripts/build-auth-bundle.ps1 */`n`n" + (($parts | ForEach-Object { Get-Content -Raw $_ }) -join $sep)
 [IO.File]::WriteAllText("$PWD/styles/auth-bundle.css", $text, [Text.UTF8Encoding]::new($false))
 Write-Host "OK styles/auth-bundle.css" (Get-Item styles/auth-bundle.css).Length "bytes"
+npx --yes clean-css-cli@5.3.3 -O2 --output styles/auth-bundle.min.css styles/auth-bundle.css
+Write-Host "OK styles/auth-bundle.min.css" (Get-Item styles/auth-bundle.min.css).Length "bytes"

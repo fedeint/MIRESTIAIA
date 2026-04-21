@@ -9,6 +9,7 @@ export class Onboarding {
     this.storageKey = storageKey;
     this.currentStep = 0;
     this.overlay = null;
+    this._spotlightRaf = null;
     this.init();
   }
 
@@ -47,10 +48,19 @@ export class Onboarding {
     document.getElementById('onboardingNext').onclick = () => this.next();
     
     // Escuchar scroll y resize para reposicionar spotlight
-    window.addEventListener('scroll', () => this.updateSpotlight(), { passive: true });
-    window.addEventListener('resize', () => this.updateSpotlight(), { passive: true });
+    window.addEventListener('scroll', () => this.scheduleSpotlightUpdate(), { passive: true });
+    window.addEventListener('resize', () => this.scheduleSpotlightUpdate(), { passive: true });
 
     this.showStep();
+  }
+
+  scheduleSpotlightUpdate() {
+    if (!this.overlay) return;
+    if (this._spotlightRaf != null) return;
+    this._spotlightRaf = window.requestAnimationFrame(() => {
+      this._spotlightRaf = null;
+      this.updateSpotlightImpl();
+    });
   }
 
   showStep() {
@@ -66,10 +76,14 @@ export class Onboarding {
     nextBtn.innerText = this.currentStep === this.steps.length - 1 ? 'Comenzar' : 'Siguiente';
 
     this.overlay.classList.add('open');
-    this.updateSpotlight();
+    this.scheduleSpotlightUpdate();
   }
 
   updateSpotlight() {
+    this.scheduleSpotlightUpdate();
+  }
+
+  updateSpotlightImpl() {
     if (!this.overlay) return;
     
     const step = this.steps[this.currentStep];
@@ -116,10 +130,9 @@ export class Onboarding {
 
   positionCard(targetRect, card) {
     const margin = 20;
-    const cardRect = card.getBoundingClientRect();
-    
-    // Limpiar transform de centrado por si acaso
+    // Escribir primero, luego leer geometría (evita reflow forzado lectura→escritura)
     card.style.transform = 'none';
+    const cardRect = card.getBoundingClientRect();
 
     let top = targetRect.bottom + margin;
     let left = targetRect.left;

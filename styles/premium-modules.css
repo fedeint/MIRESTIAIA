@@ -152,7 +152,8 @@ body[data-theme="dark"] .mod-stat-card {
   border-color: var(--color-accent);
 }
 
-.theme-fab i {
+.theme-fab i,
+.theme-fab svg.auth-icon {
   width: 24px;
   height: 24px;
 }

@@ -1,3 +1,5 @@
+import { iconThemeFab } from "./auth-inline-icons.js";
+
 export const APP_META = {
   name: "MiRest con IA",
   envLabel: "estructura colaborativa del frontend",
@@ -436,23 +438,20 @@ function applyTheme(theme, button) {
 
   if (button) {
     const isDark = theme === "dark";
-    
-    // Si el botón tiene texto (estilo antiguo), lo limpiamos si es un FAB
-    if (button.classList.contains('theme-fab')) {
-      button.textContent = ""; 
-    } else if (button.textContent && !button.querySelector('i')) {
-      button.textContent = isDark ? "Modo claro" : "Modo oscuro";
-    }
-    
-    // Asegurar que el icono sea el correcto
-    let icon = button.querySelector('[data-lucide]');
-    if (!icon && button.classList.contains('theme-fab')) {
-      button.innerHTML = `<i data-lucide="${isDark ? 'sun' : 'moon'}"></i>`;
-      icon = button.querySelector('[data-lucide]');
+
+    if (button.classList.contains("theme-fab")) {
+      button.innerHTML = iconThemeFab(isDark);
+      button.setAttribute("aria-pressed", String(isDark));
+      return;
     }
 
+    if (button.textContent && !button.querySelector("i, svg")) {
+      button.textContent = isDark ? "Modo claro" : "Modo oscuro";
+    }
+
+    const icon = button.querySelector("[data-lucide]");
     if (icon) {
-      icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+      icon.setAttribute("data-lucide", isDark ? "sun" : "moon");
       if (window.lucide) {
         window.lucide.createIcons();
       }

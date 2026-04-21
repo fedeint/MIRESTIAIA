@@ -495,7 +495,8 @@
     bottom: calc(16px + env(safe-area-inset-bottom)) !important;
     right: calc(16px + env(safe-area-inset-right)) !important;
   }
-  .theme-fab i {
+  .theme-fab i,
+  .theme-fab svg.auth-icon {
     width: 20px !important;
     height: 20px !important;
   }

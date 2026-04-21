@@ -1,4 +1,11 @@
 import { supabase } from "./supabase.js";
+import { hydrateAuthIconPlaceholders } from "./auth-inline-icons.js?v=20260421-auth-icons";
+import { initCookieConsentBar } from "./cookie-consent.js?v=20260421-cookies";
+import { initializeThemeToggle } from "./navigation.js?v=20260420-resend1";
+
+hydrateAuthIconPlaceholders();
+initCookieConsentBar();
+initializeThemeToggle(document.getElementById("themeToggle"));
 
 const statusEl = document.getElementById("activateStatus");
 const formEl = document.getElementById("activateForm");
@@ -218,7 +225,6 @@ async function bootstrap() {
   try {
     document.body.classList.add("page-ready");
     bindPasswordToggles();
-    if (window.lucide) window.lucide.createIcons();
 
     const parsed = parseAuthCallbackParams();
 

@@ -14,24 +14,14 @@
     document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap"
-    media="print"
-    onload="this.media='all'"
-  />
+  <link rel="stylesheet" href="./styles/auth-bundle.min.css?v=20260421-auth-perf" />
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" />
   </noscript>
-
-  <link rel="stylesheet" href="./styles/auth-bundle.css?v=20260429-auth-perf" />
-
-  <script defer src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body data-theme="light">
+  <main id="contenido-principal">
   <div class="login-container">
     <div class="login-card card" style="max-width: 520px;">
       <div class="login-card__accent login-card__accent--warm" aria-hidden="true"></div>
@@ -78,53 +68,21 @@
         <i data-lucide="life-buoy"></i>
         <span>Si no recibes nada en unos minutos, revisa en Supabase que Authentication → Emails / SMTP esté activo, pide «Enviar recuperación» desde Accesos, o confirma que el correo sea exactamente el de la cuenta.</span>
       </div>
+
+      <p class="legal-footer-row" style="border-top: none; margin-top: var(--space-6);">
+        <a href="./legal/privacidad.html">Privacidad</a>
+        <a href="./legal/cookies.html">Cookies</a>
+        <a href="./legal/terminos.html">Términos</a>
+      </p>
     </div>
   </div>
 
   <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
     <i data-lucide="moon"></i>
   </button>
+  </main>
 
-  <script type="module" defer>
-    import { requestPasswordRecoveryEmail } from "./scripts/password-recovery-client.js?v=20260424-no-resend-recovery";
-    import { initializeThemeToggle } from "./scripts/navigation.js?v=20260422-recovery";
-
-    document.body.classList.add("page-ready");
-    window.lucide.createIcons();
-    initializeThemeToggle(document.getElementById("themeToggle"));
-
-    const form = document.getElementById("publicRecoveryForm");
-    const emailInput = document.getElementById("recovery_page_email");
-    const msg = document.getElementById("recoveryPageMessage");
-    const submitBtn = document.getElementById("recoveryPageSubmit");
-
-    form?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = emailInput.value.trim().toLowerCase();
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enviando...';
-      msg.style.display = "none";
-      window.lucide.createIcons();
-
-      try {
-        const { message } = await requestPasswordRecoveryEmail(email);
-        msg.textContent = message;
-        msg.className = "request-banner request-banner--success";
-        msg.style.display = "block";
-      } catch (err) {
-        console.error("[recovery-page]", err);
-        msg.textContent =
-          err?.message ||
-          "Intenta de nuevo en unos minutos. Si administras el proyecto, revisa SMTP y plantillas en Supabase (Authentication → Emails).";
-        msg.className = "request-banner request-banner--error";
-        msg.style.display = "block";
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i data-lucide="send"></i> Enviar enlace';
-        window.lucide.createIcons();
-      }
-    });
-  </script>
+  <script type="module" defer src="./scripts/recuperar-entry.js?v=20260421-recovery-perf"></script>
 </body>
 
 </html>

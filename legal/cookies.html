@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de cookies | MiRest con IA</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <script>
+    document.documentElement.classList.add("js", "auth-shell");
+    document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
+  </script>
+  <link rel="stylesheet" href="../styles/auth-bundle.min.css?v=20260421-legal" />
+</head>
+<body data-theme="light" class="page-ready">
+  <main class="login-container" style="padding-top: var(--space-8); padding-bottom: var(--space-10);">
+    <article class="login-card card" style="max-width: 640px; margin: 0 auto;">
+      <div class="login-header">
+        <span class="eyebrow">MiRest con IA</span>
+        <h1>Política de cookies</h1>
+        <p class="legal-meta">Texto base para desarrollo; ajústalo con tu política real y cookies de terceros.</p>
+      </div>
+      <div class="legal-prose" style="font-size: 14px; line-height: 1.65; color: var(--color-text-muted);">
+        <h2 style="font-size: 16px; color: var(--color-text); margin-top: 1.5rem;">Qué guardamos en tu dispositivo</h2>
+        <p>
+          <strong>Tema de interfaz:</strong> la preferencia claro/oscuro se guarda en <code>localStorage</code> bajo la
+          clave <code>mirest-ui-theme</code>.
+        </p>
+        <p>
+          <strong>Consentimiento:</strong> si aceptas la barra de cookies en las páginas de acceso, guardamos tu
+          elección en <code>localStorage</code> y una cookie técnica <code>mirest_consent</code> para recordar el
+          consentimiento en la misma ruta del sitio.
+        </p>
+        <p>
+          <strong>Fuentes web:</strong> solo cargamos las tipografías de Google Fonts después de ese consentimiento (o
+          si ya constaba guardado), para reducir solicitudes innecesarias en la primera visita.
+        </p>
+        <h2 style="font-size: 16px; color: var(--color-text); margin-top: 1.5rem;">Cookies de sesión / proveedor</h2>
+        <p>
+          El inicio de sesión con Supabase puede implicar cookies o almacenamiento asociado al dominio del proveedor
+          según su configuración. Consulta la documentación de Supabase y la configuración de tu proyecto.
+        </p>
+      </div>
+      <p class="legal-footer-row" style="border-top: none; margin-top: var(--space-8);">
+        <a href="./privacidad.html">Privacidad</a>
+        <a href="./terminos.html">Términos</a>
+        <a href="../login.html">Volver al inicio de sesión</a>
+      </p>
+    </article>
+  </main>
+</body>
+</html>

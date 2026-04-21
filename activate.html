@@ -13,21 +13,10 @@
     document.documentElement.dataset.theme = localStorage.getItem("mirest-ui-theme") || "light";
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap"
-    media="print"
-    onload="this.media='all'"
-  />
+  <link rel="stylesheet" href="./styles/auth-bundle.min.css?v=20260421-auth-perf" />
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&family=Inter:wght@300..900&display=swap" />
   </noscript>
-
-  <link rel="stylesheet" href="./styles/auth-bundle.css?v=20260429-auth-perf" />
-
-  <script defer src="https://unpkg.com/lucide@latest"></script>
   <!-- Antes del módulo: el cliente de Supabase puede limpiar el hash; guardamos URL completa del callback. -->
   <script>
     window.__MIREST_ACTIVATE_RAW__ = {
@@ -54,6 +43,7 @@
 
 <!-- page-ready: sin esto, base.css deja body en opacity:0 (html.js body) y la página se ve “en blanco”. -->
 <body data-theme="light" class="page-ready">
+  <main id="contenido-principal">
   <div class="login-container">
     <div class="login-card card">
       <div id="activateLoadingPanel" class="activate-loading-overlay" aria-live="polite">
@@ -158,6 +148,13 @@
   <button id="themeToggle" class="theme-fab" type="button" aria-label="Cambiar tema">
     <i data-lucide="moon"></i>
   </button>
+
+  <p class="legal-footer-row" style="max-width: 460px; margin: 0 auto var(--space-4); padding: 0 var(--space-6);">
+    <a href="./legal/privacidad.html">Privacidad</a>
+    <a href="./legal/cookies.html">Cookies</a>
+    <a href="./legal/terminos.html">Términos</a>
+  </p>
+  </main>
 
   <script type="module" defer src="./scripts/activate.js?v=20260429-activate-photo"></script>
 </body>

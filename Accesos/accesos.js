@@ -8,7 +8,7 @@ import {
   listAccessRequests,
   notifyAccessRequestEvent,
   updateAccessRequest,
-} from "../scripts/access-requests.js?v=20260421-jwtfix";
+} from "../scripts/access-requests.js?v=20260421-uxpolish";
 import {
   deleteUser,
   listUsers,
@@ -38,6 +38,7 @@ let usersList = [];
 let isRendering = false;
 let isLoadingUsers = false;
 let showRejected = false;
+let showApproved = false;
 
 const ASSIGNABLE_MODULES = getAssignableModules();
 const ASSIGNABLE_KEYS = ASSIGNABLE_MODULES.map((m) => m.key);
@@ -97,8 +98,11 @@ function updateOverviewMetrics(requests) {
 }
 
 function getVisibleRequests(requests) {
-  if (showRejected) return requests;
-  return requests.filter((item) => item.status !== ACCESS_REQUEST_STATUS.REJECTED);
+  return requests.filter((item) => {
+    if (item.status === ACCESS_REQUEST_STATUS.REJECTED && !showRejected) return false;
+    if (item.status === ACCESS_REQUEST_STATUS.APPROVED && !showApproved) return false;
+    return true;
+  });
 }
 
 function updateRejectedToggleLabel() {
@@ -108,6 +112,15 @@ function updateRejectedToggleLabel() {
   const suffix = rejectedCount > 0 ? ` (${rejectedCount})` : "";
   toggle.textContent = (showRejected ? "Ocultar rechazadas" : "Mostrar rechazadas") + suffix;
   toggle.style.display = rejectedCount > 0 ? "" : "none";
+}
+
+function updateApprovedToggleLabel() {
+  const toggle = document.getElementById("toggleApprovedBtn");
+  if (!toggle) return;
+  const approvedCount = accessRequests.filter((r) => r.status === ACCESS_REQUEST_STATUS.APPROVED).length;
+  const suffix = approvedCount > 0 ? ` (${approvedCount})` : "";
+  toggle.textContent = (showApproved ? "Ocultar aprobadas" : "Mostrar aprobadas") + suffix;
+  toggle.style.display = approvedCount > 0 ? "" : "none";
 }
 
 function permissionsForRole(role) {
@@ -291,6 +304,7 @@ function buildRow(request) {
 function renderTable(requests) {
   updateOverviewMetrics(requests);
   updateRejectedToggleLabel();
+  updateApprovedToggleLabel();
 
   const visible = getVisibleRequests(requests);
 
@@ -299,7 +313,7 @@ function renderTable(requests) {
     return;
   }
   if (visible.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No hay solicitudes activas. Todas las solicitudes están rechazadas.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No hay solicitudes activas. Las aprobadas ya son usuarios con acceso y las rechazadas están ocultas.</td></tr>`;
     return;
   }
 
@@ -755,9 +769,18 @@ async function loadUsers() {
 window.revokeUserAccess = async (userId) => {
   const user = usersList.find((item) => item.id === userId);
   const label = user?.email || "este usuario";
-  if (!window.confirm(`¿Revocar el acceso de ${label}? Podrá ser restaurado después.`)) {
-    return;
-  }
+  const name = user?.full_name ? `${user.full_name} · ${label}` : label;
+
+  const confirmed = await openDangerConfirmModal({
+    title: "Revocar acceso",
+    description: "El usuario no podrá iniciar sesión hasta que restaures su acceso. Podrás revertir esta acción cuando quieras.",
+    detail: name,
+    confirmLabel: "Sí, revocar acceso",
+  });
+  if (!confirmed) return;
+
+  clearUsersFeedback();
+  setUsersFeedback(`Revocando acceso de ${label}…`, "success");
 
   try {
     const data = await revokeUser(userId);
@@ -769,6 +792,11 @@ window.revokeUserAccess = async (userId) => {
 };
 
 window.restoreUserAccess = async (userId) => {
+  const user = usersList.find((item) => item.id === userId);
+  const label = user?.email || "este usuario";
+  clearUsersFeedback();
+  setUsersFeedback(`Restaurando acceso de ${label}…`, "success");
+
   try {
     const data = await restoreUser(userId);
     setUsersFeedback(data?.message || "Acceso restaurado correctamente.", "success");
@@ -781,9 +809,18 @@ window.restoreUserAccess = async (userId) => {
 window.deleteUserAccount = async (userId) => {
   const user = usersList.find((item) => item.id === userId);
   const label = user?.email || "este usuario";
-  if (!window.confirm(`Eliminar permanentemente a ${label}. Esta acción no se puede deshacer. ¿Continuar?`)) {
-    return;
-  }
+  const name = user?.full_name ? `${user.full_name} · ${label}` : label;
+
+  const confirmed = await openDangerConfirmModal({
+    title: "Eliminar usuario permanentemente",
+    description: "Esta acción borra la cuenta de autenticación de forma definitiva. No podrás deshacerla y el usuario deberá registrarse de nuevo para volver a tener acceso.",
+    detail: name,
+    confirmLabel: "Sí, eliminar usuario",
+  });
+  if (!confirmed) return;
+
+  clearUsersFeedback();
+  setUsersFeedback(`Eliminando a ${label}…`, "success");
 
   try {
     const data = await deleteUser(userId);
@@ -893,6 +930,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (toggleRejectedBtn) {
     toggleRejectedBtn.addEventListener("click", () => {
       showRejected = !showRejected;
+      renderTable(accessRequests);
+      if (window.lucide) window.lucide.createIcons();
+    });
+  }
+
+  const toggleApprovedBtn = document.getElementById("toggleApprovedBtn");
+  if (toggleApprovedBtn) {
+    toggleApprovedBtn.addEventListener("click", () => {
+      showApproved = !showApproved;
       renderTable(accessRequests);
       if (window.lucide) window.lucide.createIcons();
     });

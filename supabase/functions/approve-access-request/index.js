@@ -179,60 +179,92 @@ Deno.serve(async (request) => {
     inviteMetadata.permissions = permissions;
   }
 
-  // Generate the invite link without sending Supabase's default email, so we can
-  // deliver our own branded message through Resend.
-  async function generateInviteLink() {
-    return adminClient.auth.admin.generateLink({
-      type: "invite",
-      email: accessRequest.email,
-      options: {
-        data: inviteMetadata,
-        redirectTo,
-      },
-    });
+  // IMPORTANTE: NO usamos generateLink({ type: "invite" }) porque esa llamada
+  // también dispara el correo genérico de Supabase ("You have been invited")
+  // por su SMTP por defecto, apuntando a localhost:3000 y con el branding feo.
+  //
+  // Estrategia:
+  //   1. Si existe un usuario en auth.users: bloquear si ya está confirmado,
+  //      o borrarlo si era una invitación previa sin activar.
+  //   2. Crear al usuario silenciosamente con createUser (no envía correo),
+  //      con email_confirm=true y una contraseña aleatoria larga.
+  //   3. Generar un enlace type="recovery" (tampoco envía correo).
+  //   4. Nosotros enviamos el correo branded vía Resend.
+  //
+  // El link de recovery redirige a /activate.html con #access_token y
+  // #refresh_token en el hash. Ese flujo ya está soportado por scripts/activate.js
+  // (maneja type=recovery y permite definir contraseña).
+
+  let existingUser = null;
+  try {
+    existingUser = await findAuthUserByEmail(adminClient, accessRequest.email);
+  } catch (lookupError) {
+    return jsonResponse(
+      { message: "No pudimos verificar al usuario existente.", detail: lookupError?.message ?? null },
+      500,
+    );
   }
 
-  let { data: linkData, error: linkError } = await generateInviteLink();
+  if (existingUser && isUserConfirmed(existingUser)) {
+    return jsonResponse(
+      {
+        message: `El correo ${accessRequest.email} ya tiene una cuenta activa. Edita sus módulos desde "Usuarios con acceso" en lugar de reinvitarlo.`,
+      },
+      409,
+    );
+  }
 
-  // Si el email ya figura en auth.users (invitación previa sin activar, o
-  // solicitudes rechazadas que dejaron residuo), reciclamos al usuario en vez
-  // de fallar con 400. Sólo lo hacemos si la cuenta NUNCA fue confirmada para
-  // no destruir usuarios activos por accidente.
-  if (linkError && isAlreadyRegisteredError(linkError)) {
-    let existingUser = null;
-    try {
-      existingUser = await findAuthUserByEmail(adminClient, accessRequest.email);
-    } catch (lookupError) {
+  if (existingUser) {
+    const { error: deleteError } = await adminClient.auth.admin.deleteUser(existingUser.id);
+    if (deleteError) {
       return jsonResponse(
-        { message: "No pudimos verificar al usuario existente.", detail: lookupError?.message ?? null },
+        {
+          message: "Había una invitación previa sin activar y no pudimos reciclarla automáticamente.",
+          detail: deleteError.message,
+        },
         500,
       );
     }
+  }
 
-    if (existingUser && isUserConfirmed(existingUser)) {
-      return jsonResponse(
-        {
-          message: `El correo ${accessRequest.email} ya tiene una cuenta activa. Edita sus módulos desde "Usuarios con acceso" en lugar de reinvitarlo.`,
-        },
-        409,
-      );
-    }
+  // Contraseña temporal larga y aleatoria. El usuario la sobreescribe en
+  // activate.html antes de usarla, y mientras tanto nadie puede adivinarla.
+  const tempPassword = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
 
-    if (existingUser) {
-      const { error: deleteError } = await adminClient.auth.admin.deleteUser(existingUser.id);
-      if (deleteError) {
-        return jsonResponse(
-          {
-            message: "Había una invitación previa sin activar y no pudimos reciclarla automáticamente.",
-            detail: deleteError.message,
-          },
-          500,
-        );
-      }
+  const { error: createError } = await adminClient.auth.admin.createUser({
+    email: accessRequest.email,
+    password: tempPassword,
+    email_confirm: true,
+    user_metadata: inviteMetadata,
+  });
 
-      ({ data: linkData, error: linkError } = await generateInviteLink());
+  if (createError && !isAlreadyRegisteredError(createError)) {
+    return jsonResponse(
+      { message: "No pudimos crear al usuario.", detail: createError.message },
+      400,
+    );
+  }
+
+  // Aseguramos que el metadata quede sincronizado en caso de que el usuario
+  // ya hubiera sido creado por alguna carrera; createUser no acepta upsert.
+  if (createError && isAlreadyRegisteredError(createError)) {
+    const retryUser = await findAuthUserByEmail(adminClient, accessRequest.email);
+    if (retryUser) {
+      await adminClient.auth.admin.updateUserById(retryUser.id, {
+        user_metadata: inviteMetadata,
+        email_confirm: true,
+        password: tempPassword,
+      });
     }
   }
+
+  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+    type: "recovery",
+    email: accessRequest.email,
+    options: {
+      redirectTo,
+    },
+  });
 
   if (linkError) {
     return jsonResponse({ message: linkError.message }, 400);

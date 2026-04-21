@@ -227,9 +227,10 @@ Deno.serve(async (request) => {
     }
   }
 
-  // Contraseña temporal larga y aleatoria. El usuario la sobreescribe en
-  // activate.html antes de usarla, y mientras tanto nadie puede adivinarla.
-  const tempPassword = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+  // Contraseña temporal aleatoria. El usuario la sobreescribe en activate.html
+  // antes de usarla. Bcrypt limita la entrada a 72 bytes, así que nos
+  // mantenemos por debajo: dos UUIDs concatenados sin separador (72 chars).
+  const tempPassword = `${crypto.randomUUID()}${crypto.randomUUID()}`.slice(0, 64);
 
   const { error: createError } = await adminClient.auth.admin.createUser({
     email: accessRequest.email,

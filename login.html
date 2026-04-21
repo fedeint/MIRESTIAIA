@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="./styles/tokens.css?v=20260420-loginfix2" />
   <link rel="stylesheet" href="./styles/base.css?v=20260420-loginfix2" />
   <link rel="stylesheet" href="./styles/components.css?v=20260420-loginfix2" />
-  <link rel="stylesheet" href="./styles/login.css?v=20260423-request-modal-scroll" />
+  <link rel="stylesheet" href="./styles/login.css?v=20260424-login-mascot" />
   <link rel="stylesheet" href="./styles/mobile.css?v=20260420-mobilev1" />
 
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -38,17 +38,18 @@
           <i data-lucide="shield-check"></i>
           Acceso seguro
         </span>
-        <div class="brand-mark" aria-hidden="true">IA</div>
+        <div class="brand-mark login-header__mascot" aria-hidden="true">
+          <img
+            src="./IA/DalIA.png"
+            alt=""
+            width="80"
+            height="80"
+            decoding="async"
+            class="login-header__mascot-img"
+          />
+        </div>
         <h1>Bienvenido a MiRest</h1>
         <p>Tu correo es tu usuario. Si ya activaste tu cuenta, inicia sesión para continuar con el flujo operativo.</p>
-      </div>
-
-      <div id="loginSessionBar" class="login-session-bar" hidden>
-        <p>Sesión activa como <strong id="loginSessionEmail"></strong></p>
-        <div class="login-session-bar__actions">
-          <button type="button" class="btn btn--primary btn--sm" id="loginSessionContinue">Ir al panel</button>
-          <button type="button" class="btn btn--secondary btn--sm" id="loginSessionLogout">Cerrar sesión</button>
-        </div>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -75,23 +76,6 @@
             <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar contraseña">
               <i data-lucide="eye"></i>
             </button>
-          </div>
-        </div>
-
-        <div class="demo-credentials" aria-label="Credenciales de ejemplo">
-          <div class="demo-credentials__header">
-            <i data-lucide="badge-info"></i>
-            <span>Acceso de ejemplo</span>
-          </div>
-          <div class="demo-credentials__grid">
-            <div class="demo-credentials__item">
-              <span>Email</span>
-              <strong>a@a.com</strong>
-            </div>
-            <div class="demo-credentials__item">
-              <span>Contraseña</span>
-              <strong>manzanas</strong>
-            </div>
           </div>
         </div>
 
@@ -133,7 +117,7 @@
     <i data-lucide="moon"></i>
   </button>
 
-  <div class="request-modal" id="requestModal" aria-hidden="true">
+  <div class="request-modal" id="requestModal" inert>
     <div class="request-modal__backdrop" data-close-request-modal></div>
     <div class="request-modal__dialog card" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
       <div class="request-modal__header">
@@ -282,11 +266,16 @@
           </div>
         </section>
 
-        <div class="request-form__actions">
-          <button type="button" class="btn btn--secondary" data-close-request-modal id="requestCloseBtn">Cerrar</button>
-          <button type="button" class="btn btn--secondary" id="requestPrevBtn" hidden>Anterior</button>
-          <button type="button" class="btn btn--secondary" id="requestNextBtn">Siguiente</button>
-          <button type="submit" class="btn btn--primary" id="requestSubmitBtn" hidden>
+        <div class="request-form__actions request-form__actions--access" role="group" aria-label="Acciones del formulario">
+          <div class="request-form__step-nav" role="toolbar" aria-label="Cambiar paso">
+            <button type="button" class="request-step-arrow" id="requestPrevBtn" aria-label="Paso anterior" hidden>
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <button type="button" class="request-step-arrow" id="requestNextBtn" aria-label="Paso siguiente">
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+          <button type="submit" class="btn btn--primary request-form__submit-access" id="requestSubmitBtn" hidden>
             <i data-lucide="send"></i>
             Enviar solicitud
           </button>
@@ -295,7 +284,7 @@
     </div>
   </div>
 
-  <div class="request-modal" id="recoveryModal" aria-hidden="true">
+  <div class="request-modal" id="recoveryModal" inert>
     <div class="request-modal__backdrop" data-close-recovery-modal></div>
     <div class="request-modal__dialog card request-modal__dialog--compact" role="dialog" aria-modal="true" aria-labelledby="recoveryModalTitle">
       <div class="request-modal__header">
@@ -379,20 +368,9 @@
       }
 
       const { data: { session } } = await supabase.auth.getSession();
-      const sessionBar = document.getElementById("loginSessionBar");
-      const sessionEmail = document.getElementById("loginSessionEmail");
-      const sessionContinue = document.getElementById("loginSessionContinue");
-      const sessionLogout = document.getElementById("loginSessionLogout");
-      if (session && sessionBar) {
-        sessionBar.hidden = false;
-        if (sessionEmail) sessionEmail.textContent = session.user?.email || "usuario";
-        sessionContinue?.addEventListener("click", () => {
-          window.location.replace("./index.html");
-        });
-        sessionLogout?.addEventListener("click", async () => {
-          await supabase.auth.signOut();
-          window.location.reload();
-        });
+      if (session) {
+        window.location.replace("./index.html");
+        return;
       }
 
       const form = document.getElementById('loginForm');
@@ -465,24 +443,36 @@
         setRequestStep(0);
         requestMessage.style.display = 'none';
         requestModal.classList.add('request-modal--open');
-        requestModal.setAttribute('aria-hidden', 'false');
+        requestModal.removeAttribute('inert');
+        window.requestAnimationFrame(() => {
+          document.getElementById('request_full_name')?.focus({ preventScroll: true });
+        });
       };
 
       const closeRequestModal = () => {
-        requestModal.classList.remove('request-modal--open');
-        requestModal.setAttribute('aria-hidden', 'true');
+        if (requestModal?.contains(document.activeElement)) {
+          openRequestModalBtn?.focus({ preventScroll: true });
+        }
+        requestModal?.classList.remove('request-modal--open');
+        requestModal?.setAttribute('inert', '');
       };
 
       const openRecoveryModal = () => {
         recoveryMessage.style.display = 'none';
         recoveryEmailInput.value = document.getElementById('email').value || '';
         recoveryModal.classList.add('request-modal--open');
-        recoveryModal.setAttribute('aria-hidden', 'false');
+        recoveryModal.removeAttribute('inert');
+        window.requestAnimationFrame(() => {
+          recoveryEmailInput?.focus({ preventScroll: true });
+        });
       };
 
       const closeRecoveryModal = () => {
-        recoveryModal.classList.remove('request-modal--open');
-        recoveryModal.setAttribute('aria-hidden', 'true');
+        if (recoveryModal?.contains(document.activeElement)) {
+          openRecoveryModalBtn?.focus({ preventScroll: true });
+        }
+        recoveryModal?.classList.remove('request-modal--open');
+        recoveryModal?.setAttribute('inert', '');
       };
 
       openRequestModalBtn?.addEventListener('click', openRequestModal);

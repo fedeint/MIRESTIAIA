@@ -8,21 +8,36 @@ const passwordEl = document.getElementById("password");
 const passwordConfirmEl = document.getElementById("passwordConfirm");
 const submitBtn = document.getElementById("activateSubmit");
 
+function getActivateSnapshot() {
+  const raw = globalThis.__MIREST_ACTIVATE_RAW__;
+  if (raw && typeof raw.hash === "string") {
+    return { hash: raw.hash, search: raw.search || "" };
+  }
+  return {
+    hash: window.location.hash || "",
+    search: window.location.search || "",
+  };
+}
+
 function setStatus(message, variant = "info") {
   statusEl.textContent = message;
   statusEl.style.display = "block";
   statusEl.dataset.variant = variant;
-  statusEl.classList.toggle("error-banner--success", variant === "success");
+  statusEl.classList.remove("error-banner--success", "error-banner--info", "error-banner--error");
+  if (variant === "success") statusEl.classList.add("error-banner--success");
+  else if (variant === "info") statusEl.classList.add("error-banner--info");
+  else statusEl.classList.add("error-banner--error");
 }
 
 function showFallback() {
   fallbackEl.hidden = false;
 }
 
-/** Lee parámetros típicos del callback de Supabase (hash y/o query). */
+/** Usa la captura hecha en activate.html antes de cargar supabase.js (el SDK borra el hash). */
 function parseAuthCallbackParams() {
-  const query = new URLSearchParams(window.location.search || "");
-  const hashRaw = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+  const snap = getActivateSnapshot();
+  const query = new URLSearchParams(snap.search || "");
+  const hashRaw = snap.hash?.startsWith("#") ? snap.hash.slice(1) : (snap.hash || "");
   const hash = new URLSearchParams(hashRaw);
   const pick = (key) => hash.get(key) ?? query.get(key);
 
@@ -31,7 +46,7 @@ function parseAuthCallbackParams() {
     try {
       errorDescription = decodeURIComponent(String(errorDescription).replace(/\+/g, " "));
     } catch {
-      // mantener texto crudo
+      // mantener
     }
   }
 
@@ -41,6 +56,16 @@ function parseAuthCallbackParams() {
     errorDescription,
     type: pick("type"),
   };
+}
+
+function snapshotHadAuthTokens() {
+  const snap = getActivateSnapshot();
+  const h = snap.hash || "";
+  return /access_token=/.test(h) && /refresh_token=/.test(h);
+}
+
+function snapshotHadPkceCode() {
+  return Boolean(new URLSearchParams(getActivateSnapshot().search || "").get("code"));
 }
 
 function isAuthFailureParams(parsed) {
@@ -77,7 +102,7 @@ function bindPasswordToggles() {
   });
 }
 
-function waitForSession(timeoutMs = 5000) {
+function waitForSession(timeoutMs = 8000) {
   return new Promise((resolve) => {
     let settled = false;
     const finish = (session) => {
@@ -99,61 +124,108 @@ function waitForSession(timeoutMs = 5000) {
 
     supabase.auth.getSession().then(({ data: payload }) => {
       if (payload?.session) finish(payload.session);
-    }).catch(() => {
-      // ignoramos; onAuthStateChange o el timeout resolverán
-    });
+    }).catch(() => {});
 
     const timer = setTimeout(() => finish(null), timeoutMs);
   });
 }
 
+async function pollForSession(maxMs = 2500, stepMs = 80) {
+  const deadline = Date.now() + maxMs;
+  while (Date.now() < deadline) {
+    const { data: payload } = await supabase.auth.getSession();
+    if (payload?.session?.user) return payload.session;
+    await new Promise((r) => setTimeout(r, stepMs));
+  }
+  return null;
+}
+
 async function bootstrap() {
-  bindPasswordToggles();
-  if (window.lucide) window.lucide.createIcons();
+  try {
+    bindPasswordToggles();
+    if (window.lucide) window.lucide.createIcons();
 
-  const parsed = parseAuthCallbackParams();
+    const parsed = parseAuthCallbackParams();
 
-  // Si el enlace expiró o es inválido, NO debemos reutilizar otra sesión abierta
-  // en el mismo navegador (p. ej. superadmin): eso mostraba el formulario equivocado
-  // o redirigía al panel sin activar la cuenta nueva.
-  if (isAuthFailureParams(parsed)) {
-    await clearLocalAuth();
+    if (isAuthFailureParams(parsed)) {
+      await clearLocalAuth();
+      const desc = (parsed.errorDescription || "").toLowerCase();
+      const expired =
+        String(parsed.errorCode || "").toLowerCase() === "otp_expired" ||
+        desc.includes("expired") ||
+        desc.includes("invalid");
+      const msg = expired
+        ? "El enlace de activación caducó o ya se usó. Pide al administrador que reenvíe la invitación desde «Accesos». Si tu cuenta ya existe, usa «Olvidé mi contraseña» en el inicio de sesión."
+        : parsed.errorDescription || "El enlace de activación no es válido. Solicita un nuevo enlace al administrador.";
+      setStatus(msg, "error");
+      showFallback();
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
 
-    const desc = (parsed.errorDescription || "").toLowerCase();
-    const expired =
-      String(parsed.errorCode || "").toLowerCase() === "otp_expired" ||
-      desc.includes("expired") ||
-      desc.includes("invalid");
+    const snapCode = new URLSearchParams(getActivateSnapshot().search || "").get("code");
+    if (snapCode) {
+      setStatus("Validando enlace de activación…", "info");
+      const { error: exchErr } = await supabase.auth.exchangeCodeForSession(snapCode);
+      if (exchErr) {
+        setStatus(
+          exchErr.message ||
+            "No pudimos validar el enlace (por ejemplo si lo abriste en otro navegador). Pide al administrador que reenvíe la invitación y ábrela en este mismo dispositivo y navegador.",
+          "error",
+        );
+        showFallback();
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-    const msg = expired
-      ? "El enlace de activación caducó o ya se usó. Pide al administrador que reenvíe la invitación desde «Accesos». Si tu cuenta ya existe, usa «Olvidé mi contraseña» en el inicio de sesión."
-      : parsed.errorDescription || "El enlace de activación no es válido. Solicita un nuevo enlace al administrador.";
+    await new Promise((r) => setTimeout(r, 50));
 
-    setStatus(msg, "error");
+    let session = (await supabase.auth.getSession()).data?.session ?? null;
+
+    if (!session?.user && snapshotHadAuthTokens()) {
+      setStatus("Preparando formulario…", "info");
+      session = await pollForSession(3000, 80);
+    }
+
+    if (!session?.user) {
+      session = await waitForSession(8000);
+    }
+
+    if (!session?.user) {
+      const hadAnyLinkHint = snapshotHadPkceCode() || snapshotHadAuthTokens();
+      if (!hadAnyLinkHint) {
+        setStatus(
+          "Para definir tu contraseña abre esta página con el botón del correo de invitación (no basta con entrar aquí sin el enlace). Si ya configuraste la cuenta, ve al inicio de sesión.",
+          "info",
+        );
+      } else {
+        setStatus(
+          "No pudimos recuperar la sesión del enlace. Cierra otras pestañas de MiRest, vuelve a abrir el enlace del correo o pide un reenvío al administrador.",
+          "error",
+        );
+      }
+      showFallback();
+      return;
+    }
+
+    emailEl.value = session.user.email ?? "";
+    formEl.hidden = false;
+
+    const label = parsed.type === "recovery" ? "Restablece tu contraseña" : "Activa tu cuenta";
+    const titleEl = document.getElementById("activateTitle");
+    if (titleEl) titleEl.textContent = label;
+
+    setStatus("", "info");
+    statusEl.style.display = "none";
+
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  } catch (err) {
+    console.error("[activate]", err);
+    setStatus("Ocurrió un error al cargar la activación. Recarga la página o abre el enlace del correo de nuevo.", "error");
     showFallback();
-    window.history.replaceState({}, document.title, window.location.pathname);
-    return;
   }
-
-  const session = await waitForSession();
-
-  if (!session?.user) {
-    setStatus(
-      "No detectamos un enlace de activación válido. Revisa el correo que recibiste y vuelve a abrir el enlace.",
-      "error",
-    );
-    showFallback();
-    return;
-  }
-
-  emailEl.value = session.user.email ?? "";
-  formEl.hidden = false;
-
-  const label = parsed.type === "recovery" ? "Restablece tu contraseña" : "Activa tu cuenta";
-  const titleEl = document.getElementById("activateTitle");
-  if (titleEl) titleEl.textContent = label;
-
-  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
 }
 
 formEl.addEventListener("submit", async (event) => {
@@ -189,7 +261,7 @@ formEl.addEventListener("submit", async (event) => {
   try {
     await supabase.auth.signOut({ scope: "local" });
   } catch {
-    // seguimos igual: el login forzará credenciales nuevas
+    // seguimos
   }
 
   const next = new URLSearchParams({ activado: "1" });

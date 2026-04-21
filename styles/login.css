@@ -405,6 +405,24 @@ body[data-theme="dark"] .error-banner--success {
   border-color: rgba(74, 222, 128, 0.22);
 }
 
+.error-banner--info {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0369a1;
+  border-color: rgba(14, 165, 233, 0.28);
+}
+
+body[data-theme="dark"] .error-banner--info {
+  color: #7dd3fc;
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(125, 211, 252, 0.22);
+}
+
+.error-banner--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

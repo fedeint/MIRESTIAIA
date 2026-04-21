@@ -546,19 +546,13 @@
         const email = recoveryEmailInput.value.trim().toLowerCase();
 
         try {
-          const response = await fetch(`${supabaseUrl}/functions/v1/send-recovery-email`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              apikey: supabaseKey,
-              Authorization: `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({ email }),
+          const redirectTo = `${window.location.origin}/activate.html`;
+          const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo,
           });
 
-          if (!response.ok) {
-            const detail = await response.json().catch(() => ({}));
-            throw new Error(detail?.message || 'No se pudo enviar el correo.');
+          if (recoveryError) {
+            throw new Error(recoveryError.message || 'No se pudo enviar el correo.');
           }
 
           recoveryMessage.textContent = 'Si el correo existe, te enviaremos un enlace de recuperación en unos segundos.';

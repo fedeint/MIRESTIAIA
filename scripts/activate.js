@@ -23,8 +23,6 @@ function parseHashParams() {
   const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
   const params = new URLSearchParams(hash);
   return {
-    accessToken: params.get("access_token"),
-    refreshToken: params.get("refresh_token"),
     type: params.get("type"),
     error: params.get("error"),
     errorDescription: params.get("error_description"),
@@ -44,11 +42,46 @@ function bindPasswordToggles() {
   });
 }
 
+// El cliente de Supabase tiene `detectSessionInUrl: true`, así que al cargar
+// esta página el SDK parsea automáticamente los tokens del hash/query y crea
+// la sesión. Nuestro trabajo es esperar a que la sesión esté disponible y
+// mostrar el formulario. Como la operación puede ser asíncrona (especialmente
+// con PKCE), esperamos hasta 5 segundos combinando getSession + onAuthStateChange.
+function waitForSession(timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (session) => {
+      if (settled) return;
+      settled = true;
+      try {
+        subscription?.unsubscribe?.();
+      } catch {
+        // ignore
+      }
+      clearTimeout(timer);
+      resolve(session);
+    };
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) finish(session);
+    });
+    const subscription = data?.subscription;
+
+    supabase.auth.getSession().then(({ data: payload }) => {
+      if (payload?.session) finish(payload.session);
+    }).catch(() => {
+      // ignoramos; onAuthStateChange o el timeout resolverán
+    });
+
+    const timer = setTimeout(() => finish(null), timeoutMs);
+  });
+}
+
 async function bootstrap() {
   bindPasswordToggles();
   if (window.lucide) window.lucide.createIcons();
 
-  const { accessToken, refreshToken, type, error, errorDescription } = parseHashParams();
+  const { type, error, errorDescription } = parseHashParams();
 
   if (error) {
     setStatus(errorDescription || "El enlace de activación no es válido o expiró.", "error");
@@ -56,7 +89,9 @@ async function bootstrap() {
     return;
   }
 
-  if (!accessToken || !refreshToken) {
+  const session = await waitForSession();
+
+  if (!session?.user) {
     setStatus(
       "No detectamos un enlace de activación válido. Revisa el correo que recibiste y vuelve a abrir el enlace.",
       "error",
@@ -65,22 +100,12 @@ async function bootstrap() {
     return;
   }
 
-  const { data, error: sessionError } = await supabase.auth.setSession({
-    access_token: accessToken,
-    refresh_token: refreshToken,
-  });
-
-  if (sessionError || !data?.user) {
-    setStatus(sessionError?.message || "No pudimos validar tu enlace de activación.", "error");
-    showFallback();
-    return;
-  }
-
-  emailEl.value = data.user.email ?? "";
+  emailEl.value = session.user.email ?? "";
   formEl.hidden = false;
 
   const label = type === "recovery" ? "Restablece tu contraseña" : "Activa tu cuenta";
-  document.getElementById("activateTitle").textContent = label;
+  const titleEl = document.getElementById("activateTitle");
+  if (titleEl) titleEl.textContent = label;
 
   window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
 }

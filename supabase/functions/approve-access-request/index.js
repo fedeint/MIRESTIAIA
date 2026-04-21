@@ -1,22 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sendEmail } from "../_shared/resend.js";
-import { buildInvitationEmail } from "../_shared/email-templates.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const ROLE_LABELS = {
-  superadmin: "Superadministrador",
-  admin: "Administrador",
-  caja: "Caja",
-  chef: "Chef / Cocina",
-  pedidos: "Pedidos / Delivery",
-  almacen: "Almacén",
-  marketing: "Marketing",
-  demo: "Demo",
 };
 
 function jsonResponse(body, status = 200) {
@@ -179,21 +166,17 @@ Deno.serve(async (request) => {
     inviteMetadata.permissions = permissions;
   }
 
-  // IMPORTANTE: NO usamos generateLink({ type: "invite" }) porque esa llamada
-  // también dispara el correo genérico de Supabase ("You have been invited")
-  // por su SMTP por defecto, apuntando a localhost:3000 y con el branding feo.
+  // Estrategia (usa el SMTP configurado en Supabase Auth → Settings → SMTP,
+  // actualmente Gmail). Supabase se encarga de enviar el correo branded usando
+  // la plantilla "Invite user" del dashboard.
   //
-  // Estrategia:
   //   1. Si existe un usuario en auth.users: bloquear si ya está confirmado,
-  //      o borrarlo si era una invitación previa sin activar.
-  //   2. Crear al usuario silenciosamente con createUser (no envía correo),
-  //      con email_confirm=true y una contraseña aleatoria larga.
-  //   3. Generar un enlace type="recovery" (tampoco envía correo).
-  //   4. Nosotros enviamos el correo branded vía Resend.
+  //      o borrarlo si era una invitación previa sin activar, para reciclar.
+  //   2. Llamar a admin.inviteUserByEmail(email, { data, redirectTo }).
+  //      Esto crea el usuario en estado "invited" y dispara el email.
   //
-  // El link de recovery redirige a /activate.html con #access_token y
-  // #refresh_token en el hash. Ese flujo ya está soportado por scripts/activate.js
-  // (maneja type=recovery y permite definir contraseña).
+  // El link de invitación redirige a /activate.html con #access_token y
+  // #refresh_token en el hash. Ese flujo ya está soportado por activate.js.
 
   let existingUser = null;
   try {
@@ -227,78 +210,46 @@ Deno.serve(async (request) => {
     }
   }
 
-  // Contraseña temporal aleatoria. El usuario la sobreescribe en activate.html
-  // antes de usarla. Bcrypt limita la entrada a 72 bytes, así que nos
-  // mantenemos por debajo: dos UUIDs concatenados sin separador (72 chars).
-  const tempPassword = `${crypto.randomUUID()}${crypto.randomUUID()}`.slice(0, 64);
+  console.log(
+    "[approve-access-request] inviting user",
+    JSON.stringify({ email: accessRequest.email, redirectTo }),
+  );
 
-  const { error: createError } = await adminClient.auth.admin.createUser({
-    email: accessRequest.email,
-    password: tempPassword,
-    email_confirm: true,
-    user_metadata: inviteMetadata,
-  });
-
-  if (createError && !isAlreadyRegisteredError(createError)) {
-    return jsonResponse(
-      { message: "No pudimos crear al usuario.", detail: createError.message },
-      400,
-    );
-  }
-
-  // Aseguramos que el metadata quede sincronizado en caso de que el usuario
-  // ya hubiera sido creado por alguna carrera; createUser no acepta upsert.
-  if (createError && isAlreadyRegisteredError(createError)) {
-    const retryUser = await findAuthUserByEmail(adminClient, accessRequest.email);
-    if (retryUser) {
-      await adminClient.auth.admin.updateUserById(retryUser.id, {
-        user_metadata: inviteMetadata,
-        email_confirm: true,
-        password: tempPassword,
-      });
-    }
-  }
-
-  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-    type: "recovery",
-    email: accessRequest.email,
-    options: {
+  const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    accessRequest.email,
+    {
+      data: inviteMetadata,
       redirectTo,
     },
-  });
+  );
 
-  if (linkError) {
-    return jsonResponse({ message: linkError.message }, 400);
-  }
-
-  const activationUrl = linkData?.properties?.action_link;
-  if (!activationUrl) {
-    return jsonResponse({ message: "No pudimos generar el enlace de activación." }, 500);
-  }
-
-  const { subject, html, text } = buildInvitationEmail({
-    fullName: accessRequest.full_name,
-    restaurantName: accessRequest.restaurant_name,
-    activationUrl,
-    roleLabel: ROLE_LABELS[role] || role,
-  });
-
-  try {
-    await sendEmail({
-      to: accessRequest.email,
-      subject,
-      html,
-      text,
-    });
-  } catch (emailError) {
+  if (inviteError) {
+    console.error(
+      "[approve-access-request] invite FAILED",
+      JSON.stringify({
+        email: accessRequest.email,
+        status: inviteError.status ?? null,
+        message: inviteError.message ?? null,
+      }),
+    );
+    if (isAlreadyRegisteredError(inviteError)) {
+      return jsonResponse(
+        {
+          message: `El correo ${accessRequest.email} ya estaba registrado en Auth. Revisa "Usuarios con acceso" o elimínalo desde Supabase y vuelve a aprobar.`,
+        },
+        409,
+      );
+    }
     return jsonResponse(
       {
-        message: "No pudimos enviar el correo de activación vía Resend.",
-        detail: emailError?.message ?? null,
+        message: "No pudimos enviar la invitación. Revisa los ajustes de SMTP en Supabase Auth.",
+        detail: inviteError.message ?? null,
       },
       502,
     );
   }
+
+  console.log("[approve-access-request] invite OK", JSON.stringify({ email: accessRequest.email }));
 
   const now = new Date().toISOString();
   const updates = {

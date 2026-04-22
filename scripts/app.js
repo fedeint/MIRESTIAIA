@@ -346,23 +346,20 @@ function shouldHandleTransition(event, link) {
 function initializeIAWidget(rootPath) {
   const topbarActions = document.querySelector(".topbar__actions");
   if (!topbarActions) return;
+  if (document.getElementById("dalia-dock")) return;
 
   const iaRoot = rootPath ? `${rootPath}/IA` : "./IA";
   const imgSrc = `${iaRoot}/DalIA.webp`;
   const imgFallback = `${iaRoot}/DalIA.png`;
-  const vidSrc = `${iaRoot}/dallA.webm`;
 
-  // ── Botón topbar: avatar con video de DalIA ────────────────────────────────
+  // ── Botón topbar: avatar DalIA (imagen, sin vídeo) ─────────────────────────
   const btn = document.createElement("button");
   btn.className = "icon-button ia-widget-btn";
   btn.type = "button";
   btn.setAttribute("aria-label", "Abrir asistente IA");
   btn.setAttribute("title", "DallIA · Asistente IA");
   btn.innerHTML = `
-    <video src="${vidSrc}" autoplay muted loop playsinline
-      onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-    </video>
-    <img src="${imgSrc}" alt="DallIA" style="display:none;" width="270" height="266" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='${imgFallback}'" />
+    <img src="${imgSrc}" alt="" width="270" height="266" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='${imgFallback}'" />
     <span class="ia-widget-btn__dot"></span>
   `;
   topbarActions.prepend(btn);
@@ -375,13 +372,10 @@ function initializeIAWidget(rootPath) {
   panel.innerHTML = `
     <div class="ia-widget-header">
       <div class="ia-widget-mascot">
-        <video src="${vidSrc}" autoplay muted loop playsinline
-          onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-        </video>
-        <img src="${imgSrc}" alt="DallIA" style="display:none;" width="270" height="266" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='${imgFallback}'" />
+        <img src="${imgSrc}" alt="" width="270" height="266" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='${imgFallback}'" />
         <span class="ia-widget-mascot__dot" title="En línea"></span>
       </div>
-      <div class="ia-widget-hactions" style="position:absolute;top:10px;right:10px;">
+      <div class="ia-widget-hactions" style="position:absolute;top:10px;right:10px;z-index:20;">
         <button class="ia-widget-hbtn" id="ia-widget-newchat" type="button" title="Nueva conversación">
           <i data-lucide="plus"></i>
         </button>
@@ -538,7 +532,11 @@ function initializeIAWidget(rootPath) {
 
   // ── Eventos ────────────────────────────────────────────────────────────────
   btn.addEventListener("click", () => togglePanel(!isOpen));
-  closeEl.addEventListener("click", () => togglePanel(false));
+  closeEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePanel(false);
+  });
   newChatEl.addEventListener("click", () => {
     history = [];
     msgsEl.innerHTML = "";

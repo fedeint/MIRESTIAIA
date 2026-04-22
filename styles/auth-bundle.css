@@ -936,6 +936,7 @@ body:has(#dalia-dock) .ia-widget-btn {
   object-fit: cover;
   border-radius: 50%;
   display: block;
+  pointer-events: none;
 }
 .ia-widget-btn--active {
   box-shadow: 0 0 0 4px rgba(240,124,42,.35), 0 4px 18px rgba(240,124,42,.3) !important;
@@ -1005,6 +1006,7 @@ body:has(#dalia-dock) .ia-widget-btn {
   border-radius: 0;
   border: none;
   box-shadow: none;
+  pointer-events: none;
 }
 /* Gradiente inferior para legibilidad del texto */
 .ia-widget-mascot::after {
@@ -1073,7 +1075,14 @@ body:has(#dalia-dock) .ia-widget-btn {
 }
 
 /* Botones del header */
-.ia-widget-hactions { display: flex; gap: 6px; z-index: 3; align-self: flex-start; padding-top: 2px; }
+.ia-widget-hactions {
+  display: flex;
+  gap: 6px;
+  z-index: 20;
+  align-self: flex-start;
+  padding-top: 2px;
+  pointer-events: auto;
+}
 .ia-widget-hbtn {
   width: 30px; height: 30px;
   border-radius: 8px;

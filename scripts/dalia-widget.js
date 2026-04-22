@@ -153,56 +153,10 @@
       to { opacity:0; transform:scale(.85); }
     }
 
-    /* ── Video de DallA ── */
-    .dalia-w-video-wrap {
-      position: relative;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, #1a0a00, #2d1200);
-      overflow: hidden;
-      height: 220px;
-    }
-
-    .dalia-w-video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center top;
-      display: block;
-    }
-
-    .dalia-w-video-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.7) 100%);
-      pointer-events: none;
-    }
-
-    .dalia-w-video-label {
-      position: absolute;
-      bottom: 10px;
-      left: 14px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      pointer-events: none;
-    }
-
-    .dalia-w-video-label span {
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-      text-shadow: 0 1px 4px rgba(0,0,0,.6);
-    }
-
-    .dalia-w-video-label .dalia-w-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 6px rgba(34,197,94,.7);
-    }
-
-    /* ── Header del widget ── */
+    /* ── Cabecera del widget (sin vídeo: el reproductor tapaba el botón cerrar en algunos navegadores) ── */
     .dalia-w-header {
+      position: relative;
+      z-index: 2;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -232,15 +186,19 @@
     }
     .dalia-w-sub { font-size: 11px; color: var(--color-text-muted, #999); }
     .dalia-w-close {
-      width: 28px; height: 28px;
-      border-radius: 8px; border: none;
-      background: transparent;
-      color: var(--color-text-muted, #999);
+      position: relative;
+      z-index: 5;
+      width: 32px; height: 32px;
+      margin-left: auto;
+      border-radius: 8px; border: 1px solid var(--color-border, #444);
+      background: var(--color-surface-muted, rgba(0,0,0,.2));
+      color: var(--color-text, #fff);
       cursor: pointer; font-size: 16px;
       display: grid; place-items: center;
-      transition: background .12s;
+      flex-shrink: 0;
+      transition: background .12s, border-color .12s;
     }
-    .dalia-w-close:hover { background: rgba(255,255,255,.08); }
+    .dalia-w-close:hover { background: rgba(240,124,42,.2); border-color: #f07c2a; }
 
     /* ── Mensajes ── */
     .dalia-w-messages {
@@ -498,18 +456,15 @@
       widgetEl = document.createElement("div");
       widgetEl.id = "dalia-widget";
       widgetEl.innerHTML = `
-        <!-- Video de DallA -->
-        <div class="dalia-w-video-wrap">
-          <video class="dalia-w-video" autoplay loop muted playsinline>
-            <source src="${ROOT}IA/dallA.webm" type="video/webm" />
-          </video>
-          <div class="dalia-w-video-overlay"></div>
-          <div class="dalia-w-video-label">
-            <span class="dalia-w-dot"></span>
-            <span>DallA</span>
+        <div class="dalia-w-header">
+          <div class="dalia-w-avatar">
+            <img src="${avatarSrc}" alt="" width="270" height="266" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='${avatarFallback}'" />
           </div>
-          <button class="dalia-w-close" id="dalia-w-close-btn" title="Cerrar"
-            style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.4);border:none;color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;display:grid;place-items:center;">✕</button>
+          <div class="dalia-w-info">
+            <div class="dalia-w-name"><span class="dalia-w-dot" aria-hidden="true"></span> DallA</div>
+            <div class="dalia-w-sub">Asistente MiRest · ${pageName}</div>
+          </div>
+          <button type="button" class="dalia-w-close" id="dalia-w-close-btn" title="Cerrar" aria-label="Cerrar chat">✕</button>
         </div>
         <div class="dalia-w-messages" id="dalia-w-msgs"></div>
         <div class="dalia-w-typing" id="dalia-w-typing">
@@ -612,7 +567,11 @@
         if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
       });
 
-      closeBtn.addEventListener("click", closeWidget);
+      closeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeWidget();
+      });
       inputEl.focus();
     }
 

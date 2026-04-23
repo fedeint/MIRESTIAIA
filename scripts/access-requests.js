@@ -161,10 +161,16 @@ export async function approveAccessRequest(requestId, role, action = "approve", 
     const payload = text ? JSON.parse(text) : null;
 
     if (!response.ok) {
+      const base = payload?.message || `No se pudo completar la activación (${response.status}).`;
+      const detail =
+        typeof payload?.detail === "string" && payload.detail.trim().length > 0
+          ? payload.detail.trim()
+          : null;
       return {
         data: null,
         error: {
-          message: payload?.message || `No se pudo completar la activación (${response.status}).`,
+          message: detail ? `${base} (${detail})` : base,
+          detail,
         },
       };
     }

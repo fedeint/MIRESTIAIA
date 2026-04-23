@@ -9,6 +9,7 @@ import {
   notifyAccessRequestEvent,
   updateAccessRequest,
 } from "../scripts/access-requests.js?v=20260421-uxpolish";
+import { supabase } from "../scripts/supabase.js";
 import {
   deleteUser,
   listUsers,
@@ -27,6 +28,7 @@ import {
 
 const tableBody = document.getElementById("requestsTableBody");
 const feedback = document.getElementById("requestFeedback");
+const rlsHint = document.getElementById("accesosRlsHint");
 const refreshBtn = document.getElementById("refreshRequestsBtn");
 const metricPending = document.getElementById("metricPending");
 const metricReviewing = document.getElementById("metricReviewing");
@@ -71,6 +73,17 @@ function setFeedback(message, variant) {
 function clearFeedback() {
   feedback.style.display = "none";
   feedback.textContent = "";
+}
+
+function setRlsHint(html) {
+  if (!rlsHint) return;
+  if (!html) {
+    rlsHint.style.display = "none";
+    rlsHint.innerHTML = "";
+    return;
+  }
+  rlsHint.innerHTML = html;
+  rlsHint.style.display = "block";
 }
 
 function setUsersFeedback(message, variant) {
@@ -352,8 +365,26 @@ async function loadRequests() {
   isRendering = true;
   refreshBtn.disabled = true;
   clearFeedback();
+  setRlsHint("");
 
-  const { data, error } = await listAccessRequests();
+  let { data, error } = await listAccessRequests();
+
+  // La RLS usa app_metadata.role en el JWT. Tras cambiar metadatos en Supabase,
+  // el access_token guardado puede seguir antiguo: renovamos y reintentamos una vez.
+  if (!error && (data?.length ?? 0) === 0) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const u = sessionData?.session?.user;
+    const claimsSuperadmin =
+      u?.app_metadata?.role === "superadmin" || u?.user_metadata?.role === "superadmin";
+    if (claimsSuperadmin) {
+      const { error: refreshErr } = await supabase.auth.refreshSession();
+      if (!refreshErr) {
+        const retry = await listAccessRequests();
+        data = retry.data;
+        error = retry.error;
+      }
+    }
+  }
 
   if (error) {
     tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No pudimos cargar las solicitudes.</td></tr>`;
@@ -361,6 +392,20 @@ async function loadRequests() {
     refreshBtn.disabled = false;
     isRendering = false;
     return;
+  }
+
+  if ((data?.length ?? 0) === 0) {
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+    const appRole = typeof user?.app_metadata?.role === "string" ? user.app_metadata.role.trim() : "";
+    const userRole = typeof user?.user_metadata?.role === "string" ? user.user_metadata.role.trim() : "";
+    if (userRole === "superadmin" && appRole !== "superadmin") {
+      setRlsHint(
+        "<strong>Rol de superadmin solo en User metadata.</strong> Las solicitudes se leen con RLS usando "
+        + "<code>App metadata</code>. En Supabase: <strong>Authentication → Users → tu usuario → App metadata</strong> "
+        + "añade <code>{\"role\":\"superadmin\"}</code>, guarda y luego <strong>cierra sesión y vuelve a entrar</strong> en MiRest.",
+      );
+    }
   }
 
   accessRequests = data ?? [];

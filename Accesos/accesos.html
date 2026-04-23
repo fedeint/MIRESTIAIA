@@ -79,6 +79,14 @@
         border: 1px solid rgba(239, 68, 68, 0.18);
         color: #dc2626;
       }
+      .request-feedback--warning {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: #92400e;
+      }
+      body[data-theme="dark"] .request-feedback--warning {
+        color: #fcd34d;
+      }
       .users-table-container {
         overflow-x: auto;
         border-radius: 16px;
@@ -551,6 +559,13 @@
             </div>
           </div>
 
+          <div
+            id="accesosRlsHint"
+            class="request-feedback request-feedback--warning"
+            style="display: none; margin-bottom: var(--space-3);"
+            role="alert"
+          ></div>
+
           <div class="accesos-overview">
             <div class="overview-card">
               <span>Pendientes</span>
@@ -634,7 +649,7 @@
     </button>
 
     <script type="module" src="../scripts/app.js?v=20260421-idle-scroll"></script>
-    <script type="module" src="./accesos.js?v=20260429-perms-features"></script>
+    <script type="module" src="./accesos.js?v=20260430-rls-refresh"></script>
     <script src="../scripts/dalia-widget.js"></script>
   </body>
 </html>

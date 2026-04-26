@@ -7,11 +7,10 @@ function getManageUserEndpoint() {
   if (typeof location === "undefined") return DIRECT;
   const h = location.hostname;
   if (h === "127.0.0.1" || h === "localhost") return DIRECT;
-  if (h.endsWith(".vercel.app")) {
+  // mires-ia.com, www, *.vercel.app, previews tipo mires-ia-*.vercel.app
+  if (h.endsWith(".vercel.app") || h.includes("mires-ia")) {
     return `${location.origin}/api/user-access`;
   }
-  // Si añades un dominio en Vercel, inclúyelo aquí para usar el proxy.
-  // if (h === "mires-ia.com" || h === "www.mires-ia.com") return `${location.origin}/api/user-access`;
   return DIRECT;
 }
 

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "mirest-pwa-v24";
+const CACHE_VERSION = "mirest-pwa-v25";
 
 const CORE_ASSETS = [
   "/",
@@ -10,6 +10,8 @@ const CORE_ASSETS = [
   "/styles/dashboard.css",
   "/styles/premium-modules.css",
   "/styles/mobile.css",
+  "/Almacen/almacen-submodules-theme.css",
+  "/Almacen/almacen-sublayout.css",
   "/scripts/app.js",
   "/scripts/pwa-install-widget.js",
   "/scripts/navigation.js",

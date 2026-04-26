@@ -15,6 +15,8 @@ function getManageUserEndpoint() {
   return DIRECT;
 }
 
+const TOKEN_IN_BODY_KEY = "__mirest_bearer";
+
 async function callManageUser(payload) {
   const {
     data: { session },
@@ -25,14 +27,29 @@ async function callManageUser(payload) {
     throw new Error("Debes iniciar sesión como administrador para continuar.");
   }
 
-  const response = await fetch(getManageUserEndpoint(), {
+  const endpoint = getManageUserEndpoint();
+  const useProxy = endpoint.includes("/api/user-access");
+  // Proxy: no cookies (reduce 494) y JWT en el cuerpo para aligerar cabeceras.
+  const requestBody = useProxy
+    ? { ...payload, [TOKEN_IN_BODY_KEY]: session.access_token }
+    : payload;
+  const requestHeaders = useProxy
+    ? {
+        apikey: supabaseKey,
+        "Content-Type": "application/json",
+      }
+    : {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      };
+
+  const response = await fetch(endpoint, {
     method: "POST",
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    headers: requestHeaders,
+    body: JSON.stringify(requestBody),
+    credentials: "omit",
+    cache: "no-store",
   });
 
   let data = null;

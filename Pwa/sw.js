@@ -1,4 +1,4 @@
-const CACHE_VERSION = "mirest-pwa-v23";
+const CACHE_VERSION = "mirest-pwa-v24";
 
 const CORE_ASSETS = [
   "/",
@@ -15,15 +15,23 @@ const CORE_ASSETS = [
   "/scripts/navigation.js",
   "/Pwa/install.js",
   "/Pwa/manifest.webmanifest",
-  "/Pedidos/assets/icons/icon-192.svg",
-  "/Pedidos/assets/icons/icon-512.svg"
+  "/Pedidos/implementacion/assets/icons/icon-192.svg",
+  "/Pedidos/implementacion/assets/icons/icon-512.svg"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_VERSION)
-      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then(async (cache) => {
+        for (const url of CORE_ASSETS) {
+          try {
+            await cache.add(url);
+          } catch (e) {
+            console.warn("[sw] precache skip", url, e?.message);
+          }
+        }
+      })
       .then(() => self.skipWaiting())
   );
 });

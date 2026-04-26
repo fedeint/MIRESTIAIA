@@ -1,6 +1,19 @@
 import { supabase, supabaseUrl, supabaseKey } from "./supabase.js";
 
-const ENDPOINT = `${supabaseUrl}/functions/v1/manage-user-access`;
+const DIRECT = `${supabaseUrl}/functions/v1/manage-user-access`;
+
+/** Mismo origen: evita CORS en fallos 5xx del edge (sin cabeceras CORS). Ver `api/user-access.js`. */
+function getManageUserEndpoint() {
+  if (typeof location === "undefined") return DIRECT;
+  const h = location.hostname;
+  if (h === "127.0.0.1" || h === "localhost") return DIRECT;
+  if (h.endsWith(".vercel.app")) {
+    return `${location.origin}/api/user-access`;
+  }
+  // Si añades un dominio en Vercel, inclúyelo aquí para usar el proxy.
+  // if (h === "mires-ia.com" || h === "www.mires-ia.com") return `${location.origin}/api/user-access`;
+  return DIRECT;
+}
 
 async function callManageUser(payload) {
   const {
@@ -12,7 +25,7 @@ async function callManageUser(payload) {
     throw new Error("Debes iniciar sesión como administrador para continuar.");
   }
 
-  const response = await fetch(ENDPOINT, {
+  const response = await fetch(getManageUserEndpoint(), {
     method: "POST",
     headers: {
       apikey: supabaseKey,

@@ -17,7 +17,7 @@ import {
   revokeUser,
   sendPasswordRecoveryToUser,
   updateUserPermissions,
-} from "../scripts/user-access.js?v=20260422-recovery";
+} from "../scripts/user-access.js?v=20260426-access-proxy";
 import {
   getAssignableModules,
   getRoleLabel,

@@ -4,7 +4,7 @@ export async function registerServiceWorker(rootPath = "") {
   if (!("serviceWorker" in navigator)) return null;
 
   const scope = `${rootPath}/`;
-  const swUrl = `${rootPath}/sw.js?v=20260426-pwa-v23`.replace(/\\+/g, "/");
+  const swUrl = `${rootPath}/sw.js?v=20260426-pwa-v24`.replace(/\\+/g, "/");
   const registrations = await navigator.serviceWorker.getRegistrations();
 
   await Promise.all(

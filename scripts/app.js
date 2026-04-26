@@ -207,10 +207,26 @@ function initializeDashboardPage(profile) {
 function initializeModulePage(module) {
   const dashboardHref = toHref("index.html");
   const moduleFolder = module.path.split("/")[0] + "/";
+  const sublabel = (document.body.dataset.sublabel || "").trim();
+  const subhead = (document.body.dataset.subheadline || "").trim();
+  const almacenHubHref = toHref("Almacen/almacen.html");
 
-  setText("pageEyebrow", "Módulo");
-  setText("pageTitle", module.label);
-  setText("pageSubtitle", `${module.description} · Punto de entrada colaborativo.`);
+  setText("pageEyebrow", sublabel ? "Módulo · Almacén" : "Módulo");
+  if (sublabel) {
+    setText("pageTitle", sublabel);
+    setText(
+      "pageSubtitle",
+      subhead
+        ? `${subhead} · Navegación y datos del almacén.`
+        : module.description,
+    );
+    if (document.getElementById("breadcrumbSubsection")) {
+      setText("breadcrumbSubsection", sublabel);
+    }
+  } else {
+    setText("pageTitle", module.label);
+    setText("pageSubtitle", `${module.description} · Punto de entrada colaborativo.`);
+  }
   setText("pageContextChip", module.short);
   setText("pageAvatar", module.short);
 
@@ -225,6 +241,10 @@ function initializeModulePage(module) {
   setHref("primaryBackLink", dashboardHref);
   setHref("secondaryBackLink", dashboardHref);
   setHref("breadcrumbHome", dashboardHref);
+  const breadcrumbAlm = document.getElementById("breadcrumbAlmacen");
+  if (breadcrumbAlm) {
+    breadcrumbAlm.setAttribute("href", almacenHubHref);
+  }
 
   const checklist = document.getElementById("moduleChecklist");
   if (checklist) {

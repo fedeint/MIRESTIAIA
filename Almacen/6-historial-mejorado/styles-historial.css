@@ -1,28 +1,27 @@
 :root {
-    --primary: #0ea5e9;
-    --primary-foreground: #ffffff;
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --card: #ffffff;
-    --card-foreground: #0f172a;
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #0ea5e9;
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
     --radius: 0.75rem;
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', sans-serif; background: var(--background); color: var(--foreground); }
+.almacen-subcontent,
+.almacen-subcontent * { margin: 0; padding: 0; box-sizing: border-box; }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+.almacen-subcontent {
+  --primary: var(--color-accent, #f07c2a);
+  --primary-foreground: #fff;
+  --background: var(--color-bg, #f8fafc);
+  --foreground: var(--color-text, #0f172a);
+  --card: var(--color-surface, #ffffff);
+  --border: var(--color-border, #e2e8f0);
+  --muted: var(--color-surface-muted, #f1f5f9);
+  --muted-foreground: var(--color-text-muted, #64748b);
+  font-family: var(--font-body, "Inter", system-ui, sans-serif);
+  color: var(--foreground, var(--color-text, #0f172a));
+  background: transparent;
+}
+
+.almacen-subcontent.container { max-width: 1200px; margin: 0 auto; padding: 0 0 0.5rem; }
 
 /* Acceso */
 .acceso-container {
@@ -40,10 +39,7 @@ body { font-family: 'Inter', sans-serif; background: var(--background); color: v
     text-align: center;
 }
 
-/* Nav */
-.modulo-nav { display: flex; gap: 0.5rem; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.5rem; }
-.modulo-nav a { text-decoration: none; color: var(--muted-foreground); padding: 0.5rem 1rem; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border); font-size: 0.875rem; white-space: nowrap; transition: all 0.2s; }
-.modulo-nav a.active { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+/* Nav: almacen-sublayout */
 
 header { margin-bottom: 2rem; }
 h1 { font-size: 1.5rem; font-weight: 700; }

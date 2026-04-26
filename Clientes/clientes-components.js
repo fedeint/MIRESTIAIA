@@ -12,14 +12,14 @@ export function renderClientCard(c) {
             <button class="preview-hint" type="button" title="Vista previa" aria-label="Abrir vista previa">
                 <i data-lucide="eye"></i>
             </button>
-            <div class="initials-box">${c.nombre.substring(0, 2).toUpperCase()}</div>
-            <span class="status-badge ${c.estado.toLowerCase()}">${c.estado}</span>
+            <div class="initials-box">${c.avatar || c.nombre.substring(0, 2).toUpperCase()}</div>
+            <span class="status-badge ${(c.tipo || c.estado || 'Regular').toLowerCase() === 'vip' ? 'vip' : 'regular'}">${c.tipo || c.estado || 'Regular'}</span>
             <div class="client-info">
                 <h3>${c.nombre}</h3>
-                <span class="doc-id">DNI: ${c.documento}</span>
+                <span class="doc-id">${c.arquetipo || 'DNI: ' + (c.documento || '-')}</span>
                 <div class="client-stats">
-                    <span><i data-lucide="shopping-cart"></i> Compras: ${c.compras}</span>
-                    <span><i data-lucide="coins"></i> Total: S/ ${c.gastado.toFixed(2)}</span>
+                    <span><i data-lucide="shopping-cart"></i> Pedidos: ${c.pedidos ?? c.compras ?? 0}</span>
+                    <span><i data-lucide="coins"></i> LTV: S/ ${(c.ltv ?? c.gastado ?? 0).toFixed(2)}</span>
                 </div>
                 <div class="contact-list">
                     <span><i data-lucide="mail"></i> ${c.email}</span>
@@ -49,18 +49,18 @@ export function renderClientRow(c) {
             <td>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="avatar-circle" style="width: 32px; height: 32px; font-size: 0.7rem;">
-                        ${c.nombre.substring(0, 2).toUpperCase()}
+                        ${c.avatar || c.nombre.substring(0, 2).toUpperCase()}
                     </div>
                     <strong>${c.nombre}</strong>
                 </div>
             </td>
-            <td>${c.documento}</td>
+            <td>${c.arquetipo || c.documento || '-'}</td>
             <td>${c.email}</td>
             <td>${c.telefono}</td>
-            <td style="text-transform: capitalize;">${c.tipo}</td>
+            <td style="text-transform: capitalize;">${['VIP', 'Regular', 'Cliente'].includes(c.tipo) ? 'Cliente' : (c.tipo || 'Cliente')}</td>
             <td>
-                <span class="badge-status-mini ${c.estado === 'VIP' ? 'activa' : 'inactiva'}" style="text-transform: uppercase;">
-                    ${c.estado}
+                <span class="badge-status-mini ${(c.tipo || c.estado || '').toLowerCase() === 'vip' ? 'activa' : 'inactiva'}" style="text-transform: uppercase;">
+                    ${(c.tipo || c.estado || '').toLowerCase() === 'vip' ? 'VIP' : 'Regular'}
                 </span>
             </td>
             <td>

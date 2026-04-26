@@ -1,0 +1,181 @@
+/* =============================================================
+   TOKENS DE DISEÑO — MiRest con IA
+   Design System v1.0 — Fuente: contexto/documentacion.md
+   Un solo source of truth. No duplicar en styles.css.
+   ============================================================= */
+
+:root {
+  /* ── Tipografía ────────────────────────────────────────── */
+  --app-font-family: "Inter", system-ui, -apple-system, sans-serif;
+  --app-font-size-h1: 38px;
+  --app-font-size-h2: 24px;
+  --app-font-size-h3: 18px;
+  --app-font-size-body-lg: 20px;
+  --app-font-size-body: 16px;
+  --app-font-size-label: 14px;
+  --app-font-size-caption: 12px;
+  --app-font-size-eyebrow: 11px;
+
+  --app-font-weight-regular: 400;
+  --app-font-weight-medium: 500;
+  --app-font-weight-semibold: 600;
+  --app-font-weight-bold: 700;
+  --app-font-weight-extrabold: 800;
+
+  --app-line-height-tight: 1.2;
+  --app-line-height-snug: 1.3;
+  --app-line-height-normal: 1.4;
+  --app-line-height-relaxed: 1.5;
+
+  /* ── Paleta de colores principales ────────────────────── */
+  --app-color-primary: #DE5A25;          /* Naranja fuerte — CTA, botón primario */
+  --app-color-primary-soft: #F6A456;     /* Naranja claro — hover, highlights */
+  --app-color-control: #15192C;          /* Azul oscuro — sidebar, texto principal */
+
+  /* ── Neutros ────────────────────────────────────────────── */
+  --app-color-bg: #F8F9FB;               /* Fondo principal de app */
+  --app-color-surface: #FFFFFF;          /* Cards, modales, superficies elevadas */
+  --app-color-surface-alt: #F8FAFC;      /* Filas alternas, items de lista */
+  --app-color-border: #E5E7EB;           /* Bordes de inputs, cards, separadores */
+  --app-color-text: #15192C;             /* Texto principal */
+  --app-color-text-secondary: #6B7280;   /* Labels, hints, metadata */
+  --app-color-text-tertiary: #9CA3AF;    /* Placeholders, texto deshabilitado */
+
+  /* ── Estados semánticos ─────────────────────────────────── */
+  --app-color-success: #22C55E;
+  --app-color-success-soft: #F0FDF4;
+  --app-color-success-text: #16A34A;
+
+  --app-color-danger: #EF4444;
+  --app-color-danger-soft: #FEF2F2;
+  --app-color-danger-text: #DC2626;
+
+  --app-color-warning: #F59E0B;
+  --app-color-warning-soft: #FFFBEB;
+  --app-color-warning-text: #D97706;
+
+  --app-color-info: #3B82F6;
+  --app-color-info-soft: #EFF6FF;
+  --app-color-info-text: #2563EB;
+
+  --app-color-neutral-soft: #F3F4F6;
+  --app-color-neutral-text: #4B5563;
+
+  --app-color-accent-soft: #FFF7ED;      /* Naranja ultra-suave para selección */
+
+  /* ── Tokens operativos Mesero-First ─────────────────────── */
+  --app-touch-target-min: 44px;
+  --app-bottom-sheet-height: 90dvh;
+  --app-table-card-min: 132px;
+  --app-table-free-bg: color-mix(in srgb, var(--app-color-success-soft) 68%, var(--app-color-surface));
+  --app-table-occupied-bg: color-mix(in srgb, var(--app-mode-soft) 70%, var(--app-color-surface));
+  --app-table-reserved-bg: color-mix(in srgb, var(--app-color-info-soft) 72%, var(--app-color-surface));
+  --app-bottom-floating-offset: calc(var(--app-safe-bottom) + var(--app-space-2));
+
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  --app-color-sidebar: #171B34;
+  --app-color-sidebar-alt: #0A0E1D;
+  --app-color-sidebar-text: rgba(240, 242, 255, 0.74);
+  --app-color-sidebar-text-hover: rgba(255, 255, 255, 0.96);
+  --app-color-sidebar-section: rgba(246, 164, 86, 0.66);
+  --app-color-sidebar-line: rgba(255, 255, 255, 0.08);
+
+  /* ── Gradientes ─────────────────────────────────────────── */
+  --app-gradient-primary: linear-gradient(135deg, #F6A456 0%, #DE5A25 100%);
+  --app-gradient-sidebar: linear-gradient(180deg, #20264A 0%, #11162E 42%, #090D1B 100%);
+
+  /* ── Sombras ─────────────────────────────────────────────── */
+  --app-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --app-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --app-shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --app-shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --app-shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --app-shadow-primary-glow: 0 8px 24px rgba(222, 90, 37, 0.28);
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --app-radius-sm: 8px;      /* Badges pequeños, elementos internos */
+  --app-radius-md: 12px;     /* Inputs, selects, textareas */
+  --app-radius-lg: 16px;     /* Botones */
+  --app-radius-xl: 20px;     /* Cards, modales */
+  --app-radius-2xl: 24px;    /* Drawers, sheets grandes */
+  --app-radius-full: 999px;  /* Badges, chips, avatares */
+
+  /* ── Espaciado (Grid 8px) ───────────────────────────────── */
+  --app-space-1: 4px;
+  --app-space-2: 8px;
+  --app-space-3: 12px;
+  --app-space-4: 16px;
+  --app-space-5: 20px;
+  --app-space-6: 24px;
+  --app-space-8: 32px;
+  --app-space-10: 40px;
+
+  /* ── Layout estructural ─────────────────────────────────── */
+  --app-sidebar-width: 236px;
+  --app-sidebar-mini-width: 84px;
+  --app-topbar-height: 64px;
+  --app-topbar-height-mobile: 52px;
+  --app-bottom-nav-height: 56px;
+  --app-panel-width: 340px;
+
+  /* ── Transiciones ───────────────────────────────────────── */
+  --app-transition-fast: 160ms ease;
+  --app-transition-base: 220ms ease;
+  --app-transition-slow: 320ms ease;
+
+  /* ── Modo operativo (cambia según salón/delivery/takeaway) ─ */
+  --app-mode-accent: var(--app-color-primary);
+  --app-mode-soft: rgba(222, 90, 37, 0.08);
+
+  /* ── Skeleton loading ────────────────────────────────────── */
+  --app-skeleton-base: rgba(148, 163, 184, 0.14);
+  --app-skeleton-highlight: rgba(255, 255, 255, 0.72);
+
+  /* ── PWA / safe-area (siempre presentes) ────────────────── */
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* ── Modo oscuro ─────────────────────────────────────────── */
+[data-theme="dark"] {
+  --app-color-bg: #0F1220;
+  --app-color-surface: #171B2E;
+  --app-color-surface-alt: #1D2438;
+  --app-color-border: rgba(255, 255, 255, 0.08);
+  --app-color-text: #F3F4F6;
+  --app-color-text-secondary: #C7CFDD;
+  --app-color-text-tertiary: #8B96AD;
+
+  --app-color-success-soft: rgba(34, 197, 94, 0.14);
+  --app-color-danger-soft: rgba(239, 68, 68, 0.14);
+  --app-color-warning-soft: rgba(245, 158, 11, 0.14);
+  --app-color-info-soft: rgba(59, 130, 246, 0.14);
+  --app-color-neutral-soft: rgba(99, 102, 241, 0.14);
+  --app-color-accent-soft: rgba(246, 164, 86, 0.14);
+
+  --app-table-free-bg: color-mix(in srgb, var(--app-color-success-soft) 60%, var(--app-color-surface));
+  --app-table-occupied-bg: color-mix(in srgb, var(--app-mode-soft) 82%, var(--app-color-surface));
+  --app-table-reserved-bg: color-mix(in srgb, var(--app-color-info-soft) 68%, var(--app-color-surface));
+
+  --app-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.18);
+  --app-shadow-card: 0 10px 30px rgba(0, 0, 0, 0.24);
+  --app-shadow-card-hover: 0 18px 42px rgba(0, 0, 0, 0.32);
+  --app-shadow-elevated: 0 24px 56px rgba(0, 0, 0, 0.4);
+
+  --app-skeleton-base: rgba(148, 163, 184, 0.16);
+  --app-skeleton-highlight: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Modo Delivery ───────────────────────────────────────── */
+[data-mode="delivery"] {
+  --app-mode-accent: #2563EB;
+  --app-mode-soft: rgba(37, 99, 235, 0.08);
+}
+
+/* ── Modo Para llevar ────────────────────────────────────── */
+[data-mode="takeaway"] {
+  --app-mode-accent: #0F766E;
+  --app-mode-soft: rgba(15, 118, 110, 0.08);
+}

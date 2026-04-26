@@ -30,8 +30,8 @@
       <div class="login-card__accent login-card__accent--cool" aria-hidden="true"></div>
       <div class="login-header">
         <span class="login-badge">
-          <i data-lucide="shield-check"></i>
-          Acceso seguro
+          <i data-lucide="utensils-crossed"></i>
+          MiRest con IA
         </span>
         <div class="brand-mark login-header__mascot" aria-hidden="true">
           <img
@@ -46,7 +46,7 @@
           />
         </div>
         <h1>Bienvenido a MiRest</h1>
-        <p>Tu correo es tu usuario. Si ya activaste tu cuenta, inicia sesión para continuar con el flujo operativo.</p>
+        <p>Entra con el correo y la contraseña de tu cuenta.</p>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -98,13 +98,7 @@
             <i data-lucide="key-round"></i>
             Olvidé mi contraseña
           </button>
-          <a class="login-text-link" href="./recuperar-contrasena.html">Guía de recuperación</a>
-          <span>Tu usuario siempre será tu correo aprobado.</span>
-        </div>
-
-        <div class="login-helper">
-          <i data-lucide="sparkles"></i>
-          <span>Si tu acceso fue aprobado, recibirás un correo de activación para definir tu contraseña.</span>
+          <a class="login-text-link" href="./recuperar-contrasena.html">¿Cómo restablezco el acceso?</a>
         </div>
 
         <p class="legal-footer-row">
@@ -295,9 +289,8 @@
           <span class="request-modal__eyebrow">Recuperación</span>
           <h2 id="recoveryModalTitle">Recupera tu contraseña</h2>
           <p>
-            Te enviaremos un correo con enlace seguro para elegir una contraseña nueva en la misma página donde activaste tu cuenta.
-            Si no llega nada, revisa spam o abre la
-            <a href="./recuperar-contrasena.html" style="color: var(--color-accent); font-weight: 600;">guía paso a paso</a>.
+            Te enviaremos un correo con un enlace para elegir una contraseña nueva. Revisa la bandeja y, si hace falta, la carpeta de no deseados.
+            <a href="./recuperar-contrasena.html" style="color: var(--color-accent); font-weight: 600;">Más detalles</a>
           </p>
         </div>
         <button type="button" class="icon-button request-modal__close" data-close-recovery-modal aria-label="Cerrar recuperación">
@@ -319,7 +312,7 @@
           <button type="button" class="btn btn--secondary" data-close-recovery-modal>Cerrar</button>
           <button type="submit" class="btn btn--primary" id="recoverySubmitBtn">
             <i data-lucide="send"></i>
-            Enviar recuperación
+            Enviar enlace
           </button>
         </div>
       </form>

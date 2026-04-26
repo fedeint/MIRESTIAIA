@@ -18,8 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const postBanner = document.getElementById("postActivateBanner");
     const emailInput = document.getElementById("email");
     if (postBanner) {
-      postBanner.textContent =
-        "Contraseña configurada. Ingresa con tu correo y la contraseña que acabas de elegir para acceder a tus módulos.";
+      postBanner.textContent = "Listo. Entra con tu correo y la contraseña que acabas de elegir.";
       postBanner.className = "error-banner error-banner--success";
       postBanner.style.display = "block";
     }
@@ -37,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const postBanner = document.getElementById("postActivateBanner");
     if (postBanner) {
       postBanner.textContent =
-        "La activación de cuenta solo funciona desde el botón del correo que te envía el administrador. Abre ese mensaje y pulsa el enlace; no entres a la página de activación a mano.";
+        "Para activar la cuenta debes usar el enlace del correo que te enviaron. Si ya tienes contraseña, inicia sesión con tu correo.";
       postBanner.className = "error-banner error-banner--info";
       postBanner.style.display = "block";
     }
@@ -256,12 +255,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("[recovery]", err);
       recoveryMessage.textContent =
         err?.message ||
-        "No pudimos enviar la recuperación. Revisa SMTP y plantillas en Supabase (Authentication → Emails) y que la URL de redirección a activate.html esté permitida.";
+        "No se pudo enviar el enlace. Inténtalo de nuevo en unos minutos.";
       recoveryMessage.className = "request-banner request-banner--error";
       recoveryMessage.style.display = "block";
     } finally {
       recoverySubmitBtn.disabled = false;
-      recoverySubmitBtn.innerHTML = `${ICON.send} Enviar recuperación`;
+      recoverySubmitBtn.innerHTML = `${ICON.send} Enviar enlace`;
     }
   });
 
@@ -285,7 +284,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       submitBtn.disabled = false;
       submitBtn.innerHTML = `${ICON["log-in"]} Ingresar al Sistema`;
       errorMsg.textContent =
-        "Correo o contraseña incorrectos. Si olvidaste la contraseña, usa «Olvidé mi contraseña», la guía en recuperar-contrasena.html o pide a tu administrador «Enviar recuperación» desde Accesos.";
+        "Correo o contraseña incorrectos. Puedes usar «Olvidé mi contraseña» o pedir a tu local un nuevo enlace de acceso.";
       errorMsg.style.display = "block";
     } else {
       submitBtn.innerHTML = `${ICON.check} ¡Bienvenido!`;

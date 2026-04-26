@@ -24,24 +24,105 @@
       }
     },
     {
-      "id": "table-15",
-      "number": "15",
-      "zone": "Barra",
-      "description": "Frente a barra",
-      "status": "ocupada",
-      "waiterId": "waiter-3",
+      "id": "table-2",
+      "number": "2",
+      "zone": "Interior",
+      "description": "Cerca a caja",
+      "status": "libre",
+      "waiterId": "waiter-2",
       "order": {
         "sentToKitchen": false,
-        "items": [
-          { "productId": "prod-8", "quantity": 2 },
-          { "productId": "prod-11", "quantity": 1 }
-        ],
-        "serviceType": "takeaway",
+        "items": [],
+        "serviceType": "salon",
         "takeawayChannel": "Salon",
         "documentType": "boleta",
         "documentIssued": false,
         "paymentConfirmed": false,
-        "packagingFeeRate": 0.1,
+        "packagingFeeRate": 0,
+        "linkedTakeawayId": null,
+        "syncedAt": null
+      }
+    },
+    {
+      "id": "table-10",
+      "number": "10",
+      "zone": "Interior",
+      "description": "Pasillo central",
+      "status": "libre",
+      "waiterId": null,
+      "order": {
+        "sentToKitchen": false,
+        "items": [],
+        "serviceType": "salon",
+        "takeawayChannel": "Salon",
+        "documentType": "boleta",
+        "documentIssued": false,
+        "paymentConfirmed": false,
+        "packagingFeeRate": 0,
+        "linkedTakeawayId": null,
+        "syncedAt": null
+      }
+    },
+    {
+      "id": "table-11",
+      "number": "11",
+      "zone": "Terraza",
+      "description": "Vista exterior",
+      "status": "reservada",
+      "waiterId": null,
+      "order": {
+        "sentToKitchen": false,
+        "items": [],
+        "serviceType": "salon",
+        "takeawayChannel": "Salon",
+        "documentType": "boleta",
+        "documentIssued": false,
+        "paymentConfirmed": false,
+        "packagingFeeRate": 0,
+        "linkedTakeawayId": null,
+        "syncedAt": null
+      }
+    },
+    {
+      "id": "table-12",
+      "number": "12",
+      "zone": "Terraza",
+      "description": "Zona norte",
+      "status": "libre",
+      "waiterId": null,
+      "order": {
+        "sentToKitchen": false,
+        "items": [],
+        "serviceType": "salon",
+        "takeawayChannel": "Salon",
+        "documentType": "boleta",
+        "documentIssued": false,
+        "paymentConfirmed": false,
+        "packagingFeeRate": 0,
+        "linkedTakeawayId": null,
+        "syncedAt": null
+      }
+    },
+    {
+      "id": "table-13",
+      "number": "13",
+      "zone": "Terraza",
+      "description": "Zona norte",
+      "status": "ocupada",
+      "waiterId": "waiter-4",
+      "order": {
+        "sentToKitchen": true,
+        "items": [
+          { "productId": "prod-3", "quantity": 1 },
+          { "productId": "prod-7", "quantity": 1 },
+          { "productId": "prod-10", "quantity": 2 }
+        ],
+        "serviceType": "salon",
+        "takeawayChannel": "Salon",
+        "documentType": "boleta",
+        "documentIssued": false,
+        "paymentConfirmed": false,
+        "packagingFeeRate": 0,
         "linkedTakeawayId": null,
         "syncedAt": null
       }

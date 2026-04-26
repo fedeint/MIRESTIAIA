@@ -236,8 +236,8 @@ async function bootstrap() {
         desc.includes("expired") ||
         desc.includes("invalid");
       const msg = expired
-        ? "El enlace de activación caducó o ya se usó. Pide al administrador que reenvíe la invitación desde «Accesos». Si tu cuenta ya existe, usa «Olvidé mi contraseña» en el inicio de sesión."
-        : parsed.errorDescription || "El enlace de activación no es válido. Solicita un nuevo enlace al administrador.";
+        ? "El enlace caducó o ya se usó. Pide a tu local un enlace nuevo o, si la cuenta ya existe, usa «Olvidé mi contraseña» al entrar."
+        : parsed.errorDescription || "El enlace no es válido. Pide a tu local un enlace de acceso nuevo.";
       setStatus(msg, "error");
       showFallback();
       hideLoadingOverlay();
@@ -254,16 +254,8 @@ async function bootstrap() {
         exchErr = (await supabase.auth.exchangeCodeForSession(snapCode)).error;
       }
       if (exchErr) {
-        const baseMsg = exchErr.message || "No pudimos validar el enlace.";
-        const isPkceHint =
-          /pkce|code verifier|flow_state|expired/i.test(String(exchErr.message || "")) ||
-          String(exchErr.message || "").toLowerCase().includes("invalid");
         setStatus(
-          `${baseMsg}${
-            isPkceHint
-              ? " Si el enlace llevaba ?code= (PKCE), caduca en pocos minutos: pide reenvío y ábrelo enseguida. En Supabase → Authentication → Providers → Email sube «Mailer OTP expiration» (p. ej. 86400 s) y revisa la plantilla «Invite user» ({{ .ConfirmationURL }} = flujo con más margen que un code corto)."
-              : " Pide al administrador que reenvíe la invitación desde Accesos y abre el enlace en este dispositivo."
-          }`,
+          "No pudimos abrir el enlace. A veces caducan al poco rato: pide a tu local un enlace nuevo y ábrelo en cuanto recibas el correo, en este dispositivo. Si ya tienes cuenta, usa «Olvidé mi contraseña» al entrar.",
           "error",
         );
         showFallback();
@@ -289,12 +281,12 @@ async function bootstrap() {
       const hadAnyLinkHint = snapshotHadPkceCode() || snapshotHadAuthTokens();
       if (!hadAnyLinkHint) {
         setStatus(
-          "Para definir tu contraseña abre esta página con el botón del correo de invitación (no basta con entrar aquí sin el enlace). Si ya configuraste la cuenta, ve al inicio de sesión.",
+          "Necesitas abrir el enlace que te llegó por correo. Si la cuenta ya está activa, ve al inicio de sesión.",
           "info",
         );
       } else {
         setStatus(
-          "No pudimos recuperar la sesión del enlace. Cierra otras pestañas de MiRest, vuelve a abrir el enlace del correo o pide un reenvío al administrador.",
+          "No pudimos completar el acceso desde el enlace. Cierra otras ventanas de MiRest, vuelve a abrir el correo, o pide a tu local un enlace nuevo.",
           "error",
         );
       }

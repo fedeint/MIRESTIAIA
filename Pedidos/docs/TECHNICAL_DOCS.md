@@ -156,3 +156,30 @@ Mientras no exista backend real:
 2. Integrar emisión real de CPE SUNAT desde backend.
 3. Registrar auditoría por usuario para cambios de estado sensibles.
 4. Conectar bot de WhatsApp para crear pedidos pickup automáticos.
+
+## PWA móvil, onboarding contextual y preloader global
+
+- La experiencia móvil PWA ahora se apoya en `repositorioprincipal/MiRestconIA/public/manifest.json` y `repositorioprincipal/MiRestconIA/public/sw.js` para instalación, cache base y apertura en modo app.
+- La capa visual compartida vive en `repositorioprincipal/MiRestconIA/public/css/pwa-experience.css` y `repositorioprincipal/MiRestconIA/public/js/pwa-experience.js`, donde se resuelven prompt de instalación, preloader global, bienvenida POST y onboarding PRO con spotlight contextual.
+- La configuración PRE se sirve desde `repositorioprincipal/MiRestconIA/routes/pwa-setup.js` y la vista `repositorioprincipal/MiRestconIA/views/setup-pwa-pre.ejs`. Allí se guarda saludo, sueldo y frecuencia antes del primer ingreso operativo.
+- El estado PRE/PRO/POST queda persistible en tenant con la migración `repositorioprincipal/MiRestconIA/migrations/20260417_pwa_onboarding_state.js`.
+- Las vistas PWA principales marcan zonas guiables mediante atributos `data-onboarding-id` en `repositorioprincipal/MiRestconIA/views/dashboard.ejs`, `repositorioprincipal/MiRestconIA/views/mesas.ejs` y `repositorioprincipal/MiRestconIA/views/pedidos.ejs`, mientras desktop usa la misma idea en `repositorioprincipal/MiRestconIA/views/dashboard-desktop.ejs`.
+- El preloader global se inyecta en navegación y formularios importantes desde `repositorioprincipal/MiRestconIA/views/layout.ejs`, `repositorioprincipal/MiRestconIA/views/partials/desktop-layout.ejs` y `repositorioprincipal/MiRestconIA/views/partials/limelight-nav.ejs`.
+# Actualización UI pedidos y dashboard
+
+- En salón, la inspección del pedido ahora muestra el detalle por ronda seleccionada, no el consolidado general.
+- Cada ronda tiene borde y fondo contextual según su estado de pago: pagada o pendiente.
+- El botón de añadir pedido abre un modal centrado con el menú disponible; los productos agotados se renderizan en escala de grises.
+- El dashboard lateral ya renderiza contenido para Resumen, Facturación y Configuración en el panel derecho del sidebar.
+- La UI se mantiene responsive y lista para extender con toggle de dark mode a nivel de preferencias si se quiere dejar persistente por usuario.
+
+## Debug Live Server / localhost
+
+- En entorno local (`localhost` o `127.0.0.1`) el registro del Service Worker queda desactivado desde [`registerServiceWorker()`](implementacion/frontend/core/pwa.js:410) para evitar pantallas en blanco por caché obsoleta durante desarrollo.
+- El arranque de la app ahora tiene un `try/catch` en [`bootstrap.js`](implementacion/frontend/core/bootstrap.js:11) para mostrar un error visible en pantalla en vez de dejar la web completamente vacía.
+## Fase 1 - estabilidad de navegacion
+
+- **Run:** `npm.cmd start` y abrir `http://localhost:3000/pedidos`.
+- **Test:** `npm.cmd test`.
+- **Manual QA:** abrir una ruta inexistente y confirmar redireccion a `/pedidos`; cambiar entre Salon, Delivery y Para llevar; entrar a Facturas y usar `Volver a ...`; completar onboarding, recargar y verificar que no reaparece salvo reset explicito.
+- **Deploy:** publicar el servidor Node/Express o configurar el hosting para que rutas HTML desconocidas vuelvan a `/pedidos`; mantener `/api/*` con respuesta JSON 404.

@@ -62,13 +62,13 @@ export const MODULES = [
     short: "CL",
     icon: "users",
     path: "Clientes/clientes.html",
-    description: "Base de clientes, historial y experiencias de fidelización.",
+    description: "CRM: base de contactos, campañas, lead scoring, nurturing e inbox.",
     owner:
-      "Este entry point queda reservado para el frontend definitivo del equipo de Clientes.",
+      "Entry point al submódulo de base de datos; el resto de pantallas vive bajo Clientes/.",
     handoff: [
-      "Construir el módulo de clientes sin duplicar estilos globales.",
-      "Mantener nomenclatura clara para futuras vistas y componentes.",
-      "Elevar al root solo mejoras que beneficien a todos los módulos.",
+      "Mantener data-root-path y módulo activo en subpáginas (dashboard CRM, campañas, etc.).",
+      "Reutilizar tokens y componentes compartidos del root.",
+      "Navegación a otras apps del ecosistema vía sidebar o enlaces cruzados coherentes.",
     ],
   },
   {
@@ -119,14 +119,14 @@ export const MODULES = [
     label: "Pedidos",
     short: "PD",
     icon: "shopping-bag",
-    path: "Pedidos/implementacion/pedidos.html",
-    description: "Pedidos de salón, delivery y coordinación operativa central.",
+    path: "Pedidos/implementacion/index.html",
+    description: "PWA de operación: salón, delivery, para llevar, cocina y caja en un flujo unificado.",
     owner:
-      "Este entry point queda reservado para el frontend definitivo del equipo de Pedidos.",
+      "Código y assets en Pedidos/implementacion/; manifest PWA local en esa carpeta.",
     handoff: [
       "Preparar vistas internas orientadas a velocidad y trazabilidad.",
-      "Reutilizar estados, chips y estructura visual compartida.",
-      "Evitar dependencias innecesarias con otros módulos en esta fase.",
+      "Reutilizar estados, chips y estructura visual del design system del módulo.",
+      "Mantener API mock/bootstrap alineada con el backend real cuando exista.",
     ],
   },
   {
@@ -230,6 +230,8 @@ export const NAV_ITEMS = [
 const ADMIN_MODULE_KEYS = MODULES
   .filter((item) => item.key !== "accesos")
   .map((item) => item.key);
+/** Módulo Accesos: visible para quienes gestionen usuarios (incl. admin, no solo superadmin). */
+const ADMIN_MODULE_KEYS_WITH_ACCESOS = [...ADMIN_MODULE_KEYS, "accesos"];
 
 const STORAGE_KEY = "mirest-ui-theme";
 
@@ -286,7 +288,7 @@ export function hasFeaturePermission(permissions, featureKey) {
 
 export const ROLE_PERMISSIONS = {
   superadmin: ["*"],
-  admin: ADMIN_MODULE_KEYS,
+  admin: ADMIN_MODULE_KEYS_WITH_ACCESOS,
   caja: ["caja", "pedidos", "soporte"],
   chef: ["cocina", "recetas", "soporte"],
   pedidos: ["pedidos", "delivery-afiliados", "soporte"],
@@ -335,6 +337,11 @@ export function isDemoRole(role) {
 
 export function isSuperadminRole(role) {
   return role === "superadmin";
+}
+
+/** Puede abrir módulo Accesos (lista de usuarios, roles, módulos) — superadmin o admin. */
+export function isAccesosManagerRole(role) {
+  return role === "superadmin" || role === "admin";
 }
 
 export function getModulesByRole(role, permissions) {

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover: requerido para safe-area-inset (notch/Dynamic Island/home indicator) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- SEO -->
+  <title>MiRest con IA · Pedidos</title>
+  <meta name="description"
+    content="Módulo de Pedidos de MiRest con IA — gestión operativa de salón, delivery y para llevar para restaurantes y cevicherías." />
+  <meta name="theme-color" content="#DE5A25" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0F1220"  media="(prefers-color-scheme: dark)"  />
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./assets/icons/icon-192.svg" />
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.svg" />
+  <!-- iOS: permite modo standalone -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Pedidos" />
+  <!-- Android: color de la barra de estado -->
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- Design System — orden obligatorio:
+       tokens → base → components → modules → [legacy styles.css] → patch -->
+  <script>
+    window.__MIREST_ASSET_VERSION__ = 'smart-waiter-v2-20260424-1802';
+    window.__MIREST_DEV_BUST__ = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      ? `?v=${window.__MIREST_ASSET_VERSION__}`
+      : '';
+    document.write(`<link rel="stylesheet" href="./frontend/styles/tokens.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="./frontend/styles/base.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="./frontend/styles/components.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="./frontend/styles/modules.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="./styles.css${window.__MIREST_DEV_BUST__}" />`);
+  </script>
+  <!-- Patch: corrige issues críticos del legacy styles.css (cargado al final) -->
+  <script>document.write(`<link rel="stylesheet" href="./frontend/styles/patch.css${window.__MIREST_DEV_BUST__}" />`);</script>
+
+  <script>
+    if (['localhost', '127.0.0.1'].includes(window.location.hostname) && 'serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations()
+          .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+          .then(() => caches?.keys?.().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))) || Promise.resolve())
+          .then(() => {
+            console.info('[dev] Service Workers y caché limpiados para Live Server.');
+          })
+          .catch((error) => {
+            console.warn('[dev] No se pudo limpiar el entorno local:', error);
+          });
+      }, { once: true });
+    }
+  </script>
+</head>
+
+<body data-theme="light" data-mode="salon" data-module="pedidos">
+  <div class="app-shell" id="appShell">
+
+    <!-- ── SIDEBAR (desktop) ─────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">IA</div>
+        <div class="brand__copy">
+          <strong>MiRest con IA</strong>
+          <span>Gestión operativa</span>
+        </div>
+        <button
+          type="button"
+          class="sidebar-close"
+          id="sidebarCloseButton"
+          data-close-dashboard
+          aria-label="Cerrar dashboard"
+        >
+          ‹
+        </button>
+      </div>
+
+      <div id="dashboardNav"></div>
+      <div class="dashboard-sidebar-content" id="dashboardContent"></div>
+
+      <div class="sidebar__group sidebar__group--footer">
+        <div class="active-module-card">
+          <p class="sidebar__label">Módulo activo</p>
+          <strong>Pedidos</strong>
+          <span>Área principal</span>
+        </div>
+        <div class="profile-card">
+          <div class="profile-card__avatar" aria-hidden="true">DA</div>
+          <div>
+            <strong>Dalia</strong>
+            <span>Administradora</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Backdrop del sidebar (mobile) -->
+    <button
+      type="button"
+      class="sidebar-backdrop"
+      id="sidebarBackdrop"
+      aria-label="Cerrar navegación"
+      tabindex="-1"
+    ></button>
+
+    <!-- ── MAIN ────────────────────────────────────────────────── -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="topbar" id="topbar">
+        <div class="topbar__left">
+          <button
+            type="button"
+            class="topbar-dashboard-btn"
+            id="dashboardToggle"
+            data-open-dashboard
+            aria-label="Abrir o contraer dashboard"
+            aria-expanded="false"
+            aria-controls="sidebar"
+          >
+            <span class="topbar-dashboard-btn__icon" aria-hidden="true">☰</span>
+          </button>
+          <div>
+            <p class="eyebrow" id="topbarEyebrow">Módulo</p>
+            <h1 id="topbarTitle">Pedidos</h1>
+          </div>
+        </div>
+
+        <!-- Mode switcher (desktop/tablet) -->
+        <div class="topbar__center" id="modeSwitcher" aria-label="Selector de área operativa"></div>
+
+      </header>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <main class="page-content" id="pageContent">
+
+        <!-- Hero del modo operativo -->
+        <section id="modeHero" aria-label="Estado del área activa"></section>
+
+        <!-- Summary cards del turno -->
+        <section
+          class="summary-grid"
+          id="summaryStats"
+          aria-label="Resumen del turno actual"
+          aria-live="polite"
+        ></section>
+
+        <!-- Workspace: área principal + panel contextual -->
+        <section
+          class="workspace-layout"
+          id="workspaceLayout"
+          data-mode="salon"
+          aria-label="Área de trabajo"
+        >
+          <!-- Panel principal -->
+          <div class="workspace-main">
+            <section class="workspace-card" id="workspaceCard">
+              <header class="workspace-card__header" id="workspaceHeader"></header>
+              <div id="workspaceToolbar" role="toolbar" aria-label="Filtros y acciones"></div>
+              <div
+                class="workspace-region"
+                id="workspaceContent"
+                aria-live="polite"
+                aria-label="Contenido del área de trabajo"
+              ></div>
+            </section>
+          </div>
+
+          <!-- Panel contextual derecho (desktop) -->
+          <aside
+            class="management-panel"
+            id="managementPanel"
+            aria-label="Panel de pedido activo"
+          ></aside>
+        </section>
+
+      </main>
+    </div><!-- /app-main -->
+  </div><!-- /app-shell -->
+
+  <!-- ── ROOTS DE OVERLAYS ──────────────────────────────────────── -->
+
+  <!-- Modales centrados -->
+  <div id="modalRoot" aria-live="assertive"></div>
+
+  <!-- Drawers laterales / bottom sheets -->
+  <div id="drawerRoot"></div>
+
+  <!-- Onboarding (PRE / PRO) -->
+  <div id="onboardingRoot"></div>
+
+  <!-- Toasts / notificaciones inline -->
+  <div
+    id="toastRoot"
+    class="toast-stack"
+    aria-live="assertive"
+    aria-atomic="true"
+    role="status"
+  ></div>
+
+  <!-- ── Bootstrap — entrada del sistema modular ───────────────── -->
+  <!--
+    type="module" garantiza:
+    - ES modules nativos (import/export)
+    - Diferido por defecto (no bloquea el render)
+    - Top-level await disponible en bootstrap.js
+  -->
+  <script type="module">
+    import(`./frontend/core/bootstrap.js${window.__MIREST_DEV_BUST__}`);
+  </script>
+</body>
+
+</html>

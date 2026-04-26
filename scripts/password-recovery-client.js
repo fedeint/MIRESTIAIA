@@ -1,9 +1,6 @@
 import { supabase } from "./supabase.js";
 
-/**
- * Recuperación solo por Supabase Auth (correo SMTP configurado en el panel del proyecto).
- * Mismo flujo que el SDK en resetPasswordForEmail (correo lo envía Auth con tu SMTP).
- */
+/** Recuperación vía Auth: correo con enlace a activate.html */
 export async function requestPasswordRecoveryEmail(rawEmail) {
   const email = String(rawEmail || "")
     .trim()
@@ -16,14 +13,13 @@ export async function requestPasswordRecoveryEmail(rawEmail) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) {
     throw new Error(
-      error.message ||
-        "No se pudo enviar la recuperación. Revisa en Supabase (Authentication → Emails / SMTP) que el envío esté bien configurado.",
+      "No se pudo enviar el enlace. Inténtalo de nuevo en unos minutos.",
     );
   }
 
   return {
     channel: "auth",
     message:
-      "Si el correo está registrado, Supabase enviará el enlace al buzón (revisa spam y Promociones en Gmail). El remitente y el texto los defines en Authentication → Emails del panel de Supabase.",
+      "Si el correo está en el sistema, te llegará un enlace para elegir una contraseña nueva. Revisa también la carpeta de no deseados o promociones.",
   };
 }

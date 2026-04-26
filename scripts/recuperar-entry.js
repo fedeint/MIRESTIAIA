@@ -30,7 +30,7 @@ form?.addEventListener("submit", async (e) => {
     console.error("[recovery-page]", err);
     msg.textContent =
       err?.message ||
-      "Intenta de nuevo en unos minutos. Si administras el proyecto, revisa SMTP y plantillas en Supabase (Authentication → Emails).";
+      "No se pudo enviar el enlace. Inténtalo de nuevo en unos minutos.";
     msg.className = "request-banner request-banner--error";
     msg.style.display = "block";
   } finally {

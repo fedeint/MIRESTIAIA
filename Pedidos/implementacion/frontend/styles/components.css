@@ -989,7 +989,14 @@
    9. ONBOARDING
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Overlay de spotlight ────────────────────────────────── */
+/* ── Overlay de spotlight (PRO) ───────────────────────────
+   Compatibilidad con shell: ../../styles/components.css oculta .onboarding-overlay
+   salvo .open; la clase `open` la añade onboarding.js junto a `is-active`. */
+.onboarding-overlay.open.is-active {
+  background: transparent;
+  backdrop-filter: none;
+  z-index: 12000;
+}
 .onboarding-overlay {
   position: fixed;
   inset: 0;

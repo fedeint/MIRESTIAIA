@@ -444,7 +444,8 @@ function _showProOverlay() {
   const step = PRO_STEPS[_proStepIndex];
   const overlay = document.createElement('div');
   overlay.id = 'onboardingOverlay';
-  overlay.className = 'onboarding-overlay is-active';
+  /* Debe incluir `open`: el shell global (../../styles/components.css) solo muestra .onboarding-overlay con .open; si no, display:none y el PRO no aparece en web. */
+  overlay.className = 'onboarding-overlay open is-active';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-label', 'Tour guiado de la aplicacion');
 

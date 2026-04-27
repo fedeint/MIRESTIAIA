@@ -39,6 +39,8 @@ try {
   console.debug('[boot] Importando bridge mobile: ./mesero-bridge.js');
   import('./mesero-bridge.js');
 
+  // base.css (módulo) exige `body.page-ready` para mostrar el shell; app.js del root la añade, aquí no.
+  document.body.classList.add('page-ready');
   console.info('[boot] Bootstrap completado ✓');
 } catch (error) {
   console.error('[boot] Error fatal al iniciar la app:', error);

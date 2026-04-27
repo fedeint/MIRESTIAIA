@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/favicon.ico", "destination": "/favicon.svg" },
+    { "source": "/Pedidos/implementacion/index.html", "destination": "/Pedidos/implementacion/Pedidos.html" },
     { "source": "/Pedidos/implementacion", "destination": "/Pedidos/implementacion/Pedidos.html" },
     { "source": "/Pedidos/implementacion/", "destination": "/Pedidos/implementacion/Pedidos.html" }
   ],

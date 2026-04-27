@@ -126,10 +126,19 @@
     }
 
     // ── Obtener embedding ──────────────────────────────────────────────────────
+    function getGeminiKey() {
+      return localStorage.getItem("mirest_gemini_key") || "";
+    }
+
     async function getEmbedding(text) {
+      const geminiKey = getGeminiKey();
+      if (!geminiKey) throw new Error("Falta la API Key de Gemini. Configúrala en el módulo de IA.");
       const resp = await fetch(EMBEDDING_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-gemini-key": geminiKey,
+        },
         body: JSON.stringify({ text }),
       });
       if (!resp.ok) throw new Error(`Embedding error: ${resp.status}`);

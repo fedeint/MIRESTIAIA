@@ -21,6 +21,9 @@ import { getTurnStats } from '../../core/app-state.js';
 import { escapeHtml, formatCurrency } from '../../core/ui-helpers.js';
 import { isMirestModuleTourEnabled } from '../../../../../scripts/mirest-tour-policy.js';
 
+/** Tras terminar PRO, mostrar POST una vez aunque no hayan pasado 4 h desde `updateLastSeen`. */
+const POST_FORCE_ONCE_KEY = 'mirest_onb_force_post_once';
+
 const PRE_PAY_REFERENCE = {
   dailySalary: 45,
   payFrequency: 'semanal',
@@ -717,6 +720,14 @@ function _finishOnboardingPRO() {
   updateLastSeen();
   void setMirestPwaOnboardingCompletado(true);
   _showToast('Tour completado. Ya conoces tu flujo principal de pedidos.', 'success');
+  try {
+    sessionStorage.setItem(POST_FORCE_ONCE_KEY, '1');
+  } catch {
+    /* */
+  }
+  window.setTimeout(() => {
+    initOnboardingPOST();
+  }, 700);
 }
 
 function clamp(value, min, max) {
@@ -728,10 +739,19 @@ function clamp(value, min, max) {
 // =====================================================================
 
 /**
- * Mostrar bienvenida de turno si pasaron mas de 4 horas.
+ * Mostrar bienvenida de turno si pasaron mas de 4 horas (o justo después del PRO, una vez).
  */
 export function initOnboardingPOST() {
-  if (!isLongAbsence(4)) return;
+  let forceOnce = false;
+  try {
+    if (sessionStorage.getItem(POST_FORCE_ONCE_KEY) === '1') {
+      forceOnce = true;
+      sessionStorage.removeItem(POST_FORCE_ONCE_KEY);
+    }
+  } catch {
+    /* */
+  }
+  if (!forceOnce && !isLongAbsence(4)) return;
 
   const preData = getOnboardingPre();
   const name = preData?.name || 'equipo';

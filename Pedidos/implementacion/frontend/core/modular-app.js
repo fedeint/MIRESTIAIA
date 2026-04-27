@@ -1119,7 +1119,8 @@ function bindEvents() {
     const detail = event.detail || {};
     setUserRole(detail.role || 'mesero');
     setUserName(detail.name || 'Equipo');
-    setActiveModule(getModulesByCurrentRole()[0] || 'pedidos');
+    /* Mantener Pedidos activo: el tour PRO apunta a #modeSwitcher etc.; si el primer módulo del rol es Caja/Cocina, el switcher queda vacío y el PRO no arranca. */
+    setActiveModule('pedidos', { preserveDashboard: true });
     renderApp();
   });
 

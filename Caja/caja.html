@@ -418,6 +418,14 @@
         .cj-meseros { flex-direction: column; }
         .cj-mesero  { max-width: 100%; }
       }
+
+      /* Chat DallIA / dock DallA por encima de overlays del módulo (tour shell ~2000, modales .cj-modal-overlay 200, toast 300). */
+      .ia-widget-panel,
+      .ia-widget-btn,
+      #dalia-dock,
+      #dalia-widget {
+        z-index: 12000 !important;
+      }
     </style>
   </head>
 

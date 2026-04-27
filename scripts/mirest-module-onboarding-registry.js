@@ -6,26 +6,56 @@ import { supabase } from "./supabase.js";
 import { loadMirestUserContext } from "./mirest-user-context.js";
 import { MIREST_SHELL_CONFIG_KEY, resolveDefaultRestaurantId } from "./mirest-app-config.js";
 
-/** @returns {Promise<import('./mirest-module-onboarding-runner.js').MirestOnboardingContext | null>} */
+/**
+ * Resuelve tenant como el resto del ecosistema: `usuarios` (preferido) y, si no hay
+ * tenant, `user_profiles` (misma lógica que resolveTenantIdForUser en module-conditions).
+ * Sin eso, el superadmin con sesión Auth “válida” seguía sin contexto y el tour
+ * mostraba “Inicia sesión…” aunque estuvieras logueado.
+ * @returns {Promise<import('./mirest-module-onboarding-runner.js').MirestOnboardingContext | null>}
+ */
 export async function createMirestOnboardingContext() {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session?.user) return null;
-  const ctxM = await loadMirestUserContext(session.user);
-  const tid = ctxM.profile?.tenant_id;
-  if (!tid) return null;
+  let user = session?.user ?? null;
+  if (!user) {
+    const { data: gu } = await supabase.auth.getUser();
+    user = gu.user ?? null;
+  }
+  if (!user) return null;
+
+  const ctxM = await loadMirestUserContext(user);
+  let profile = ctxM.profile;
+  let tid = profile?.tenant_id != null ? String(profile.tenant_id) : "";
+
+  if (!tid) {
+    const { data: up, error: eUp } = await supabase
+      .from("user_profiles")
+      .select("id, tenant_id, restaurant_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (eUp) {
+      console.warn("[onb] user_profiles (fallback tenant):", eUp);
+    }
+    if (up?.tenant_id != null) {
+      tid = String(up.tenant_id);
+      profile = { ...(profile && typeof profile === "object" ? profile : {}), ...up, tenant_id: up.tenant_id };
+    }
+  }
+  if (!tid) {
+    return null;
+  }
   const restaurantId = await resolveDefaultRestaurantId(
     supabase,
-    String(tid),
-    ctxM.profile?.restaurant_id
+    tid,
+    profile && typeof profile === "object" ? /** @type {{ restaurant_id?: unknown }} */(profile).restaurant_id : null
   );
   return {
     supabase,
-    tenantId: String(tid),
+    tenantId: tid,
     restaurantId: restaurantId ? String(restaurantId) : null,
-    user: session.user,
-    profile: ctxM.profile,
+    user,
+    profile: profile && typeof profile === "object" ? profile : null,
   };
 }
 

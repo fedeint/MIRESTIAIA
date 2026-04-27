@@ -46,7 +46,11 @@ export class MirestModuleOnboardingRunner {
     }
     this.ctx = await createMirestOnboardingContext();
     if (!this.ctx) {
-      window.alert("Inicia sesión para usar el tour con verificación en la nube.");
+      window.alert(
+        "No se pudo preparar el tour: hace falta un tenant vinculado a tu usuario. " +
+          "Debe existir una fila con tenant_id en public.usuarios o public.user_profiles. " +
+          "Si ya iniciaste sesión, revisa en Accesos/Supabase que tu perfil tenga local asignado o políticas RLS.",
+      );
       return;
     }
     this._buildOverlay();

@@ -2,7 +2,7 @@
   "name": "MiRest con IA · Pedidos",
   "short_name": "Pedidos",
   "description": "Gestión de pedidos para salón, delivery y para llevar en tiempo real. Diseñado para cevicherías, pollerías y restaurantes operativos.",
-  "start_url": "./index.html?module=pedidos",
+  "start_url": "./Pedidos.html?module=pedidos",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -36,21 +36,21 @@
       "name": "Nuevo pedido salón",
       "short_name": "Salón",
       "description": "Ir directamente al mapa de mesas del salón",
-      "url": "./index.html?mode=salon",
+      "url": "./Pedidos.html?mode=salon",
       "icons": [{ "src": "./assets/icons/icon-192.svg", "sizes": "96x96" }]
     },
     {
       "name": "Delivery activo",
       "short_name": "Delivery",
       "description": "Ver pedidos de delivery en tiempo real",
-      "url": "./index.html?mode=delivery",
+      "url": "./Pedidos.html?mode=delivery",
       "icons": [{ "src": "./assets/icons/icon-192.svg", "sizes": "96x96" }]
     },
     {
       "name": "Para llevar",
       "short_name": "Llevar",
       "description": "Pedidos para recoger",
-      "url": "./index.html?mode=takeaway",
+      "url": "./Pedidos.html?mode=takeaway",
       "icons": [{ "src": "./assets/icons/icon-192.svg", "sizes": "96x96" }]
     }
   ],
@@ -71,7 +71,7 @@
     }
   ],
   "share_target": {
-    "action": "./index.html",
+    "action": "./Pedidos.html",
     "method": "GET",
     "enctype": "application/x-www-form-urlencoded",
     "params": {

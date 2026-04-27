@@ -23,15 +23,14 @@ try {
   await initGlobalAppShell();
   console.debug("[boot] Shell global (sidebar) montado");
 
-  if (showPwaAccessGateIfNeeded()) {
-    document.body.classList.add("page-ready");
-    return;
-  }
-
-  // ── 1. Runtime operativo (Salón, Delivery, KPI, workspace) ───────
+  // El runtime y el workspace SIEMPRE se montan. El gate PWA (si aplica) solo
+  // añade un overlay: antes se hacía `return` y se saltaba initModularApp,
+  // dejando sidebar, cinta y cuerpo vacíos en Vercel / panel web.
   console.debug("[boot] Ejecutando initModularApp()");
   initModularApp();
   console.debug("[boot] initModularApp() completado");
+
+  showPwaAccessGateIfNeeded();
 
   // ── 2. Inicializar storage (IDB en background, no bloquea) ──────
   console.debug('[boot] Inicializando storage en segundo plano');

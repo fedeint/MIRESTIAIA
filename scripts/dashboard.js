@@ -125,7 +125,7 @@ function buildChecklistItems(snapshot) {
   if (snapshot.activeOrders > 0) {
     items.push({
       text: `Hay ${snapshot.activeOrders} pedido(s) activo(s)`,
-      href: toHref("Pedidos/implementacion/index.html?module=pedidos"),
+      href: toHref("Pedidos/implementacion/Pedidos.html?module=pedidos"),
       icon: "list-checks",
       priority: snapshot.activeOrders >= 8 ? "alta" : "media",
     });

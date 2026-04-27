@@ -9,7 +9,7 @@
  *   - API/datos: Network First con fallback a caché
  */
 
-const CACHE_VERSION   = 'v3';
+const CACHE_VERSION   = 'v5-solo-pedidos-html';
 const CACHE_SHELL     = `mirest-shell-${CACHE_VERSION}`;
 const CACHE_FONTS     = `mirest-fonts-${CACHE_VERSION}`;
 const CACHE_IMAGES    = `mirest-images-${CACHE_VERSION}`;
@@ -17,7 +17,7 @@ const CACHE_DATA      = `mirest-data-${CACHE_VERSION}`;
 
 // Recursos del app shell (siempre en caché)
 const SHELL_ASSETS = [
-  './index.html',
+  './Pedidos.html',
   './styles.css',
   './frontend/core/operational-ui-config.js',
   './frontend/core/order-entity-factories.js',
@@ -182,12 +182,12 @@ self.addEventListener('push', event => {
 // Manejar clic en notificación push
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const url = event.notification.data?.url || './index.html';
+  const url = event.notification.data?.url || './Pedidos.html';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(clientList => {
-        const existing = clientList.find(c => c.url.includes('index.html'));
+        const existing = clientList.find(c => /Pedidos\.html/i.test(c.url));
         if (existing) {
           existing.focus();
           if (url) existing.navigate(url);
@@ -210,7 +210,7 @@ self.addEventListener('fetch', event => {
         const shareUrl = formData.get('url') || '';
 
         // Redirigir a la app con los datos en query params
-        const redirectUrl = new URL('./index.html', self.registration.scope);
+        const redirectUrl = new URL('./Pedidos.html', self.registration.scope);
         redirectUrl.searchParams.set('share_title', title);
         redirectUrl.searchParams.set('share_text',  text);
         if (shareUrl) redirectUrl.searchParams.set('share_url', shareUrl);

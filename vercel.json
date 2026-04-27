@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/Pedidos/implementacion", "destination": "/Pedidos/implementacion/Pedidos.html" },
+    { "source": "/Pedidos/implementacion/", "destination": "/Pedidos/implementacion/Pedidos.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)\\.webmanifest",

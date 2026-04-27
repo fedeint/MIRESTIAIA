@@ -40,9 +40,8 @@ function activatePWAShell() {
   document.body.classList.add('pwa-shell');
   document.body.classList.add(isIOS ? 'pwa-ios' : 'pwa-android');
 
-  // Reparar el topbar center: ocultar y mostrar chips de modo abajo
-  const modeSwitcher = document.getElementById('modeSwitcher');
-  if (modeSwitcher) modeSwitcher.style.setProperty('display', 'none', 'important');
+  // El selector de modo en topbar se oculta vía CSS (.pwa-shell .topbar__center);
+  // no usar estilo inline: evita chocar con media queries y con bottom-nav / chips.
 
   console.info('[PWA] Shell activada —', isIOS ? 'iOS' : 'Android');
 }

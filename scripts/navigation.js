@@ -119,7 +119,7 @@ export const MODULES = [
     label: "Pedidos",
     short: "PD",
     icon: "shopping-bag",
-    path: "Pedidos/implementacion/index.html",
+    path: "Pedidos/implementacion/index.html?module=pedidos",
     description: "PWA de operación: salón, delivery, para llevar, cocina y caja en un flujo unificado.",
     owner:
       "Código y assets en Pedidos/implementacion/; manifest PWA local en esa carpeta.",

@@ -1057,6 +1057,28 @@ function bindEvents() {
   }, { passive: true });
 }
 
+function applyUrlModuleIntent() {
+  try {
+    const u = new URL(window.location.href);
+    const fromQuery = u.searchParams.get("module");
+    if (fromQuery) {
+      setActiveModule(fromQuery.trim());
+      u.searchParams.delete("module");
+      const qs = u.searchParams.toString();
+      const clean = `${u.pathname}${qs ? `?${qs}` : ""}${u.hash || ""}`;
+      window.history.replaceState(null, "", clean);
+      return;
+    }
+    const h = (u.hash || "").toLowerCase();
+    if (h === "#pedidos" || h === "#operacion") {
+      setActiveModule("pedidos");
+      window.history.replaceState(null, "", `${u.pathname}${u.search || ""}`);
+    }
+  } catch (e) {
+    console.warn("[modular-app] applyUrlModuleIntent", e);
+  }
+}
+
 export function initModularApp() {
   if (initialized) return;
   console.info('[modular-app] Inicializando runtime modular...');
@@ -1065,7 +1087,8 @@ export function initModularApp() {
   applyTheme(readTheme());
   console.debug('[modular-app] Tema aplicado', refs.body.dataset.theme);
   restoreSession();
-  console.debug('[modular-app] Sesión restaurada', getState());
+  applyUrlModuleIntent();
+  console.debug("[modular-app] Sesión + URL", getState());
   bindEvents();
   console.debug('[modular-app] Eventos enlazados');
   renderApp();

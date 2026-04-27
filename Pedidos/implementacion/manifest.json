@@ -2,7 +2,7 @@
   "name": "MiRest con IA · Pedidos",
   "short_name": "Pedidos",
   "description": "Gestión de pedidos para salón, delivery y para llevar en tiempo real. Diseñado para cevicherías, pollerías y restaurantes operativos.",
-  "start_url": "./index.html",
+  "start_url": "./index.html?module=pedidos",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

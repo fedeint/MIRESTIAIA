@@ -1,8 +1,38 @@
+import { supabase } from "../scripts/supabase.js";
+import { loadMirestUserContext } from "../scripts/mirest-user-context.js";
+import {
+  applyRemoteConfigFragments,
+  buildRemotePayload,
+  fetchRestaurantAppConfig,
+  resolveDefaultRestaurantId,
+  saveRestaurantAppConfig,
+} from "../scripts/mirest-app-config.js";
+import {
+  getModuleOnboardingKeys,
+  startMirestModuleOnboarding,
+} from "../scripts/mirest-module-onboarding-runner.js";
+import {
+  ALERTA_TIPOS,
+  coalesceAlertasByTipo,
+  fetchAlertas,
+  fetchTenantRow,
+  fetchTenantModulos,
+  fetchTenantHorarios,
+  mapHorariosToShell,
+  registrarSolicitudPruebaAlerta,
+  saveAlertaConfigForTipo,
+  saveTenantPatch,
+  syncHorariosFromShell,
+  updateTenantModulo,
+} from "../scripts/mirest-config-service.js";
+
 const DEFAULT_CONFIG = {
   dallIA: {
     nombre: "DallIA",
     trato: "Tú",
     personalidad: "Amigable",
+    /** @type {Record<string, boolean>} — `false` = ocultar DallA en el módulo; ausente o `true` = visible. */
+    activoPorModulo: {},
     capacidades: {
       chat: true,
       voice: true,
@@ -10,16 +40,9 @@ const DEFAULT_CONFIG = {
       daily: false
     }
   },
+  /** Mapa lógica por clave = `alerta_tipo` (relleno al cargar desde `alertas_config` o al guardar). */
   alertas: {
-    canales: {
-      urgente: true,
-      ops: true,
-      ai: true,
-      rep: false,
-      sunat: false,
-      per: false
-    },
-    dnd: { activo: false, desde: "22:00", hasta: "07:00" }
+    tipos: /** @type {Record<string, { activo: boolean, canal: string, destinatario: string, umbral_stock: number | null, hora_reporte: string | null }>} */ ({}),
   },
   modulos: {
     pedidosMesas: true,
@@ -87,9 +110,72 @@ const DEFAULT_CONFIG = {
   }
 };
 
+const LEGACY_TO_TENANT_MOD = {
+  pedidosMesas: "pedidos",
+  cocinaKDS: "cocina",
+  delivery: "delivery",
+  almacenInventario: "almacen",
+  clientesFidelidad: "clientes",
+  facturacionSUNAT: "facturacion",
+};
+
+/** Alineado con public.config_modulo_key — controla public.tenants.dalla_activo_por_modulo. */
+const DALLA_MODULO_LIST = [
+  { key: "pedidos", label: "Pedidos y mesas" },
+  { key: "cocina", label: "Cocina (KDS)" },
+  { key: "caja", label: "Caja" },
+  { key: "almacen", label: "Almacén" },
+  { key: "productos", label: "Productos" },
+  { key: "recetas", label: "Recetas" },
+  { key: "proveedores", label: "Proveedores" },
+  { key: "delivery", label: "Delivery" },
+  { key: "clientes", label: "Clientes" },
+  { key: "facturacion", label: "Facturación" },
+  { key: "reportes", label: "Reportes" },
+  { key: "dalla", label: "DallA / asistente" },
+];
+
+const ALERTA_LABELS = {
+  stock_critico: { titulo: "Stock crítico (almacén)", desc: "Aviso cuando un ítem está por agotarse según el umbral." },
+  caja_cerrada: { titulo: "Caja sin cierre de turno", desc: "Recordatorio o alerta de operación de caja." },
+  pedido_cobrado: { titulo: "Pedido cobrado", desc: "Notificación al liquidar o cobrar un pedido." },
+  reporte_diario: { titulo: "Reporte diario automático", desc: "Envía un resumen a la hora programada." },
+  stock_agotado: { titulo: "Stock agotado", desc: "Cuando un producto pasa a cero o no disponible." },
+};
+
+function tratoToUi(t) {
+  if (t === "tuteo") return "Tú";
+  if (t === "usted") return "Usted";
+  return t || "Tú";
+}
+
+function tratoToDb(etiqueta) {
+  if (etiqueta === "Tú" || etiqueta === "Tú / informal") return "tuteo";
+  return "usted";
+}
+
+function personUiToDb(label) {
+  const m = {
+    Profesional: "formal",
+    Amigable: "amigable",
+    Directo: "directo",
+  };
+  return m[label] || "amigable";
+}
+
+function personDbToUi(v) {
+  const m = { formal: "Profesional", amigable: "Amigable", directo: "Directo" };
+  return m[v] || "Amigable";
+}
+
 const ConfigStore = {
   STORAGE_KEY: "mirest_config",
   state: null,
+  /** @type {string | null} */
+  tenantId: null,
+  /** @type {string | null} */
+  restaurantId: null,
+  remoteEnabled: false,
 
   load() {
     try {
@@ -98,7 +184,7 @@ const ConfigStore = {
         this.state = JSON.parse(stored);
       } else {
         this.state = structuredClone(DEFAULT_CONFIG);
-        this.persist();
+        this.persistLocalOnly();
       }
     } catch (e) {
       console.error("Error parsing config:", e);
@@ -106,19 +192,91 @@ const ConfigStore = {
     }
   },
 
-  persist() {
+  /** Caché en el navegador (y base para mezclar con Supabase al iniciar). */
+  persistLocalOnly() {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
     } catch (e) {
       console.error("QuotaExceededError o fallo de guardado:", e);
       alert("Error guardando la configuración. Espacio insuficiente en localStorage.");
     }
+  },
+
+  /**
+   * Tras sesión: aplica `restaurant_settings` (clave mirest_shell_v1) si existe;
+   * no pisa `usuarios` (lista local de demostración).
+   */
+  async hydrateFromServer() {
+    this.tenantId = null;
+    this.restaurantId = null;
+    this.remoteEnabled = false;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const ctx = await loadMirestUserContext(session.user);
+    const profile = ctx.profile;
+    if (!profile?.tenant_id) return;
+    this.tenantId = String(profile.tenant_id);
+    const rid = await resolveDefaultRestaurantId(
+      supabase,
+      this.tenantId,
+      profile.restaurant_id
+    );
+    if (!rid) {
+      console.warn("[config] Sin restaurante asignado: solo caché local");
+      return;
+    }
+    this.restaurantId = rid;
+    this.remoteEnabled = true;
+    const remote = await fetchRestaurantAppConfig(supabase, rid);
+    if (remote) {
+      applyRemoteConfigFragments(DEFAULT_CONFIG, this.state, remote);
+      this.persistLocalOnly();
+    }
+  },
+
+  /** Guarda caché local y, si hay local + sesión, sube a Supabase. */
+  persist() {
+    this.persistLocalOnly();
+    this.syncToRemote();
+  },
+
+  syncToRemote() {
+    if (!this.remoteEnabled || !this.restaurantId || !this.tenantId) return;
+    const payload = buildRemotePayload(this.state);
+    saveRestaurantAppConfig(
+      supabase,
+      this.tenantId,
+      this.restaurantId,
+      payload
+    )
+      .then(({ error }) => {
+        if (error) console.error("[config] No se pudo guardar en la nube:", error);
+      })
+      .catch((e) => console.error("[config] red:", e));
   }
 };
 
 const ConfigUI = {
-  init() {
+  updatePersistStatus() {
+    const el = document.getElementById("cfg-persist-status");
+    if (!el) return;
+    if (ConfigStore.remoteEnabled) {
+      el.textContent =
+        "DallIA, alertas, módulos, horarios, tour e info del local se guardan en la base (mismo caché en este navegador). Varios dispositivos con la misma sesión de local comparten ajustes.";
+      el.style.color = "var(--color-text, #18181b)";
+    } else {
+      el.textContent =
+        "Inicia sesión y deja asignado un local al usuario para que esta configuración se guarde en la nube; mientras, solo se guarda en este navegador.";
+    }
+  },
+
+  async init() {
     ConfigStore.load();
+    await ConfigStore.hydrateFromServer();
+    await this.loadTenantMaster();
+    this.updatePersistStatus();
     this.hydrate();
     this.setupNavigation();
     this.setupDallIAHandlers();
@@ -128,6 +286,185 @@ const ConfigUI = {
     this.setupTourHandlers();
     this.setupUsuariosHandlers();
     this.setupRestauranteHandlers();
+    this.setupModuleOnboarding();
+  },
+
+  /**
+   * Fuentes de verdad: public.tenants (DallA + ficha) y tenant_* recién migrados.
+   * Sobreescribe el caché local / restaurant_settings con datos de tenants cuando existen.
+   */
+  async loadTenantMaster() {
+    const { tenant } = await fetchTenantRow();
+    if (!tenant) return;
+    const t = /** @type {Record<string, unknown>} */ (tenant);
+    if (t.dalla_nombre != null && String(t.dalla_nombre).trim() !== "")
+      ConfigStore.state.dallIA.nombre = String(t.dalla_nombre);
+    if (t.dalla_tono) ConfigStore.state.dallIA.trato = tratoToUi(/** @type {string} */(t.dalla_tono));
+    if (t.dalla_personalidad) {
+      ConfigStore.state.dallIA.personalidad = personDbToUi(
+        String(t.dalla_personalidad)
+      );
+    }
+    if (t.name != null && String(t.name).trim() !== "")
+      ConfigStore.state.restaurante.nombre = String(t.name);
+    if (t.direccion != null) ConfigStore.state.restaurante.direccion = String(t.direccion || "");
+    if (t.ruc != null) ConfigStore.state.restaurante.ruc = String(t.ruc || "");
+    if (t.moneda != null) ConfigStore.state.restaurante.moneda = String(t.moneda || "PEN");
+    if (t.zona_horaria != null) ConfigStore.state.restaurante.zonaHoraria = String(t.zona_horaria);
+    if (t.logo_url != null) ConfigStore.state.restaurante.logo = String(t.logo_url);
+
+    if (t.dalla_activo_por_modulo && typeof t.dalla_activo_por_modulo === "object") {
+      ConfigStore.state.dallIA.activoPorModulo = {
+        ...ConfigStore.state.dallIA.activoPorModulo,
+        .../** @type {Record<string, boolean>} */ (t.dalla_activo_por_modulo),
+      };
+    }
+
+    const rowsA = await fetchAlertas();
+    ConfigStore.state.alertas = {
+      tipos: coalesceAlertasByTipo(rowsA),
+    };
+
+    const rowsH = await fetchTenantHorarios();
+    if (rowsH.length > 0) {
+      ConfigStore.state.horarios = mapHorariosToShell(rowsH);
+    }
+    const rowsM = await fetchTenantModulos();
+    if (rowsM.length > 0) {
+      const byM = new Map(rowsM.map((r) => [r.modulo, r]));
+      for (const [legacy, key] of Object.entries(LEGACY_TO_TENANT_MOD)) {
+        const r = byM.get(key);
+        if (r) ConfigStore.state.modulos[legacy] = !!r.activo;
+      }
+    }
+    ConfigStore.persistLocalOnly();
+  },
+
+  cfgToast(msg) {
+    const t = document.createElement("div");
+    t.setAttribute("role", "status");
+    t.className = "puff-in-center";
+    t.style.cssText =
+      "position:fixed;bottom:24px;right:24px;z-index:5000;max-width:min(360px,92vw);padding:12px 16px;border-radius:12px;background:var(--color-surface);border:1px solid var(--color-border);box-shadow:var(--shadow-elevated);font-size:14px;";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  },
+
+  /** Botón DallA por módulo (public.tenants.dalla_activo_por_modulo). */
+  renderDallAVisibilidadModulos() {
+    const cont = document.getElementById("cfg-dallia-modvis-list");
+    if (!cont) return;
+    const m = ConfigStore.state.dallIA.activoPorModulo || {};
+    cont.innerHTML = DALLA_MODULO_LIST.map(({ key, label }) => {
+      const on = m[key] !== false;
+      return `<div class="cfg-row" style="align-items:center; justify-content:space-between;">
+        <div class="cfg-row-label" style="font-weight:600;">${label}</div>
+        <input type="checkbox" class="cfg-toggle" data-cfg-dalla-mod="${key}" id="cfg-dallamod-${key}" ${
+        on ? "checked" : ""
+      } title="Mostrar el acceso a DallA en este módulo">
+      </div>`;
+    }).join("");
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  renderSeccionAlertasSupabase() {
+    const root = document.getElementById("cfg-alertas-tipo-root");
+    if (!root) return;
+    const tipos = ConfigStore.state.alertas?.tipos || {};
+    const html = ALERTA_TIPOS.map((tipo) => {
+      const lab = ALERTA_LABELS[tipo] || { titulo: tipo, desc: "" };
+      const row = tipos[tipo] || {
+        activo: false,
+        canal: "email",
+        destinatario: "",
+        umbral_stock: null,
+        hora_reporte: null,
+      };
+      const hora = row.hora_reporte && String(row.hora_reporte).slice(0, 5);
+      const umNum =
+        row.umbral_stock != null && !Number.isNaN(Number(row.umbral_stock)) ? String(row.umbral_stock) : "";
+      const extraStock =
+        tipo === "stock_critico"
+          ? `<div class="cfg-time-col" style="min-width:120px;">
+          <label>Umbral (unid. o % según lógica en almacén)</label>
+          <input type="number" class="cfg-input" min="0" step="1" id="cfg-alt-umbral-${tipo}" value="${umNum}" placeholder="Ej. 5" style="max-width:100px;">
+        </div>`
+          : "";
+      const extraHora =
+        tipo === "reporte_diario"
+          ? `<div class="cfg-time-col">
+          <label>Hora del reporte</label>
+          <input type="time" class="cfg-input" id="cfg-alt-hora-${tipo}" value="${hora || ""}">
+        </div>`
+          : "";
+      return `<div class="cfg-card" data-cfg-alerta-tipo="${tipo}" style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h3 class="cfg-card-title">${lab.titulo}</h3>
+            <p class="cfg-card-description" style="margin:0 0 8px 0;">${lab.desc}</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; color:var(--color-text-muted);">Enviar alerta</span>
+            <input type="checkbox" class="cfg-toggle" id="cfg-alt-activo-${tipo}" ${
+        row.activo ? "checked" : ""
+      }>
+          </div>
+        </div>
+        <div class="cfg-time-inputs" style="flex-wrap:wrap; align-items:flex-end; gap:12px; margin-top:12px;">
+          <div class="cfg-time-col" style="min-width:120px;">
+            <label>Canal</label>
+            <select class="cfg-input" id="cfg-alt-canal-${tipo}" style="min-width:120px;">
+              <option value="email" ${row.canal === "email" ? "selected" : ""}>Email</option>
+              <option value="whatsapp" ${row.canal === "whatsapp" ? "selected" : ""}>WhatsApp</option>
+              <option value="push" ${row.canal === "push" ? "selected" : ""}>Push</option>
+            </select>
+          </div>
+          <div class="cfg-time-col" style="flex:1; min-width:180px;">
+            <label>Destinatario</label>
+            <input type="text" class="cfg-input" id="cfg-alt-dest-${tipo}" value="" placeholder="Correo o +51…">
+          </div>
+          ${extraStock}
+          ${extraHora}
+          <div class="cfg-time-col" style="min-width:120px;">
+            <label>&nbsp;</label>
+            <button type="button" class="cfg-btn-save" id="cfg-alt-prueba-${tipo}" style="background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border); box-shadow:none; font-size:12px; padding:8px 12px; white-space:nowrap;">Enviar prueba</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+    root.innerHTML = html;
+    for (const tipo of ALERTA_TIPOS) {
+      const d = document.getElementById(`cfg-alt-dest-${tipo}`);
+      if (d) d.value = tipos[tipo]?.destinatario || "";
+    }
+    for (const tipo of ALERTA_TIPOS) {
+      const b = document.getElementById(`cfg-alt-prueba-${tipo}`);
+      if (!b) continue;
+      b.addEventListener("click", async () => {
+        const canal = document.getElementById(`cfg-alt-canal-${tipo}`)?.value || "email";
+        const dest = document.getElementById(`cfg-alt-dest-${tipo}`)?.value?.trim() || "";
+        try {
+          await registrarSolicitudPruebaAlerta(tipo, canal, dest);
+          this.cfgToast("Prueba registrada en auditoría. El envío en vivo aún conecta al servicio de notificaciones.");
+        } catch (e) {
+          console.error(e);
+          this.cfgToast("No se pudo registrar la prueba. Revisa la consola o permisos.");
+        }
+        if (window.lucide) window.lucide.createIcons();
+      });
+    }
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  setupModuleOnboarding() {
+    document.getElementById("btnModuleOnbConfig")?.addEventListener("click", () => {
+      startMirestModuleOnboarding("configuracion", { force: true });
+    });
+    document.getElementById("btnModuleOnbList")?.addEventListener("click", () => {
+      console.log("[Mirest] Módulos de onboarding:", getModuleOnboardingKeys().join(", "));
+    });
+    if (window.lucide) window.lucide.createIcons();
   },
 
   updateTopbarName(name) {
@@ -175,18 +512,9 @@ const ConfigUI = {
     document.getElementById("cfg-ia-cap-alerts").checked = st.dallIA.capacidades.alerts;
     document.getElementById("cfg-ia-cap-daily").checked = st.dallIA.capacidades.daily;
 
-    // Alertas
-    document.getElementById("cfg-alt-urgente").checked = st.alertas.canales.urgente;
-    document.getElementById("cfg-alt-ops").checked = st.alertas.canales.ops;
-    document.getElementById("cfg-alt-ai").checked = st.alertas.canales.ai;
-    document.getElementById("cfg-alt-rep").checked = st.alertas.canales.rep;
-    document.getElementById("cfg-alt-sunat").checked = st.alertas.canales.sunat;
-    document.getElementById("cfg-alt-per").checked = st.alertas.canales.per;
-    
-    document.getElementById("cfg-alt-dnd").checked = st.alertas.dnd.activo;
-    document.getElementById("cfg-alt-dnd-from").value = st.alertas.dnd.desde;
-    document.getElementById("cfg-alt-dnd-to").value = st.alertas.dnd.hasta;
-    this.refreshDNDState(st.alertas.dnd.activo);
+    this.renderDallAVisibilidadModulos();
+
+    this.renderSeccionAlertasSupabase();
 
     // Módulos
     document.querySelectorAll(".cfg-mod-toggle").forEach(cb => {
@@ -219,22 +547,41 @@ const ConfigUI = {
     attachSeg("cfg-ia-trato");
     attachSeg("cfg-ia-person");
 
-    document.getElementById("btnSaveDallia").addEventListener("click", () => {
+    document.getElementById("btnSaveDallia").addEventListener("click", async () => {
       const name = document.getElementById("cfg-ia-name").value.trim();
       if (!name) {
         document.getElementById("err-ia-name").style.display = "block";
         return;
       }
       document.getElementById("err-ia-name").style.display = "none";
-      
+
+      const tratoUi = document.querySelector("#cfg-ia-trato .active")?.dataset.val || "Tú";
+      const persoUi = document.querySelector("#cfg-ia-person .active")?.dataset.val || "Amigable";
       ConfigStore.state.dallIA.nombre = name;
-      ConfigStore.state.dallIA.trato = document.querySelector("#cfg-ia-trato .active").dataset.val;
-      ConfigStore.state.dallIA.personalidad = document.querySelector("#cfg-ia-person .active").dataset.val;
+      ConfigStore.state.dallIA.trato = tratoUi;
+      ConfigStore.state.dallIA.personalidad = persoUi;
       ConfigStore.state.dallIA.capacidades.chat = document.getElementById("cfg-ia-cap-chat").checked;
       ConfigStore.state.dallIA.capacidades.voice = document.getElementById("cfg-ia-cap-voice").checked;
       ConfigStore.state.dallIA.capacidades.alerts = document.getElementById("cfg-ia-cap-alerts").checked;
       ConfigStore.state.dallIA.capacidades.daily = document.getElementById("cfg-ia-cap-daily").checked;
-      
+      const modMap = {};
+      for (const { key } of DALLA_MODULO_LIST) {
+        const el = document.querySelector(`[data-cfg-dalla-mod="${key}"]`);
+        modMap[key] = !!(el && el instanceof HTMLInputElement && el.checked);
+      }
+      ConfigStore.state.dallIA.activoPorModulo = { ...modMap };
+      try {
+        await saveTenantPatch({
+          dalla_nombre: name,
+          dalla_tono: tratoToDb(tratoUi),
+          dalla_personalidad: personUiToDb(persoUi),
+          dalla_activo_por_modulo: modMap,
+        });
+        this.cfgToast("DallA guardada en el tenant (Supabase).");
+      } catch (e) {
+        console.error(e);
+        this.cfgToast("No se pudo guardar en el servidor; solo caché local.");
+      }
       ConfigStore.persist();
       this.updateTopbarName(name);
 
@@ -242,70 +589,89 @@ const ConfigUI = {
       const html = btn.innerHTML;
       btn.innerHTML = `<i data-lucide="check"></i> Guardado`;
       if (window.lucide) window.lucide.createIcons();
-      setTimeout(() => btn.innerHTML = html, 1500);
+      setTimeout(() => {
+        btn.innerHTML = html;
+      }, 1500);
     });
   },
 
-  // ── ALERTAS HANDLERS
-  refreshDNDState(isActive) {
-    const cont = document.getElementById("cfg-alt-dnd-times");
-    if (isActive) {
-      cont.style.opacity = "1";
-      cont.style.pointerEvents = "auto";
-    } else {
-      cont.style.opacity = "0.5";
-      cont.style.pointerEvents = "none";
-    }
-  },
-  
+  // ── ALERTAS (alertas_config en Supabase)
   setupAlertsHandlers() {
-    document.getElementById("cfg-alt-dnd").addEventListener("change", (e) => {
-      this.refreshDNDState(e.target.checked);
-    });
-
-    document.getElementById("btnSaveAlertas").addEventListener("click", () => {
-      const dnd = document.getElementById("cfg-alt-dnd").checked;
-      const tFrom = document.getElementById("cfg-alt-dnd-from").value;
-      const tTo = document.getElementById("cfg-alt-dnd-to").value;
-
-      if (dnd && (!tFrom || !tTo)) {
-        document.getElementById("err-dnd").style.display = "block";
-        return;
+    const btn = document.getElementById("btnSaveAlertas");
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      const errs = [];
+      for (const tipo of ALERTA_TIPOS) {
+        const activo = !!document.getElementById(`cfg-alt-activo-${tipo}`)?.checked;
+        const canal = document.getElementById(`cfg-alt-canal-${tipo}`)?.value || "email";
+        const destinatario =
+          document.getElementById(`cfg-alt-dest-${tipo}`)?.value?.trim() || "";
+        const umbralEl = document.getElementById(`cfg-alt-umbral-${tipo}`);
+        const horaEl = document.getElementById(`cfg-alt-hora-${tipo}`);
+        const umbral_stock =
+          umbralEl && umbralEl.value !== "" ? umbralEl.value : null;
+        const hora_reporte =
+          horaEl && horaEl.value ? horaEl.value : null;
+        try {
+          await saveAlertaConfigForTipo(tipo, {
+            activo,
+            canal,
+            destinatario,
+            umbral_stock,
+            hora_reporte,
+          });
+        } catch (e) {
+          console.error(e);
+          errs.push(tipo);
+        }
       }
-      document.getElementById("err-dnd").style.display = "none";
-
-      ConfigStore.state.alertas.canales.urgente = document.getElementById("cfg-alt-urgente").checked;
-      ConfigStore.state.alertas.canales.ops = document.getElementById("cfg-alt-ops").checked;
-      ConfigStore.state.alertas.canales.ai = document.getElementById("cfg-alt-ai").checked;
-      ConfigStore.state.alertas.canales.rep = document.getElementById("cfg-alt-rep").checked;
-      ConfigStore.state.alertas.canales.sunat = document.getElementById("cfg-alt-sunat").checked;
-      ConfigStore.state.alertas.canales.per = document.getElementById("cfg-alt-per").checked;
-
-      ConfigStore.state.alertas.dnd.activo = dnd;
-      ConfigStore.state.alertas.dnd.desde = tFrom;
-      ConfigStore.state.alertas.dnd.hasta = tTo;
-
+      const nrows = await fetchAlertas();
+      ConfigStore.state.alertas = { tipos: coalesceAlertasByTipo(nrows) };
+      this.renderSeccionAlertasSupabase();
+      this.cfgToast(
+        errs.length
+          ? `No se guardaron: ${errs.join(", ")}. Revisa caja, permisos o datos.`
+          : "Todas las reglas de alerta se guardaron en la base (alertas_config)."
+      );
       ConfigStore.persist();
-      
-      const btn = document.getElementById("btnSaveAlertas");
       btn.innerHTML = `<i data-lucide="check"></i> Guardado`;
       if (window.lucide) window.lucide.createIcons();
-      setTimeout(() => btn.innerHTML = `<i data-lucide="save"></i> Guardar`, 1500);
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="save"></i> Guardar todo`;
+      }, 1500);
     });
   },
 
   // ── Modulos
   setupModulesHandlers() {
-    document.getElementById("btnSaveModulos").addEventListener("click", () => {
-      document.querySelectorAll(".cfg-mod-toggle").forEach(cb => {
-        ConfigStore.state.modulos[cb.dataset.mod] = cb.checked;
-      });
-      ConfigStore.persist();
-      
+    document.getElementById("btnSaveModulos").addEventListener("click", async () => {
       const btn = document.getElementById("btnSaveModulos");
+      document.querySelectorAll(".cfg-mod-toggle").forEach((cb) => {
+        if (cb instanceof HTMLInputElement) {
+          ConfigStore.state.modulos[cb.dataset.mod] = cb.checked;
+        }
+      });
+      const err = [];
+      for (const [legacy, tmod] of Object.entries(LEGACY_TO_TENANT_MOD)) {
+        const on = !!ConfigStore.state.modulos[legacy];
+        try {
+          await updateTenantModulo(tmod, { activo: on, visible_en_menu: on });
+        } catch (e) {
+          err.push(legacy);
+          console.warn(e);
+        }
+      }
+      this.cfgToast(
+        err.length
+          ? "Algunos módulos no se actualizaron (¿caja abierta o permisos?). Caché guardada."
+          : "Módulos del sistema actualizados en Supabase (tenant_modulos)."
+      );
+      ConfigStore.persist();
       btn.innerHTML = `<i data-lucide="check"></i> Guardado`;
       if (window.lucide) window.lucide.createIcons();
-      setTimeout(() => btn.innerHTML = `<i data-lucide="save"></i> Guardar`, 1500);
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="save"></i> Guardar`;
+      }, 1500);
     });
   },
 
@@ -348,18 +714,32 @@ const ConfigUI = {
   },
 
   setupHorariosHandlers() {
-    document.getElementById("btnSaveHorarios").addEventListener("click", () => {
-      const list = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
-      list.forEach(day => {
-        ConfigStore.state.horarios[day].cerrado = document.getElementById(`cfg-hr-t-${day}`).checked;
-        ConfigStore.state.horarios[day].apertura = document.getElementById(`cfg-hr-ap-${day}`).value;
-        ConfigStore.state.horarios[day].cierre = document.getElementById(`cfg-hr-cl-${day}`).value;
+    document.getElementById("btnSaveHorarios").addEventListener("click", async () => {
+      const list = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+      list.forEach((day) => {
+        const c = document.getElementById(`cfg-hr-t-${day}`)?.checked;
+        const ap = document.getElementById(`cfg-hr-ap-${day}`)?.value;
+        const cl = document.getElementById(`cfg-hr-cl-${day}`)?.value;
+        if (ConfigStore.state.horarios[day]) {
+          ConfigStore.state.horarios[day].cerrado = !!c;
+          ConfigStore.state.horarios[day].apertura = ap || "08:00";
+          ConfigStore.state.horarios[day].cierre = cl || "22:00";
+        }
       });
-      ConfigStore.persist();
       const btn = document.getElementById("btnSaveHorarios");
+      try {
+        await syncHorariosFromShell(ConfigStore.state.horarios);
+        this.cfgToast("Horarios guardados (tenant_horarios) y caché local.");
+      } catch (e) {
+        console.error(e);
+        this.cfgToast("Solo caché local: no se pudo escribir horarios en la nube.");
+      }
+      ConfigStore.persist();
       btn.innerHTML = `<i data-lucide="check"></i> Guardado`;
       if (window.lucide) window.lucide.createIcons();
-      setTimeout(() => btn.innerHTML = `<i data-lucide="save"></i> Guardar`, 1500);
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="save"></i> Guardar`;
+      }, 1500);
     });
   },
 
@@ -472,31 +852,52 @@ const ConfigUI = {
 
   // ── Restaurante
   setupRestauranteHandlers() {
-    document.getElementById("btnSaveRest").addEventListener("click", () => {
+    document.getElementById("btnSaveRest").addEventListener("click", async () => {
       const ruc = document.getElementById("cfg-rest-ruc").value.trim();
       const errRuc = document.getElementById("err-rest-ruc");
 
       if (ruc && ruc.length !== 11) {
-         errRuc.style.display = "block";
-         return;
+        errRuc.style.display = "block";
+        return;
       }
       errRuc.style.display = "none";
 
-      ConfigStore.state.restaurante.nombre = document.getElementById("cfg-rest-nombre").value.trim();
-      ConfigStore.state.restaurante.direccion = document.getElementById("cfg-rest-dir").value.trim();
+      const nombre = document.getElementById("cfg-rest-nombre").value.trim();
+      const dir = document.getElementById("cfg-rest-dir").value.trim();
+      ConfigStore.state.restaurante.nombre = nombre;
+      ConfigStore.state.restaurante.direccion = dir;
       ConfigStore.state.restaurante.ruc = ruc;
-
+      const btn = document.getElementById("btnSaveRest");
+      try {
+        await saveTenantPatch({
+          name: nombre,
+          direccion: dir,
+          ruc: ruc || null,
+        });
+        this.cfgToast("Datos del restaurante guardados (tenants).");
+      } catch (e) {
+        console.error(e);
+        this.cfgToast("No se pudo guardar en el servidor; solo caché local.");
+      }
       ConfigStore.persist();
       this.updateTopbarRestaurante(ConfigStore.state.restaurante.nombre);
-      const btn = document.getElementById("btnSaveRest");
       btn.innerHTML = `<i data-lucide="check"></i> Guardado`;
       if (window.lucide) window.lucide.createIcons();
-      setTimeout(() => btn.innerHTML = `<i data-lucide="save"></i> Guardar`, 1500);
+      setTimeout(() => {
+        btn.innerHTML = `<i data-lucide="save"></i> Guardar`;
+      }, 1500);
     });
-  }
+  },
 
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  ConfigUI.init();
+  ConfigUI.init().catch((e) => {
+    console.error("[config] init", e);
+    const el = document.getElementById("cfg-persist-status");
+    if (el) {
+      el.textContent = "Error al cargar la configuración. Revisa la consola.";
+      el.style.color = "var(--color-destructive, #dc2626)";
+    }
+  });
 });

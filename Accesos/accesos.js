@@ -27,6 +27,7 @@ import {
 } from "../scripts/navigation.js?v=20260426-roles-onboarding";
 import { loadRolesConfigMap, getModulesForRoleFromDb } from "../scripts/roles-config.js";
 import { shellRoleToAppRole } from "../scripts/mirest-role-maps.js";
+import { startMirestModuleOnboarding } from "../scripts/mirest-module-onboarding-runner.js";
 
 const tableBody = document.getElementById("requestsTableBody");
 const feedback = document.getElementById("requestFeedback");
@@ -1146,6 +1147,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  document.getElementById("btnAccesosModuleOnb")?.addEventListener("click", () => {
+    startMirestModuleOnboarding("accesos", { force: true });
+  });
+  document.getElementById("btnAccesosMarkPerfiles")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("mirest_onb_accesos_perfiles", "1");
+    } catch {
+      /* */
+    }
+    window.alert("Paso 2 del tour (perfiles) marcado. Vuelve al tour y pulsa «Verificar ahora».");
+  });
   loadRequests();
   loadUsers();
 });

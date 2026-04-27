@@ -545,6 +545,23 @@
         </header>
 
         <main class="dashboard">
+          <div
+            class="request-feedback"
+            style="margin-bottom: var(--space-4); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-color: rgba(240, 124, 42, 0.35); background: rgba(240, 124, 42, 0.06)"
+          >
+            <div>
+              <strong>Onboarding Accesos</strong>
+              <span style="display: block; font-size: 13px; color: var(--color-text-muted); margin-top: 4px">
+                Tour con spotlight y comprobación en la base (4 pasos). El paso «perfiles» puede marcarse aquí si aún no hay UI de perfiles.
+              </span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+              <button type="button" class="btn btn--secondary btn--sm" id="btnAccesosMarkPerfiles" title="Solo para el tour — paso 2">
+                Marqué perfiles (tour)
+              </button>
+              <button type="button" class="btn btn--primary" id="btnAccesosModuleOnb">Iniciar tour</button>
+            </div>
+          </div>
           <div class="accesos-header">
             <div>
               <h2>Solicitudes de acceso</h2>

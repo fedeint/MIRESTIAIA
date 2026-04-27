@@ -355,6 +355,11 @@ export function isAccesosManagerRole(role) {
   return role === "superadmin" || role === "admin";
 }
 
+/** Módulo Configuración: solo admin y superadmin; operativos se redirigen. */
+export function canAccessConfiguracion(role) {
+  return role === "superadmin" || role === "admin";
+}
+
 export function getModulesByRole(role, permissions) {
   const perms = Array.isArray(permissions) && permissions.length > 0
     ? permissions

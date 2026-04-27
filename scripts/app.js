@@ -7,6 +7,7 @@ import {
   initializeThemeToggle,
   isDemoRole,
   isAccesosManagerRole,
+  canAccessConfiguracion,
   renderSidebar,
   resolveUserPermissions,
   resolveUserRole,
@@ -80,6 +81,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  if (activeKey === "configuracion" && user && !canAccessConfiguracion(userRole)) {
+    window.location.href = rootPath ? `${rootPath}/index.html` : "index.html";
+    return;
+  }
+
   window.currentUserRole = userRole;
   window.currentUserPermissions = userPermissions;
   window.currentUserProfile = profile;
@@ -87,6 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("page-ready");
   dismissBootLoader();
   document.body.dataset.userRole = userRole;
+  document.body.dataset.cfgRole = userRole;
 
   registerServiceWorker(rootPath).catch(() => null);
   initPwaInstallWidget({ rootPath });
@@ -104,9 +111,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   initializeResponsiveSidebar(pageType);
   initializePageTransitions();
   setText("currentYear", String(new Date().getFullYear()));
-  initializeIAWidget(rootPath);
+  let showDallA = true;
+  try {
+    const { shouldShowDallAForCurrentPage } = await import("./mirest-dallia-visibility.js");
+    showDallA = await shouldShowDallAForCurrentPage();
+  } catch (e) {
+    console.warn("[App] Visibilidad DallA: se mantiene el asistente visible.", e);
+  }
+  if (showDallA) {
+    initializeIAWidget(rootPath);
+  }
   setupLogoutBtn(rootPath);
   applyUserIdentity(profile);
+
+  import("./mirest-module-onboarding-runner.js")
+    .then((m) => {
+      window.MirestOnboarding = {
+        start: (key, opts) => m.startMirestModuleOnboarding(String(key), opts),
+        list: m.getModuleOnboardingKeys,
+      };
+    })
+    .catch(() => null);
 
   if (pageType === "dashboard") {
     initializeDashboardPage(profile);

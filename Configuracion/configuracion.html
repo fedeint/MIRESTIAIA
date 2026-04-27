@@ -455,6 +455,13 @@
             <span>/</span>
             <strong>Configuración</strong>
           </nav>
+          <p
+            id="cfg-persist-status"
+            class="text-sm"
+            style="margin: 0 0 1rem; padding: 10px 14px; border-radius: 10px; background: var(--color-surface-muted, #f4f4f5); color: var(--color-text-muted, #71717a);"
+          >
+            Cargando preferencias…
+          </p>
 
           <div class="cfg-layout">
             <!-- Sidebar Interno de Configuración -->
@@ -542,82 +549,24 @@
                     <input type="checkbox" class="cfg-toggle" id="cfg-ia-cap-daily">
                   </div>
                 </div>
+
+                <div class="cfg-card">
+                  <h3 class="cfg-card-title">DallA en módulos</h3>
+                  <p class="cfg-card-description">Desactiva el botón flotante de DallA solo en los módulos que elijas. Si un módulo no figura, se asume activo mientras haya módulo habilitado en el plan.</p>
+                  <div id="cfg-dallia-modvis-list" class="cfg-dallia-modvis-grid" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;"></div>
+                </div>
               </section>
 
               <!-- SECTION: Alertas -->
               <section id="cfg-sect-alertas" class="cfg-section" data-section="alertas">
                 <div class="cfg-section-header">
                   <div>
-                    <h2 class="cfg-section-title">Alertas y Notificaciones</h2>
-                    <p class="cfg-section-subtitle">Configura qué, cuándo y cómo te avisamos</p>
+                    <h2 class="cfg-section-title">Alertas y notificaciones</h2>
+                    <p class="cfg-section-subtitle">Cada regla se guarda en la base (alertas_config): canal, destinatario y condiciones de envío.</p>
                   </div>
-                  <button class="cfg-btn-save" id="btnSaveAlertas"><i data-lucide="save"></i> Guardar</button>
+                  <button type="button" class="cfg-btn-save" id="btnSaveAlertas"><i data-lucide="save"></i> Guardar todo</button>
                 </div>
-
-                <div class="cfg-card">
-                  <h3 class="cfg-card-title" style="color:var(--color-text-muted); font-size: 11px; text-transform: uppercase;">Canales de Notificación</h3>
-                  
-                  <div class="cfg-row">
-                    <div class="cfg-row-label">
-                      <span style="width:8px;height:8px;background:var(--color-red);border-radius:50%;display:inline-block;"></span> Urgente
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-urgente" checked>
-                  </div>
-                  <div class="cfg-row">
-                    <div class="cfg-row-label">
-                      <span style="width:8px;height:8px;background:var(--color-accent);border-radius:50%;display:inline-block;"></span> Operaciones
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-ops" checked>
-                  </div>
-                  <div class="cfg-row">
-                    <div class="cfg-row-label">
-                      <span style="width:8px;height:8px;background:blue;border-radius:50%;display:inline-block;"></span> Sugerencias IA
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-ai" checked>
-                  </div>
-                  <div class="cfg-row">
-                    <div class="cfg-row-label">
-                      <span style="width:8px;height:8px;background:var(--color-success);border-radius:50%;display:inline-block;"></span> Reportes
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-rep">
-                  </div>
-                  <div class="cfg-row">
-                    <div class="cfg-row-label">
-                      <span style="width:8px;height:8px;background:#222;border-radius:50%;display:inline-block;"></span> SUNAT / Fiscal
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-sunat">
-                  </div>
-                  <div class="cfg-row" style="border:none">
-                    <div class="cfg-row-label">
-                      <span style="width:8px;height:8px;background:gray;border-radius:50%;display:inline-block;"></span> Personal
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-per">
-                  </div>
-                </div>
-
-                <div class="cfg-card" style="background:var(--color-surface-muted)">
-                  <h3 class="cfg-card-title" style="color:var(--color-text-muted); font-size: 11px; text-transform: uppercase;">No Molestar</h3>
-                  
-                  <div class="cfg-row" style="border-bottom:none; padding-bottom: 0;">
-                    <div>
-                      <div class="cfg-row-label" style="font-size:16px;">Modo No Molestar</div>
-                      <div class="cfg-card-description" style="margin-bottom:0">Silencia todas las alertas en este horario</div>
-                    </div>
-                    <input type="checkbox" class="cfg-toggle" id="cfg-alt-dnd">
-                  </div>
-
-                  <div class="cfg-time-inputs" id="cfg-alt-dnd-times" style="opacity:0.5; pointer-events:none;">
-                    <div class="cfg-time-col">
-                      <label>Desde</label>
-                      <input type="time" class="cfg-input" id="cfg-alt-dnd-from" value="22:00">
-                    </div>
-                    <div class="cfg-time-col">
-                      <label>Hasta</label>
-                      <input type="time" class="cfg-input" id="cfg-alt-dnd-to" value="07:00">
-                    </div>
-                  </div>
-                  <span class="cfg-field-error" id="err-dnd">Debes especificar horas de inicio y fin válidas.</span>
-                </div>
+                <div id="cfg-alertas-tipo-root"></div>
               </section>
 
               <!-- SECTION: Módulos -->
@@ -718,6 +667,21 @@
                     <!-- Rendered Via JS -->
                   </div>
                 </div>
+                <div class="cfg-card" style="margin-top:1rem">
+                  <h3 class="cfg-card-title">Tour interactivo (nuevo) — con verificación en base</h3>
+                  <p class="cfg-card-description">
+                    Mismo estilo de spotlight que Pedidos: pasos, acción requerida y comprobación automática de datos en Supabase (mientras tengas sesión).
+                    También disponible con <code style="font-size:12px">MirestOnboarding.start("configuracion")</code> en consola.
+                  </p>
+                  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+                    <button type="button" class="cfg-btn-save" id="btnModuleOnbConfig" style="background:var(--color-accent)">
+                      <i data-lucide="play-circle"></i> Iniciar — Configuración (5 pasos)
+                    </button>
+                    <button type="button" class="cfg-btn-save" id="btnModuleOnbList" style="background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-border)">
+                      <i data-lucide="list"></i> Ver módulos en consola
+                    </button>
+                  </div>
+                </div>
               </section>
 
                <!-- ADD SEC: Usuarios -->
@@ -731,7 +695,7 @@
                 </div>
                 <div class="cfg-card">
                   <!-- Se simulará una tabla básica del CRUD -->
-                  <p class="cfg-card-description">Los usuarios configurados se almacenarán localmente durante el MVP.</p>
+                  <p class="cfg-card-description">Los usuarios reales se administran en Accesos (Supabase). La lista de demostración aquí solo se guarda en este navegador.</p>
                   <div id="usersListContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
                 </div>
               </section>

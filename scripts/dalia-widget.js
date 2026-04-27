@@ -591,10 +591,21 @@
     });
   }
 
-  // ── Inicializar cuando el DOM esté listo ──────────────────────────────────
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", createWidget);
-  } else {
+  // ── Inicializar: respeta tenants.dalla_activo_por_modulo (vía mirest-dallia-visibility.js) ─
+  async function bootDalia() {
+    try {
+      const { shouldShowDallAForCurrentPage } = await import(ROOT + "scripts/mirest-dallia-visibility.js");
+      const ok = await shouldShowDallAForCurrentPage();
+      if (!ok) return;
+    } catch (e) {
+      console.warn("[dalia-widget] visibilidad; se muestra el widget por defecto.", e);
+    }
     createWidget();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => void bootDalia());
+  } else {
+    void bootDalia();
   }
 })();

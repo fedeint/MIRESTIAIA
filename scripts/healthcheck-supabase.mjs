@@ -40,6 +40,7 @@ const MODULOS = {
     "roles_modulos",
     "access_requests",
   ],
+  "Configuración (shell)": ["restaurant_settings"],
 };
 
 const headers = {

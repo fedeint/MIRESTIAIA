@@ -49,54 +49,6 @@ export function renderDashboardPanel(payload) {
   return renderDashboardHome(buildDashboardSummary(payload));
 }
 
-export function renderDashboardNav({ state }) {
-  if (state.activeModule !== 'pedidos') {
-    return '';
-  }
-
-  const baseSections = [
-    { id: 'overview', label: 'Resumen global', helper: 'Cifras y atajos', kind: 'section', target: 'overview' },
-    { id: 'operacion', label: 'Operación', helper: 'Salón · Delivery · Recojo', kind: 'section', target: 'operacion' },
-  ];
-  const moduleItems = [
-    { id: 'factura', label: 'Facturación', helper: `${state.invoiceHistory.length} emitidas`, kind: 'module', target: 'facturas' },
-    { id: 'configuracion', label: 'Configuración', helper: 'Impresoras y sesión', kind: 'module', target: 'configuracion' },
-  ];
-  const items = [
-    ...baseSections,
-    ...moduleItems.filter((item) => state.visibleModules.includes(item.target)),
-  ];
-
-  return `
-    <div class="sidebar__group dashboard-nav-shell" id="pedidosInModuleNav">
-      <p class="sidebar__label">Pedidos — vistas</p>
-      <nav class="sidebar__nav dashboard-nav-list" aria-label="Resumen y operación">
-        ${items.map((item) => {
-          const isActive = item.kind === 'section'
-            ? state.activeModule === 'pedidos' && state.dashboardSection === item.target
-            : state.activeModule === item.target;
-
-          return `
-          <button
-            type="button"
-            class="sidebar__item dashboard-nav__item ${isActive ? 'is-active' : ''}"
-            ${item.kind === 'section'
-              ? `data-dashboard-section="${escapeHtml(item.target)}"`
-              : `data-open-module="${escapeHtml(item.target)}"`}
-          >
-            <div class="nav-icon" aria-hidden="true">${item.id === 'overview' ? 'RS' : item.id === 'operacion' ? 'OP' : item.id === 'factura' ? 'FC' : 'CF'}</div>
-            <span>
-              <strong>${escapeHtml(item.label)}</strong>
-              <small>${escapeHtml(item.helper)}</small>
-            </span>
-          </button>
-        `;
-        }).join('')}
-      </nav>
-    </div>
-  `;
-}
-
 function renderInvoiceSection({ state, refData }) {
   const draft = state.invoiceDraft;
   const printer = state.printers.factura;
@@ -256,14 +208,6 @@ export function renderDashboardContent({ state, stats, refData }) {
 
   if (state.activeModule === 'configuracion' || state.dashboardSection === 'configuracion') {
     return renderSettingsSection(state);
-  }
-
-  if (state.activeModule === 'pedidos' && state.dashboardSection === 'operacion') {
-    return '';
-  }
-
-  if (state.activeModule === 'pedidos' && state.dashboardSection === 'overview') {
-    return renderDashboardPanel({ state, stats });
   }
 
   return renderDashboardPanel({ state, stats });

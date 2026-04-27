@@ -1,11 +1,10 @@
 /**
  * Shell global: mismo sidebar de navegación (Menu principal + Módulos) que el dashboard base.
  * Usa `scripts/navigation.js#renderSidebar` y el mismo criterio móvil que `layout.css` (≤1180px cajón).
+ * No se inyecta un segundo “dashboard” en Pedidos: se reutiliza la misma lista de módulos y estilos.
  */
 import { renderSidebar, resolveUserRole, resolveUserPermissions } from '../../../../scripts/navigation.js';
 import { getCurrentUser, supabase } from '../../../../scripts/supabase.js';
-import { getState, subscribe } from './app-state.js';
-import { renderDashboardNav } from '../modules/dashboard/index.js';
 
 function getRootPath() {
   return (document.body?.dataset?.rootPath || './').replace(/\/+$/, '');
@@ -36,7 +35,7 @@ function initResponsiveNav() {
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute(
       'aria-label',
-      open ? 'Cerrar navegación lateral' : 'Abrir navegación lateral',
+      open ? 'Cerrar navegación lateral' : 'Abrir o cerrar la navegación de la plataforma',
     );
   };
 
@@ -85,19 +84,4 @@ export async function initGlobalAppShell() {
   wireLogout();
   initResponsiveNav();
   window.lucide?.createIcons?.();
-
-  const dashHost = document.getElementById('pedidosDashboardNavHost');
-  if (dashHost) {
-    const paintPedidosNav = () => {
-      const state = getState();
-      const isPed = state.activeModule === 'pedidos';
-      dashHost.innerHTML = isPed ? renderDashboardNav({ state }) : '';
-      dashHost.toggleAttribute('hidden', !isPed);
-      window.lucide?.createIcons?.();
-    };
-    paintPedidosNav();
-    subscribe('activeModule', paintPedidosNav);
-    subscribe('dashboardSection', paintPedidosNav);
-    globalThis.addEventListener('mirest:session-restore', paintPedidosNav);
-  }
 }

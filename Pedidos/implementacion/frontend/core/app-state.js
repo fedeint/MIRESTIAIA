@@ -49,8 +49,8 @@ import { fetchMenuCatalog, fetchOperationalWaiters } from './catalog-fetch.js';
 const VALID_APP_MODES = ['salon', 'delivery', 'takeaway'];
 const SAFE_DEFAULT_MODE = 'salon';
 const SAFE_OPERATIONAL_MODULE = 'pedidos';
-const SAFE_DASHBOARD_SECTION = 'overview';
-const VALID_DASHBOARD_SECTIONS = ['overview', 'operacion', 'factura', 'configuracion'];
+const SAFE_DASHBOARD_SECTION = 'operacion';
+const VALID_DASHBOARD_SECTIONS = ['operacion', 'factura', 'configuracion'];
 
 const ROLE_MODULES = {
   /** Alineado con el shell: admin / superadmin → PWA con stack completo. */

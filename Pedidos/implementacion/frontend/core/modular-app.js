@@ -60,7 +60,6 @@ import { renderAlmacenModule } from '../modules/almacen/index.js';
 import { renderSalonModule } from '../modules/pedidos/salon/index.js';
 import { renderDeliveryModule } from '../modules/pedidos/delivery/index.js';
 import { renderTakeawayModule } from '../modules/pedidos/takeaway/index.js';
-import { renderDashboardContent } from '../modules/dashboard/index.js';
 
 const THEME_KEYS = ['mirest_theme', 'mirest-theme'];
 
@@ -118,7 +117,6 @@ function cacheRefs() {
     managementPanel: document.getElementById('managementPanel'),
     workspaceLayout: document.getElementById('workspaceLayout'),
     userChip: document.getElementById('userChip'),
-    pedidosHubNav: document.getElementById('pedidosHubNav'),
   };
 }
 
@@ -331,34 +329,6 @@ function openLogoutSessionGuide() {
   });
 
   syncConfirmState();
-}
-
-function renderPedidosHubRow(state) {
-  if (state.activeModule !== 'pedidos') return '';
-  const sec = state.dashboardSection;
-  return `
-    <div class="pedidos-hub" role="tablist" aria-label="Vista dentro de Pedidos">
-      <button type="button" class="pedidos-hub__tab ${sec === 'overview' ? 'is-active' : ''}" role="tab" aria-selected="${String(sec === 'overview')}" data-dashboard-section="overview">Resumen global</button>
-      <button type="button" class="pedidos-hub__tab ${sec === 'operacion' ? 'is-active' : ''}" role="tab" aria-selected="${String(sec === 'operacion')}" data-dashboard-section="operacion">Operación (Salón · Delivery · Recojo)</button>
-    </div>
-  `;
-}
-
-function renderPedidosOverviewHero(stats) {
-  const m = MODULE_META.pedidos;
-  return `
-    <div class="mode-hero mode-hero--overview">
-      <div>
-        <p class="eyebrow">${escapeHtml(m.eyebrow)}</p>
-        <h2>Resumen global de operación</h2>
-        <p>${escapeHtml(m.heroCopy)}</p>
-      </div>
-      <div class="mode-hero__pills">
-        <span class="mode-pill">Mesas: ${stats.ocupadas} ocup. · ${stats.libres} libre(s)</span>
-        <span class="mode-pill">Delivery: ${stats.dlPending} · Recojo: ${stats.twPending}</span>
-      </div>
-    </div>
-  `;
 }
 
 function renderPwaModuleStrip(activeModule) {
@@ -587,27 +557,7 @@ function renderCurrentMode() {
     };
   }
 
-  if (state.activeModule === 'pedidos' && state.dashboardSection === 'overview') {
-    return {
-      toolbar: '',
-      content: renderDashboardContent({ state, stats, refData }),
-      panel: '',
-      singleColumn: true,
-      hideHero: false,
-      hideSummary: true,
-      modeHeroOverride: renderPedidosOverviewHero(stats),
-      workspaceHeader: `
-    <div class="workspace-heading">
-      <h3>Resumen y atajos de turno</h3>
-      <p>Entra a cada submódulo o revisa cifras del día</p>
-    </div>
-    <div class="workspace-heading__actions">
-      <button type="button" class="btn btn--primary btn--sm" data-dashboard-section="operacion">Abrir operación (mesas, delivery, recojo)</button>
-    </div>`,
-    };
-  }
-
-  if (state.activeModule === 'pedidos' && state.dashboardSection === 'operacion' && state.mode === 'delivery') {
+  if (state.activeModule === 'pedidos' && state.mode === 'delivery') {
     return renderDeliveryModule({
       state,
       selectedOrder: selectedDeliveryOrder,
@@ -615,7 +565,7 @@ function renderCurrentMode() {
     });
   }
 
-  if (state.activeModule === 'pedidos' && state.dashboardSection === 'operacion' && state.mode === 'takeaway') {
+  if (state.activeModule === 'pedidos' && state.mode === 'takeaway') {
     return renderTakeawayModule({
       state,
       selectedOrder: selectedTakeawayOrder,
@@ -623,7 +573,7 @@ function renderCurrentMode() {
     });
   }
 
-  if (state.activeModule === 'pedidos' && state.dashboardSection === 'operacion' && state.mode === 'salon') {
+  if (state.activeModule === 'pedidos' && state.mode === 'salon') {
     return renderSalonModule({
       state,
       stats,
@@ -659,12 +609,6 @@ function renderCurrentMode() {
 }
 
 function resolveTopbarMeta(s) {
-  if (s.activeModule === 'pedidos' && s.dashboardSection === 'overview') {
-    return { ...MODULE_META.pedidos, title: 'Resumen global', heroTitle: 'Resumen global' };
-  }
-  if (s.activeModule === 'pedidos' && s.dashboardSection === 'operacion') {
-    return MODE_META[s.mode] || MODE_META.salon;
-  }
   if (s.activeModule === 'pedidos') {
     return MODE_META[s.mode] || MODE_META.salon;
   }
@@ -698,14 +642,12 @@ function renderApp() {
 
   refs.body.dataset.mode = state.mode;
   refs.body.dataset.module = state.activeModule;
-  refs.body.dataset.pedidosSection = state.activeModule === 'pedidos' ? (state.dashboardSection || '') : '';
   refs.appShell.dataset.module = state.activeModule;
   refs.appShell.dataset.mode = state.mode;
-  refs.appShell.dataset.pedidosSection = state.activeModule === 'pedidos' ? (state.dashboardSection || '') : '';
   refs.workspaceLayout.dataset.mode = state.mode;
   refs.topbarEyebrow.textContent = meta.eyebrow;
   refs.topbarTitle.textContent = meta.title || meta.heroTitle;
-  const showPedidosModeNav = state.activeModule === 'pedidos' && state.dashboardSection === 'operacion';
+  const showPedidosModeNav = state.activeModule === 'pedidos';
   if (refs.modeSwitcher) {
     refs.modeSwitcher.innerHTML = showPedidosModeNav ? renderModeSwitcher(state.mode) : '';
   }
@@ -714,14 +656,6 @@ function renderApp() {
     const { html, show } = renderPwaModuleStrip(state.activeModule);
     pwaStrip.innerHTML = html;
     pwaStrip.toggleAttribute("hidden", !show);
-  }
-  if (refs.pedidosHubNav) {
-    if (state.activeModule === 'pedidos') {
-      refs.pedidosHubNav.innerHTML = renderPedidosHubRow(state);
-    } else {
-      refs.pedidosHubNav.innerHTML = '';
-    }
-    refs.pedidosHubNav.toggleAttribute('hidden', state.activeModule !== 'pedidos');
   }
   refs.modeHero.style.display = shouldHideModeHero ? 'none' : '';
   refs.summaryStats.style.display = currentView.hideSummary ? 'none' : '';
@@ -756,7 +690,6 @@ function renderApp() {
 
 function handleModeChange(mode) {
   setMode(mode);
-  setDashboardSection('operacion');
   setActiveModule('pedidos', { preserveDashboard: true });
   persistSession();
   renderApp();
@@ -771,10 +704,7 @@ function openDashboardSection(section) {
     setDashboardSection('configuracion');
     setActiveModule('configuracion');
   } else {
-    setDashboardSection(section);
-    if (section === 'overview' || section === 'operacion') {
-      setActiveModule('pedidos', { preserveDashboard: true });
-    }
+    setActiveModule('pedidos', { preserveDashboard: true });
   }
   closeSidebar();
   persistSession();
@@ -861,7 +791,6 @@ function bindEvents() {
       const nextMode = /** @type {any} */ (jumpCard).dataset?.jumpOps;
       if (nextMode === 'salon' || nextMode === 'delivery' || nextMode === 'takeaway') {
         setMode(nextMode);
-        setDashboardSection('operacion');
         setActiveModule('pedidos', { preserveDashboard: true });
         persistSession();
         renderApp();
@@ -1194,7 +1123,6 @@ function applyUrlModuleIntent() {
     }
     const h = (u.hash || "").toLowerCase();
     if (h === "#operacion") {
-      setDashboardSection("operacion");
       setActiveModule("pedidos", { preserveDashboard: true });
       window.history.replaceState(null, "", `${u.pathname}${u.search || ""}`);
       return;

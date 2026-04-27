@@ -1,13 +1,21 @@
-import catalogData from '../data/catalog.json' with { type: 'json' };
-import staffData from '../data/staff.json' with { type: 'json' };
 import { deliveryPartners, kitchenBoardSeed, recipeAvailability, takeawayChatFeed } from '../../data.js';
 
+const EMPTY_CATALOG = {
+  categories: [{ id: 'all', name: 'Todos' }],
+  products: [],
+};
+
+const EMPTY_STAFF = { waiters: [], couriers: [], zones: [] };
+
+/**
+ * Catálogo vacío: la PWA hoy hidrata desde `loadOperationalCatalog` (Supabase).
+ */
 export function getCatalogMock() {
-  return structuredClone(catalogData);
+  return structuredClone(EMPTY_CATALOG);
 }
 
 export function getStaffMock() {
-  return structuredClone(staffData);
+  return structuredClone(EMPTY_STAFF);
 }
 
 export function getDeliveryPartnersMock() {

@@ -2,7 +2,7 @@
  * app-state.js — MiRest con IA
  * Estado global del módulo Pedidos.
  * Centraliza toda la data reactiva y sus mutaciones.
- * Desacopla el runtime modular de la data mock en [`data.js`](../../data.js).
+ * Runtime modular: estado en memoria; catálogo vía `loadOperationalCatalog` (Supabase) y `data.js` sin semillas.
  */
 
 import {
@@ -12,12 +12,12 @@ import {
   initialTakeawayOrders,
   deliveryStatusFlow,
   takeawayStatusFlow,
-  products,
-  categories,
-  recipeAvailability,
-  waiters,
-  couriers,
-  deliveryPartners,
+  categories as defaultCategories,
+  products as defaultProducts,
+  recipeAvailability as defaultRecipeAvailability,
+  waiters as defaultWaiters,
+  couriers as defaultCouriers,
+  deliveryPartners as defaultDeliveryPartners,
   kitchenBoardSeed,
   takeawayChatFeed,
   desktopPaymentMethods,
@@ -38,6 +38,7 @@ import {
   advanceOperationalStatus,
   normalizeOrderState,
 } from './order-state.js';
+import { fetchMenuCatalog, fetchOperationalWaiters } from './catalog-fetch.js';
 
 // ── Estado base ───────────────────────────────────────────────────
 
@@ -51,7 +52,8 @@ const SAFE_DASHBOARD_SECTION = 'overview';
 const VALID_DASHBOARD_SECTIONS = ['overview', 'factura', 'configuracion'];
 
 const ROLE_MODULES = {
-  dueno: ['pedidos', 'facturas', 'configuracion', 'caja', 'delivery-afiliados', 'ventas', 'cocina', 'menu', 'almacen'],
+  /** Dueno: delivery vive en módulo pedidos (modo delivery), no en una entrada aparte. */
+  dueno: ['pedidos', 'facturas', 'configuracion', 'caja', 'ventas', 'cocina', 'menu', 'almacen'],
   cajero: ['caja', 'menu', 'configuracion'],
   mesero: ['pedidos', 'menu', 'facturas', 'configuracion'],
   cocina: ['cocina', 'configuracion'],
@@ -108,7 +110,44 @@ const initialMode = normalizeMode(restoredAppSession?.mode || document.body.data
 const initialActiveModule = normalizeActiveModule(restoredAppSession?.activeModule, initialUserRole);
 const initialDashboardSection = normalizeDashboardSection(restoredAppSession?.dashboardSection || SAFE_DASHBOARD_SECTION);
 
-const PRODUCTS_MAP = new Map(products.map((product) => [product.id, product]));
+/**
+ * Catálogo y operadores (se hidrata desde Supabase; sin datos de muestra en `data.js`).
+ * @type {{
+ *  products: Array<Record<string, unknown>>,
+ *  categories: Array<{ id: string, name: string }>,
+ *  recipeAvailability: Record<string, unknown>,
+ *  waiters: Array<{ id: string, name: string, shift?: string }>,
+ *  couriers: Array<{ id: string, name: string, vehicle?: string }>,
+ *  deliveryPartners: Array<{ id: string, name: string }>
+ *  }}
+ */
+export const refData = {
+  products: structuredClone(defaultProducts),
+  categories: structuredClone(defaultCategories),
+  recipeAvailability: { ...defaultRecipeAvailability },
+  waiters: structuredClone(defaultWaiters),
+  couriers: structuredClone(defaultCouriers),
+  deliveryPartners: structuredClone(defaultDeliveryPartners),
+  documentTypeOptions,
+  deliveryStatusFlow,
+  takeawayStatusFlow,
+  desktopPaymentMethods,
+  desktopTipOptions,
+  desktopRoundStatusMeta,
+  statusMeta,
+  deliveryStatusMeta,
+  takeawayStatusMeta,
+  roleModules: ROLE_MODULES,
+};
+
+const PRODUCTS_MAP = new Map();
+function rebuildProductsMap() {
+  PRODUCTS_MAP.clear();
+  for (const p of refData.products) {
+    PRODUCTS_MAP.set(p.id, p);
+  }
+}
+rebuildProductsMap();
 const PAYMENT_METHOD_LABELS = Object.fromEntries(desktopPaymentMethods.map((method) => [method.id, method.label]));
 
 function normalizeTableState(table) {
@@ -195,45 +234,8 @@ const _state = {
     notes: '',
   },
 
-  /** Historial de facturas emitidas */
-  invoiceHistory: [
-    ...initialDeliveryOrders
-      .filter((order) => order.documentType === 'factura' && order.documentIssued)
-      .map((order, index) => ({
-        id: `seed-invoice-delivery-${index + 1}`,
-        code: `F001-${String(index + 1).padStart(5, '0')}`,
-        sourceType: 'delivery',
-        sourceId: order.id,
-        sourceLabel: order.code,
-        customer: order.customer,
-        documentNumber: order.customerDocument || 'Sin documento',
-        businessName: order.businessName || 'Cliente sin razón social',
-        total: Number(order.total) || 0,
-        paymentMethod: order.paymentLabel || 'Pendiente',
-        printerName: 'Facturador Epson',
-        printerStatus: 'Desconectado',
-        issuedAt: Date.now() - ((index + 1) * 3600000),
-        status: 'Emitida',
-      })),
-    ...initialTakeawayOrders
-      .filter((order) => order.documentType === 'factura' && order.documentIssued)
-      .map((order, index) => ({
-        id: `seed-invoice-takeaway-${index + 1}`,
-        code: `F001-${String(index + 11).padStart(5, '0')}`,
-        sourceType: 'takeaway',
-        sourceId: order.id,
-        sourceLabel: order.code,
-        customer: order.customer,
-        documentNumber: order.customerDocument || 'Sin documento',
-        businessName: order.businessName || 'Cliente sin razón social',
-        total: Number(order.total) || 0,
-        paymentMethod: order.paymentLabel || 'Pendiente',
-        printerName: 'Facturador Epson',
-        printerStatus: 'Desconectado',
-        issuedAt: Date.now() - ((index + 2) * 5400000),
-        status: 'Emitida',
-      })),
-  ],
+  /** Historial de facturas emitidas (se alimenta con flujos reales de caja / facturación) */
+  invoiceHistory: [],
 
   /** Impresoras configuradas */
   printers: {
@@ -275,6 +277,29 @@ const _state = {
 
 /** @type {Map<string, Set<Function>>} */
 const _subscribers = new Map();
+
+/**
+ * Recarga productos, categorías, resumen de recetas y meseros desde Supabase.
+ */
+export async function loadOperationalCatalog() {
+  try {
+    const menu = await fetchMenuCatalog();
+    if (menu.ok) {
+      refData.products = menu.products;
+      refData.categories = menu.categories;
+      refData.recipeAvailability = menu.recipeAvailability || {};
+      rebuildProductsMap();
+    }
+    const team = await fetchOperationalWaiters();
+    if (team.ok) {
+      refData.waiters = team.waiters;
+    }
+  } catch (e) {
+    console.warn('[mirest] Hidratación de catálogo operativo omitida', e);
+  } finally {
+    emit('catalog');
+  }
+}
 
 /**
  * Suscribirse a cambios de una key del state.
@@ -338,7 +363,7 @@ export function getFilteredTables() {
   if (_state.searchQuery) {
     const q = _state.searchQuery.toLowerCase();
     tables = tables.filter((t) => {
-      const waiterName = waiters.find((waiter) => waiter.id === t.waiterId)?.name || '';
+      const waiterName = refData.waiters.find((waiter) => waiter.id === t.waiterId)?.name || '';
       return [
         t.number,
         t.zone,
@@ -398,6 +423,11 @@ export function returnToLastOperationalContext() {
 
 export function ensureSafeNavigationState() {
   let repaired = false;
+  if (_state.activeModule === "delivery-afiliados") {
+    _state.activeModule = SAFE_OPERATIONAL_MODULE;
+    setMode("delivery");
+    repaired = true;
+  }
   const safeMode = normalizeMode(_state.mode);
   const safeRole = normalizeRole(_state.userRole);
   const safeModules = getModulesForRole(safeRole);
@@ -955,27 +985,6 @@ function _pushHistory(entry) {
   _state._history.push(entry);
   if (_state._history.length > 20) _state._history.shift();
 }
-
-// ── Datos de referencia (readonly) ───────────────────────────────
-
-export const refData = {
-  products,
-  categories,
-  recipeAvailability,
-  waiters,
-  couriers,
-  deliveryPartners,
-  documentTypeOptions,
-  deliveryStatusFlow,
-  takeawayStatusFlow,
-  desktopPaymentMethods,
-  desktopTipOptions,
-  desktopRoundStatusMeta,
-  statusMeta,
-  deliveryStatusMeta,
-  takeawayStatusMeta,
-  roleModules: ROLE_MODULES,
-};
 
 // ── CustomEvents (bus entre módulos) ─────────────────────────────
 

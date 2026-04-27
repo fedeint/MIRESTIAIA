@@ -1,5 +1,5 @@
 /**
- * Componentes visuales para el Delivery Hub
+ * Componentes reutilizables (p. ej. tarjetas). La pantalla de delivery operativa vive en Pedidos (módulo/modo delivery).
  */
 
 export function createOrderCard(order, onAction) {

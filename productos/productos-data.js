@@ -12,4 +12,4 @@ export const PRODUCT_CATEGORIES = [
   { id: 'extras', label: 'Extras' }
 ];
 
-export const MOCK_PRODUCTS = [];
+export const CATALOG_SEED = [];

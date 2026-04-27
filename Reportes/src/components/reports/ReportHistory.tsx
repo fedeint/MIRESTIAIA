@@ -1,4 +1,4 @@
-import { reportHistory } from "@/data/mockData";
+import { reportHistory } from "@/data/reportData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Download, Copy, History } from "lucide-react";
@@ -16,6 +16,9 @@ export function ReportHistory() {
         </div>
       </div>
 
+      {reportHistory.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">Sin reportes generados aún. El historial se rellenará al conectar el servicio de exportación.</p>
+      ) : (
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -51,6 +54,7 @@ export function ReportHistory() {
           ))}
         </TableBody>
       </Table>
+      )}
     </div>
   );
 }

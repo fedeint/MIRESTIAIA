@@ -1,4 +1,4 @@
-import { reportPreviewData } from "@/data/mockData";
+import { reportPreviewData } from "@/data/reportData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileDown, FileSpreadsheet, Eye, FileText, StickyNote } from "lucide-react";
@@ -84,7 +84,7 @@ export function ReportPreview({ activeSections, reportType, dateFrom, dateTo, ge
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-foreground">{d.restaurant}</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">RUC: 20123456789</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">RUC: {d.ruc || "—"}</p>
                 </div>
                 <div className="text-right">
                   <div className="inline-block rounded-md bg-gradient-to-r from-primary to-primary/80 px-3 py-1">
@@ -130,20 +130,30 @@ export function ReportPreview({ activeSections, reportType, dateFrom, dateTo, ge
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {d.platos.map((p) => (
+                    {d.platos.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-xs text-muted-foreground py-4 text-center">
+                          Sin platos en el rango. Los datos reales vienen del motor de reportes.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      d.platos.map((p) => (
                       <TableRow key={p.nombre}>
                         <TableCell className="text-xs">{p.nombre}</TableCell>
                         <TableCell className="text-xs text-right">{p.cantidad}</TableCell>
                         <TableCell className="text-xs text-right">S/ {p.precio}</TableCell>
                         <TableCell className="text-xs text-right font-medium">S/ {p.total.toLocaleString()}</TableCell>
                       </TableRow>
-                    ))}
+                    ))
+                    )}
+                    {d.platos.length > 0 && (
                     <TableRow className="bg-muted/30 font-semibold">
                       <TableCell className="text-xs">Total</TableCell>
                       <TableCell className="text-xs text-right">{d.platos.reduce((a, b) => a + b.cantidad, 0)}</TableCell>
                       <TableCell className="text-xs text-right" />
                       <TableCell className="text-xs text-right">S/ {d.platos.reduce((a, b) => a + b.total, 0).toLocaleString()}</TableCell>
                     </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </section>

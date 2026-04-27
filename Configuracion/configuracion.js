@@ -383,7 +383,7 @@ const ConfigUI = {
       const isOk = val.estado === "Completado";
       el.innerHTML = `
         <div style="font-weight:600; color:var(--color-text);"><i data-lucide="${isOk ? 'check-circle-2':'circle'}" style="color:${isOk? 'var(--color-success)' : 'var(--color-text-muted)'}; margin-right:8px; vertical-align:middle; width:20px;height:20px;"></i> ${val.label}</div>
-        <button class="cfg-btn-save" style="background:var(--color-surface);color:var(--color-text);box-shadow:none;border:1px solid var(--cfg-border);font-size:12px;padding:6px 12px;" onclick="window.mockCompleter('${key}')">${isOk ? 'Rehacer' : 'Hacer Tour'}</button>
+        <button class="cfg-btn-save" style="background:var(--color-surface);color:var(--color-text);box-shadow:none;border:1px solid var(--cfg-border);font-size:12px;padding:6px 12px;" onclick="window.cfgTouchTourStepComplete('${key}')">${isOk ? 'Rehacer' : 'Hacer Tour'}</button>
       `;
       cont.appendChild(el);
     });
@@ -402,8 +402,7 @@ const ConfigUI = {
        this.renderTour();
     });
     
-    // global helper para el mock
-    window.mockCompleter = (key) => {
+    window.cfgTouchTourStepComplete = (key) => {
        ConfigStore.state.tour.pasos[key].estado = "Completado";
        ConfigStore.persist();
        this.renderTour();
@@ -436,7 +435,7 @@ const ConfigUI = {
             <div style="font-size:12px;color:var(--color-text-muted)">${usr.email} • PIN: ****</div>
           </div>
         </div>
-        <button class="cfg-btn-save" style="background:transparent;color:var(--color-red);box-shadow:none;padding:5px;" onclick="window.mockDelUser('${usr.id}')"><i data-lucide="trash"></i></button>
+        <button class="cfg-btn-save" style="background:transparent;color:var(--color-red);box-shadow:none;padding:5px;" onclick="window.cfgRemoveLocalUser('${usr.id}')"><i data-lucide="trash"></i></button>
       `;
       cont.appendChild(row);
     });
@@ -460,7 +459,7 @@ const ConfigUI = {
       }
     });
 
-    window.mockDelUser = (id) => {
+    window.cfgRemoveLocalUser = (id) => {
        if(ConfigStore.state.usuarios.length <= 1) {
           alert("No puedes eliminar al único administrador del sistema.");
           return;

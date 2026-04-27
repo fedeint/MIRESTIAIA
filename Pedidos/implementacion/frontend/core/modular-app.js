@@ -33,6 +33,8 @@ import {
   updateInvoiceDraft,
   updatePaymentDraft,
   updateTableStatus,
+  subscribe,
+  loadOperationalCatalog,
 } from './app-state.js';
 import {
   escapeHtml,
@@ -55,7 +57,6 @@ import { renderMenuModule } from '../modules/menu/index.js';
 import { renderCocinaModule } from '../modules/cocina/index.js';
 import { renderVentasModule } from '../modules/ventas/index.js';
 import { renderAlmacenModule } from '../modules/almacen/index.js';
-import { renderDeliveryAfiliadosModule } from '../modules/delivery-afiliados/index.js';
 import { renderSalonModule } from '../modules/pedidos/salon/index.js';
 import { renderDeliveryModule } from '../modules/pedidos/delivery/index.js';
 import { renderTakeawayModule } from '../modules/pedidos/takeaway/index.js';
@@ -92,7 +93,6 @@ const MODULE_META = {
   cocina: { title: 'Cocina', eyebrow: 'Producción', heroTitle: 'Cocina', heroCopy: 'Sigue pedidos en proceso y marca su salida.' },
   ventas: { title: 'Ventas', eyebrow: 'Indicadores', heroTitle: 'Ventas', heroCopy: 'Visualiza ingresos y utilidad estimada.' },
   almacen: { title: 'Almacén', eyebrow: 'Inventario', heroTitle: 'Almacén', heroCopy: 'Controla extras, recetas e insumos.' },
-  'delivery-afiliados': { title: 'Delivery', eyebrow: 'Contratos vinculados', heroTitle: 'Delivery', heroCopy: 'Gestiona empresas afiliadas y sus condiciones.' },
 };
 
 let refs;
@@ -537,18 +537,6 @@ function renderCurrentMode() {
       hideHero: true,
       hideSummary: true,
       workspaceHeader: renderStandaloneHeader('almacen'),
-    };
-  }
-
-  if (state.activeModule === 'delivery-afiliados') {
-    return {
-      toolbar: '',
-      content: renderDeliveryAfiliadosModule({ refData }),
-      panel: '',
-      singleColumn: true,
-      hideHero: true,
-      hideSummary: true,
-      workspaceHeader: renderStandaloneHeader('delivery-afiliados'),
     };
   }
 
@@ -1061,6 +1049,14 @@ export function initModularApp() {
   console.debug('[modular-app] Render inicial completado');
   initOnboarding();
   console.debug('[modular-app] Onboarding inicializado');
+  subscribe('catalog', () => {
+    try {
+      renderApp();
+    } catch (e) {
+      console.warn('[modular-app] Re-render post-catálogo', e);
+    }
+  });
+  void loadOperationalCatalog();
   initialized = true;
   console.info('[modular-app] Runtime modular activo ✓');
 }

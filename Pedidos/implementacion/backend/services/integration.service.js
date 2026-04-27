@@ -18,8 +18,8 @@ export function getPedidosConnectedModulesMock() {
       availability: getRecipeAvailabilityMock(),
     },
     deliveryPartners: {
-      label: 'Delivery afiliados',
-      helper: 'Empresas vinculadas que nutren pedidos delivery.',
+      label: 'Redes / canales (Pedidos)',
+      helper: 'Canales y alianzas asociados al módulo Pedidos (mismo universo que el modo Delivery).',
       items: getDeliveryPartnersMock(),
     },
     takeawayChat: {

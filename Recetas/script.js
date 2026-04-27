@@ -1,96 +1,93 @@
-// --- Estado de la Aplicación ---
-let recetas = [
-    { 
-        id: 1, 
-        nombre: "Ají de Gallina", 
-        categoria: "Platos de fondo", 
-        estado: "Inactiva", 
-        costo: 5.445, 
-        precioVenta: 18.00,
-        foodCost: 30.25,
-        tiempo: "25 min", 
-        porciones: "1", 
-        ingredientes: "7", 
-        version: "v1",
-        foto: null,
-        detalleIngredientes: [
-            { ingrediente: "Gallina entera", cantidad: "0.2 kg", costo: 2.80 },
-            { ingrediente: "Ají amarillo", cantidad: "0.05 kg", costo: 0.40 },
-            { ingrediente: "Leche evaporada", cantidad: "0.1 lt", costo: 0.50 },
-            { ingrediente: "Queso fresco", cantidad: "0.03 kg", costo: 0.54 },
-            { ingrediente: "Arroz", cantidad: "0.15 kg", costo: 0.525 },
-            { ingrediente: "Huevos", cantidad: "1 und", costo: 0.50 },
-            { ingrediente: "Aceite vegetal", cantidad: "0.03 lt", costo: 0.18 }
-        ]
-    },
-    { 
-        id: 2, 
-        nombre: "Anticuchos de Corazon", 
-        categoria: "Sopas y Entradas", 
-        estado: "Activa", 
-        costo: 8.50, 
-        precioVenta: 25.00,
-        foodCost: 34.00,
-        tiempo: "20 min", 
-        porciones: "1", 
-        ingredientes: "5", 
-        version: "v1",
-        foto: null,
-        detalleIngredientes: []
-    },
-    { 
-        id: 3, 
-        nombre: "Arroz Chaufa de Pollo", 
-        categoria: "Platos de fondo", 
-        estado: "Inactiva", 
-        costo: 4.80, 
-        precioVenta: 15.00,
-        foodCost: 32.00,
-        tiempo: "15 min", 
-        porciones: "1", 
-        ingredientes: "6", 
-        version: "v1",
-        foto: null,
-        detalleIngredientes: []
-    },
-    { 
-        id: 4, 
-        nombre: "Arroz Chaufa Especial", 
-        categoria: "Platos de fondo", 
-        estado: "Activa", 
-        costo: 6.20, 
-        precioVenta: 22.00,
-        foodCost: 28.18,
-        tiempo: "20 min", 
-        porciones: "1", 
-        ingredientes: "7", 
-        version: "v1",
-        foto: null,
-        detalleIngredientes: []
-    },
-    { 
-        id: 5, 
-        nombre: "Arroz con Leche", 
-        categoria: "Postres", 
-        estado: "Activa", 
-        costo: 2.10, 
-        precioVenta: 8.00,
-        foodCost: 26.25,
-        tiempo: "30 min", 
-        porciones: "1", 
-        ingredientes: "5", 
-        version: "v1",
-        foto: null,
-        detalleIngredientes: []
+// --- Estado: recetas = filas reales (public.recipes, recipe_ingredients, insumos, products) ---
+let recetas = [];
+
+async function loadRecetasFromSupabase() {
+    try {
+        const { supabase } = await import('../scripts/supabase.js');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const { data: rws, error: e0 } = await supabase
+            .from('recipes')
+            .select('id, name, portions, is_active, sale_product_id, metadata, updated_at')
+            .order('name');
+        if (e0 || !rws?.length) return;
+        const rids = rws.map((r) => r.id);
+        const { data: ings, error: e1 } = await supabase
+            .from('recipe_ingredients')
+            .select('id, recipe_id, quantity, unit, insumo_id')
+            .in('recipe_id', rids);
+        if (e1) return;
+        const insIds = [...new Set((ings || []).map((x) => x.insumo_id).filter(Boolean))];
+        let insMap = new Map();
+        if (insIds.length) {
+            const { data: insu, error: e2 } = await supabase
+                .from('insumos')
+                .select('id, nombre, costo_unitario')
+                .in('id', insIds);
+            if (e2) return;
+            insMap = new Map((insu || []).map((i) => [i.id, i]));
+        }
+        const pids = [...new Set((rws.map((r) => r.sale_product_id).filter(Boolean)))];
+        let priceMap = new Map();
+        if (pids.length) {
+            const { data: pds } = await supabase
+                .from('products')
+                .select('id, name, price, metadata')
+                .in('id', pids);
+            priceMap = new Map((pds || []).map((p) => [p.id, p]));
+        }
+        const ingByR = new Map();
+        for (const row of ings || []) {
+            if (!ingByR.has(row.recipe_id)) ingByR.set(row.recipe_id, []);
+            const ins = row.insumo_id ? insMap.get(row.insumo_id) : null;
+            const lineCost = ins
+                ? Number(row.quantity || 0) * (Number(ins.costo_unitario) || 0)
+                : 0;
+            const cantLabel = [String(row.quantity ?? ''), String(row.unit || '')].filter(Boolean).join(' ').trim() || '—';
+            ingByR.get(row.recipe_id).push({
+                ingrediente: ins?.nombre || 'Insumo',
+                cantidad: cantLabel,
+                costo: Math.round(lineCost * 100) / 100
+            });
+        }
+        recetas = rws.map((r) => {
+            const det = ingByR.get(r.id) || [];
+            const subtotal = det.reduce((s, x) => s + (Number(x.costo) || 0), 0);
+            const prod = r.sale_product_id ? priceMap.get(r.sale_product_id) : null;
+            const precioVenta = prod ? Number(prod.price) || 0 : 0;
+            const m = r.metadata && typeof r.metadata === 'object' ? r.metadata : {};
+            const categoria = m.categoria
+                || (prod?.metadata && typeof prod.metadata === 'object' && prod.metadata.categoria)
+                || '—';
+            return {
+                id: r.id,
+                nombre: r.name,
+                categoria,
+                estado: r.is_active ? 'Activa' : 'Inactiva',
+                costo: Math.round(subtotal * 1000) / 1000,
+                precioVenta,
+                foodCost: precioVenta > 0
+                    ? Math.round((subtotal / precioVenta) * 100 * 100) / 100
+                    : 0,
+                tiempo: m.tiempo != null ? String(m.tiempo) : '—',
+                porciones: r.portions != null ? String(r.portions) : '1',
+                ingredientes: String(det.length),
+                version: m.version != null ? String(m.version) : 'v1',
+                foto: null,
+                detalleIngredientes: det
+            };
+        });
+    } catch (e) {
+        console.warn('[recetas] Carga desde base omitida o vacía', e);
     }
-];
+}
 
 let modoVista = 'grid'; // 'lista' o 'grid'
 let filtroActual = 'Todos';
 let busquedaActual = '';
 let idAEliminar = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // --- Elementos del DOM ---
     const gridRecetas = document.getElementById('gridRecetas');
     const containerGrid = document.getElementById('container-recetas-grid');
@@ -133,7 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const quickCategoria = document.getElementById('quickCategoria');
     const quickTiempo = document.getElementById('quickTiempo');
 
-    // --- Inicialización ---
+    // --- Inicialización (datos reales) ---
+    await loadRecetasFromSupabase();
     renderizar();
     actualizarStats();
     setupEventListeners();
@@ -280,6 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderizar() {
+        if (recetas.length === 0) {
+            const emptyMsg = '<div class="recipe-empty-hint" style="padding:1.25rem;border:1px dashed var(--color-border,#e5e5e5);border-radius:12px;max-width:40rem">Sin datos aún. Carga recetas reales: insumos con costo, platos de venta y <strong>recipe_ingredients</strong> con cantidad. Revisa el onboarding (pasos 4–7) o inicia sesión con RLS/tenant activo.</div>';
+            if (containerGrid) containerGrid.innerHTML = emptyMsg;
+            if (gridRecetas) gridRecetas.innerHTML = `<tr><td colspan="8">${emptyMsg}</td></tr>`;
+            actualizarConteosPills();
+            return;
+        }
         const avgPrecio = recetas.length > 0
             ? recetas.reduce((sum, r) => sum + (Number(r.precioVenta) || 0), 0) / recetas.length
             : 0;

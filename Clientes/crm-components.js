@@ -410,7 +410,7 @@
               </tbody></table>
           `;
           
-          document.getElementById('saas-chat-history').innerHTML = '<div class="saas-chat-mockup" style="padding:24px;"><div class="chat-msg received">Hola, ¿pueden preparar el lomo sin cebolla? <span class="time">10:30 AM</span></div><div class="chat-msg sent">¡Claro que sí! Ya lo anotamos. <span class="time">10:32 AM</span></div></div>';
+          document.getElementById('saas-chat-history').innerHTML = '<div class="workspace-note" style="padding:16px; margin:0;">No hay trazas de historial conectadas a DallA. Vincular WhatsApp Business o el canal de cocina operativo.</div>';
       }
 
       document.querySelectorAll('.saas-tab').forEach(t => t.classList.remove('active'));
@@ -438,9 +438,7 @@
           document.getElementById(tab.dataset.target)?.classList.add('active');
       }
 
-      // =======================================================
-      // LÓGICA MOCK PARA "NUEVO INSUMO"
-      // =======================================================
+      // — UI provisional (persistencia en almacén / insumos pendiente) —
       if (e.target.closest('#btnNewInsumo')) {
           let modal = document.getElementById('customInsumoModal');
           if (!modal) {
@@ -489,17 +487,13 @@
           setTimeout(() => { modal.querySelector('.modal-content').style.transform = 'scale(1)'; }, 10);
       }
 
-      // =======================================================
-      // LÓGICA MOCK PARA "REGISTRAR PAGO" (DESCARGAR ARCHIVO)
-      // =======================================================
+      // — Comprobante local (borrador); conectar a facturación o ERP —
       if (e.target.closest('#btnRegisterPayment')) {
-          const confirmPago = confirm("¿Desea registrar el pago de la deuda pendiente y descargar el comprobante mock?");
+          const confirmPago = confirm("¿Registrar pago y descargar comprobante de borrador? (En producción: integrar comprobante fiscal o ERP.)");
           if (confirmPago) {
               const clientName = document.getElementById('profileName').innerText;
               const amount = document.getElementById('profileDebtAmount').innerText;
-              
-              // 1. Simular la creación de un archivo de Voucher (En el futuro esto será un PDF real)
-              const receiptContent = "========================================\\n       COMPROBANTE DE PAGO (MOCK)\\n========================================\\nFecha: " + new Date().toLocaleString() + "\\nProveedor: " + clientName + "\\nMonto Cancelado: " + amount + "\\nEstado: PAGADO\\n\\n* Documento autogenerado por MiRest con IA.\\n========================================";
+              const receiptContent = "========================================\\n       COMPROBANTE DE PAGO (BORRADOR LOCAL)\\n========================================\\nFecha: " + new Date().toLocaleString() + "\\nProveedor: " + clientName + "\\nMonto cancelado: " + amount + "\\nEstado: PAGADO (solo referencia, no es comprobante SUNAT)\\n\\n* Generado en MiRest con IA.\\n========================================";
               
               const blob = new Blob([receiptContent], { type: 'text/plain' });
               const url = URL.createObjectURL(blob);

@@ -15,7 +15,7 @@ function renderSunatHeader() {
       </div>
       <div class="sunat-banner__meta">
         <span class="badge badge--warning">IGV 18%</span>
-        <span class="badge badge--info">Régimen general mock</span>
+        <span class="badge badge--info">Régimen general (configuración local)</span>
       </div>
     </div>
   `;

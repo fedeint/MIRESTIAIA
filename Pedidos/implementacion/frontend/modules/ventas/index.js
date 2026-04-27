@@ -18,7 +18,7 @@ export function renderVentasModule({ state }) {
         </header>
         <div class="summary-grid summary-grid--module">
           <article class="summary-card summary-card--accent"><div class="summary-card__body"><strong>${formatCurrency(totalSales)}</strong><p>Ventas registradas</p><span>Salón, delivery y para llevar</span></div></article>
-          <article class="summary-card summary-card--success"><div class="summary-card__body"><strong>${formatCurrency(estimatedProfit)}</strong><p>Ganancia estimada</p><span>Margen mock referencial</span></div></article>
+          <article class="summary-card summary-card--success"><div class="summary-card__body"><strong>${formatCurrency(estimatedProfit)}</strong><p>Ganancia estimada</p><span>Margen referencial (configura costos)</span></div></article>
         </div>
       </section>
     </section>

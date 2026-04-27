@@ -85,21 +85,6 @@ export const MODULES = [
     ],
   },
   {
-    key: "delivery-afiliados",
-    label: "Delivery",
-    short: "DA",
-    icon: "truck",
-    path: "Delivery/delivery.html",
-    description: "Operación de delivery, marketplaces y afiliados externos.",
-    owner:
-      "Este entry point queda reservado para el frontend definitivo del equipo de DeliveryAfiliados.",
-    handoff: [
-      "Separar claramente estados de delivery, afiliados y marketplaces.",
-      "Mantener consistencia visual con badges y tarjetas compartidas.",
-      "Evitar lógica de negocio dentro del shell global del proyecto.",
-    ],
-  },
-  {
     key: "facturacion",
     label: "Facturacion",
     short: "FC",
@@ -126,7 +111,7 @@ export const MODULES = [
     handoff: [
       "Preparar vistas internas orientadas a velocidad y trazabilidad.",
       "Reutilizar estados, chips y estructura visual del design system del módulo.",
-      "Mantener API mock/bootstrap alineada con el backend real cuando exista.",
+      "Mantener bootstrap y contratos alineados con el backend/Supabase cuando el flujo unifique.",
     ],
   },
   {
@@ -291,7 +276,7 @@ export const ROLE_PERMISSIONS = {
   admin: ADMIN_MODULE_KEYS_WITH_ACCESOS,
   caja: ["caja", "pedidos", "soporte"],
   chef: ["cocina", "recetas", "soporte"],
-  pedidos: ["pedidos", "delivery-afiliados", "soporte"],
+  pedidos: ["pedidos", "soporte"],
   almacen: ["almacen", "soporte"],
   marketing: ["clientes", "reportes", "ia", "soporte"],
   demo: [
@@ -307,13 +292,8 @@ export const ROLE_PERMISSIONS = {
   ],
 };
 
-export const DEMO_EMAILS = new Set(["a@a.com"]);
-
 export function resolveUserRole(user) {
   if (!user) return "demo";
-  const email = (user.email || "").toLowerCase();
-  if (DEMO_EMAILS.has(email)) return "demo";
-
   const metaRole =
     (typeof user.app_metadata?.role === "string" && user.app_metadata.role.trim()) ||
     (typeof user.user_metadata?.role === "string" && user.user_metadata.role.trim()) ||

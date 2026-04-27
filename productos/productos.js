@@ -1,104 +1,148 @@
 /**
- * Controlador principal de la sección de Productos
+ * Controlador: carta sincronizada con `fetchMenuCatalog` (misma lógica que Pedidos).
  */
-
-import { PRODUCT_CATEGORIES, MOCK_PRODUCTS } from './productos-data.js';
-import { createProductCard, createCategoryPill, renderMetricCard, createProductDetailModal } from './productos-components.js';
+import { createProductCard, createCategoryPill, renderMetricCard, createProductDetailModal } from "./productos-components.js";
+import { loadProductosCatalog } from "./productos-catalog.js";
 
 class ProductosController {
   constructor() {
-    this.products = MOCK_PRODUCTS;
-    this.categories = PRODUCT_CATEGORIES;
-    this.currentCategory = 'todos';
-    this.searchTerm = '';
+    this.products = [];
+    this.categories = [{ id: "todos", label: "Todos" }];
+    this.currentCategory = "todos";
+    this.searchTerm = "";
     this.activeModal = null;
-
-    this.init();
+    this.notes = null;
+    this.bootstrap();
   }
 
-  init() {
+  async bootstrap() {
     this.cacheDOM();
+    const r = await loadProductosCatalog();
+    this.notes = r.notAuthenticated ? r.message : r.emptyMessage;
+    if (!r.ok) {
+      this.notes = r.message || "No se pudo cargar el catálogo.";
+    }
+    this.products = r.products || [];
+    this.categories = (r.categoryPills && r.categoryPills.length ? r.categoryPills : this.categories) || this.categories;
     this.bindEvents();
     this.render();
   }
 
   cacheDOM() {
-    this.metricsContainer = document.getElementById('metricsContainer');
-    this.categoriesContainer = document.getElementById('categoriesContainer');
-    this.productsContainer = document.getElementById('productsContainer');
-    this.productSearch = document.getElementById('productSearch');
+    this.metricsContainer = document.getElementById("metricsContainer");
+    this.categoriesContainer = document.getElementById("categoriesContainer");
+    this.productsContainer = document.getElementById("productsContainer");
+    this.productSearch = document.getElementById("productSearch");
   }
 
   bindEvents() {
-    this.productSearch.addEventListener('input', (e) => {
-      this.searchTerm = e.target.value.toLowerCase();
-      this.renderProducts();
-    });
-
-    this.categoriesContainer.addEventListener('click', (e) => {
-      const pill = e.target.closest('.category-pill');
-      if (pill) {
-        this.currentCategory = pill.dataset.category;
-        this.updateCategoryPills();
+    if (this.productSearch) {
+      this.productSearch.addEventListener("input", (e) => {
+        this.searchTerm = (e.target.value || "").toLowerCase();
         this.renderProducts();
-      }
-    });
+      });
+    }
 
-    // Evento para abrir modal al hacer click en una card
-    this.productsContainer.addEventListener('click', (e) => {
-      const card = e.target.closest('.product-card');
-      if (card) {
-        const productId = parseInt(card.dataset.id);
-        const product = this.products.find(p => p.id === productId);
-        if (product) this.openProductModal(product);
-      }
-    });
+    if (this.categoriesContainer) {
+      this.categoriesContainer.addEventListener("click", (e) => {
+        const pill = e.target.closest(".category-pill");
+        if (pill) {
+          this.currentCategory = pill.dataset.category;
+          this.updateCategoryPills();
+          this.renderProducts();
+        }
+      });
+    }
+
+    if (this.productsContainer) {
+      this.productsContainer.addEventListener("click", (e) => {
+        const card = e.target.closest(".product-card");
+        if (card && card.dataset.id) {
+          const product = this.products.find((p) => String(p.id) === String(card.dataset.id));
+          if (product) this.openProductModal(product);
+        }
+      });
+    }
   }
 
   render() {
+    this.renderNote();
     this.renderMetrics();
     this.renderCategories();
     this.renderProducts();
   }
 
+  renderNote() {
+    if (!this.metricsContainer || !this.notes) return;
+    const existing = this.metricsContainer.parentElement?.querySelector(".productos-catalog-note");
+    if (existing) existing.remove();
+    if (this.notes) {
+      const p = document.createElement("p");
+      p.className = "workspace-note productos-catalog-note";
+      p.style.marginBottom = "1rem";
+      p.textContent = this.notes;
+      this.metricsContainer.parentElement?.insertBefore(p, this.metricsContainer);
+    }
+  }
+
   renderMetrics() {
-    const available = this.products.filter(p => p.status === 'disponible').length;
-    const outOfStock = this.products.filter(p => p.status === 'agotado').length;
-    const mostSold = this.products.find(p => p.popular) || this.products[0];
+    if (!this.metricsContainer) return;
+    const available = this.products.filter((p) => p.status === "disponible").length;
+    const outOfStock = this.products.filter((p) => p.status === "agotado").length;
+    const withPopular = this.products.find((p) => p.popular);
+    const most = withPopular || this.products[0];
+    const mostName = most ? most.name : "—";
 
     this.metricsContainer.innerHTML = `
-      ${renderMetricCard('metricAvailable', 'Disponibles', available, 'check-circle', 'success')}
-      ${renderMetricCard('metricOutOfStock', 'Agotados', outOfStock, 'alert-triangle', 'warning')}
-      ${renderMetricCard('metricMostSold', 'Más Vendido', mostSold.name, 'flame', 'accent')}
+      ${renderMetricCard("metricAvailable", "Disponibles", String(available), "check-circle", "success")}
+      ${renderMetricCard("metricOutOfStock", "Agotados", String(outOfStock), "alert-triangle", "warning")}
+      ${renderMetricCard("metricMostSold", "Destacado", mostName, "flame", "accent")}
     `;
-    
+
     if (window.lucide) lucide.createIcons();
   }
 
   renderCategories() {
-    this.categoriesContainer.innerHTML = '';
-    this.categories.forEach(cat => {
+    if (!this.categoriesContainer) return;
+    this.categoriesContainer.innerHTML = "";
+    this.categories.forEach((cat) => {
       const pill = createCategoryPill(cat, cat.id === this.currentCategory);
       this.categoriesContainer.appendChild(pill);
     });
   }
 
   updateCategoryPills() {
-    const pills = this.categoriesContainer.querySelectorAll('.category-pill');
-    pills.forEach(pill => {
-      pill.classList.toggle('active', pill.dataset.category === this.currentCategory);
+    if (!this.categoriesContainer) return;
+    const pills = this.categoriesContainer.querySelectorAll(".category-pill");
+    pills.forEach((pill) => {
+      pill.classList.toggle("active", pill.dataset.category === this.currentCategory);
     });
   }
 
   renderProducts() {
-    const filtered = this.products.filter(p => {
-      const matchesCategory = this.currentCategory === 'todos' || p.category === this.currentCategory;
+    if (!this.productsContainer) return;
+    const filtered = this.products.filter((p) => {
+      const matchesCategory = this.currentCategory === "todos" || p.category === this.currentCategory;
       const matchesSearch = p.name.toLowerCase().includes(this.searchTerm);
       return matchesCategory && matchesSearch;
     });
 
-    this.productsContainer.innerHTML = '';
-    
+    this.productsContainer.innerHTML = "";
+
+    if (this.products.length === 0) {
+      this.productsContainer.innerHTML = `
+        <div class="mod-placeholder">
+          <div class="mod-placeholder-icon">
+            <i data-lucide="package"></i>
+          </div>
+          <h2>Sin productos en catálogo</h2>
+          <p>${this.notes || "Añade productos activos en DallA o inicia sesión."}</p>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
     if (filtered.length === 0) {
       this.productsContainer.innerHTML = `
         <div class="mod-placeholder">
@@ -106,11 +150,11 @@ class ProductosController {
             <i data-lucide="search-x"></i>
           </div>
           <h2>No se encontraron productos</h2>
-          <p>Intenta con otros términos de búsqueda o categoría.</p>
+          <p>Prueba otra categoría o término de búsqueda.</p>
         </div>
       `;
     } else {
-      filtered.forEach(p => {
+      filtered.forEach((p) => {
         const card = createProductCard(p);
         this.productsContainer.appendChild(card);
       });
@@ -122,31 +166,31 @@ class ProductosController {
   openProductModal(product) {
     const modalElement = createProductDetailModal(product);
     document.body.appendChild(modalElement);
-    document.body.style.overflow = 'hidden'; // Bloquear scroll
+    document.body.style.overflow = "hidden";
     this.activeModal = modalElement;
 
     if (window.lucide) lucide.createIcons();
 
-    // Lógica de galería (slider)
     let currentSlide = 0;
-    const slides = modalElement.querySelectorAll('.modal-slide');
-    const indicators = modalElement.querySelectorAll('.slide-indicator');
+    const slides = modalElement.querySelectorAll(".modal-slide");
+    const indicators = modalElement.querySelectorAll(".slide-indicator");
     const totalSlides = slides.length;
     let autoPlayInterval = null;
 
     const showSlide = (n) => {
-      slides[currentSlide].classList.remove('active');
-      indicators[currentSlide].classList.remove('active');
+      if (totalSlides === 0) return;
+      slides[currentSlide].classList.remove("active");
+      indicators[currentSlide].classList.remove("active");
       currentSlide = (n + totalSlides) % totalSlides;
-      slides[currentSlide].classList.add('active');
-      indicators[currentSlide].classList.add('active');
+      slides[currentSlide].classList.add("active");
+      indicators[currentSlide].classList.add("active");
     };
 
     const startAutoPlay = () => {
       if (totalSlides <= 1) return;
       autoPlayInterval = setInterval(() => {
         showSlide(currentSlide + 1);
-      }, 4000); // Cambiar cada 4 segundos
+      }, 4000);
     };
 
     const resetAutoPlay = () => {
@@ -154,18 +198,23 @@ class ProductosController {
       startAutoPlay();
     };
 
-    modalElement.querySelector('.modal-next').addEventListener('click', () => {
-      showSlide(currentSlide + 1);
-      resetAutoPlay();
-    });
+    const next = modalElement.querySelector(".modal-next");
+    const prev = modalElement.querySelector(".modal-prev");
+    if (next) {
+      next.addEventListener("click", () => {
+        showSlide(currentSlide + 1);
+        resetAutoPlay();
+      });
+    }
+    if (prev) {
+      prev.addEventListener("click", () => {
+        showSlide(currentSlide - 1);
+        resetAutoPlay();
+      });
+    }
 
-    modalElement.querySelector('.modal-prev').addEventListener('click', () => {
-      showSlide(currentSlide - 1);
-      resetAutoPlay();
-    });
-    
     indicators.forEach((ind, idx) => {
-      ind.addEventListener('click', () => {
+      ind.addEventListener("click", () => {
         showSlide(idx);
         resetAutoPlay();
       });
@@ -173,32 +222,31 @@ class ProductosController {
 
     startAutoPlay();
 
-    // Cerrar modal
     const closeModal = () => {
       clearInterval(autoPlayInterval);
-      modalElement.classList.add('fade-out');
+      modalElement.classList.add("fade-out");
       setTimeout(() => {
         modalElement.remove();
-        document.body.style.overflow = '';
+        document.body.style.overflow = "";
         this.activeModal = null;
       }, 300);
     };
 
-    modalElement.querySelector('.modal-close').addEventListener('click', closeModal);
-    modalElement.querySelector('.modal-overlay').addEventListener('click', closeModal);
-    
-    // Cerrar con Escape
+    const closeEl = modalElement.querySelector(".modal-close");
+    const over = modalElement.querySelector(".modal-overlay");
+    if (closeEl) closeEl.addEventListener("click", closeModal);
+    if (over) over.addEventListener("click", closeModal);
+
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         closeModal();
-        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener("keydown", onKeyDown);
       }
     };
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
   }
 }
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   new ProductosController();
 });

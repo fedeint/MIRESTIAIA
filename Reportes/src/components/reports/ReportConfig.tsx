@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { reportTypes, reportSections, savedTemplates } from "@/data/mockData";
+import { reportTypes, reportSections, savedTemplates } from "@/data/reportData";
 import {
   Calendar, FileText, RotateCcw, Layers, Save, Clock, Mail,
   MessageCircle, ChevronDown, ChevronUp, Bookmark, Play,

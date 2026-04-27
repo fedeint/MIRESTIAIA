@@ -193,7 +193,7 @@ function initializeActions() {
             const content = document.getElementById('reporteContent');
             const actions = document.getElementById('reporteHeaderActions');
             
-            // Actualizar mock data con datos del form
+            // Reflejar tipo y fechas del formulario en el borrador
             const tipoSelect = document.getElementById('rpInputTipo');
             const fechaHastaInput = document.getElementById('rpInputFechaHasta');
             

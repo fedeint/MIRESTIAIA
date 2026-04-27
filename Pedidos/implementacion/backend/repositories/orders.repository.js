@@ -1,15 +1,15 @@
-import salonData from '../data/orders-salon.json' with { type: 'json' };
-import deliveryData from '../data/orders-delivery.json' with { type: 'json' };
-import takeawayData from '../data/orders-takeaway.json' with { type: 'json' };
-
+/**
+ * Reserva local sin datos de relleno: el runtime real toma state desde PWA/Supabase.
+ * Estas funciones quedan como vacíos estructurados para compatibilidad.
+ */
 export function getSalonTablesMock() {
-  return structuredClone(salonData.tables || []);
+  return [];
 }
 
 export function getDeliveryOrdersMock() {
-  return structuredClone(deliveryData.orders || []);
+  return [];
 }
 
 export function getTakeawayOrdersMock() {
-  return structuredClone(takeawayData.orders || []);
+  return [];
 }

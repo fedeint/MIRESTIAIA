@@ -86,17 +86,6 @@ Deno.serve(async (request) => {
       );
     }
 
-    if (!canManageUserAccess(user)) {
-      return jsonResponse(
-        {
-          message:
-            "Necesitas rol de administrador o superadmin. Si recién cambiaste la contraseña, cierra sesión y vuelve a entrar (el token debe actualizarse).",
-        },
-        403,
-        request,
-      );
-    }
-
     let body = null;
     try {
       body = await request.json();
@@ -110,6 +99,83 @@ Deno.serve(async (request) => {
     const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    /** Personal operativo (Caja, Pedidos): leer desde Accesos; cualquier sesión autenticada con tenant en JWT. */
+    if (action === "list_operational_staff") {
+      const OPERATIONAL_ROLES = new Set(["mesero", "cajero", "chef"]);
+      const tenantFrom = (u) => {
+        const t = u?.app_metadata?.tenant_id;
+        return typeof t === "string" && t.trim() ? t.trim() : null;
+      };
+      const callerTid = tenantFrom(user);
+      if (!callerTid) {
+        return jsonResponse(
+          {
+            staff: [],
+            empty: true,
+            emptyReason: "no_tenant",
+            onboardingStep: 1,
+            message:
+              "Aún no hay restaurante/tenant vinculado a tu sesión. Completa el paso 1 (Configuración) y vuelve a iniciar sesión con un usuario asignado al local.",
+          },
+          200,
+          request,
+        );
+      }
+      const { data, error } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 200 });
+      if (error) return jsonResponse({ message: error.message }, 500, request);
+      const staff = data.users
+        .filter((u) => {
+          if (tenantFrom(u) !== callerTid) return false;
+          const r = getAuthRole(u);
+          if (!r || u.banned_until) return false;
+          return OPERATIONAL_ROLES.has(r);
+        })
+        .map((u) => {
+          const meta = u.user_metadata ?? {};
+          const mesa =
+            (typeof meta.mesa === "string" && meta.mesa.trim() ? meta.mesa.trim() : null) ||
+            (typeof meta.active_table === "string" && meta.active_table.trim() ? meta.active_table.trim() : null) ||
+            (typeof meta.table === "string" && meta.table.trim() ? meta.table.trim() : null);
+          const name =
+            (typeof meta.full_name === "string" && meta.full_name.trim() ? meta.full_name.trim() : null) || u.email || u.id;
+          return {
+            id: u.id,
+            name,
+            role: getAuthRole(u) ?? "unknown",
+            tableLabel: mesa ? (mesa.toLowerCase().includes("mesa") ? mesa : `Mesa ${mesa}`) : "—",
+            productCount: 0,
+            status: "unknown",
+            email: u.email ?? null,
+          };
+        });
+      if (staff.length === 0) {
+        return jsonResponse(
+          {
+            staff: [],
+            empty: true,
+            emptyReason: "no_operational_users",
+            onboardingStep: 2,
+            message:
+              "Aún no hay meseros, cajeros o chefs vinculados a este restaurante. Completa el paso 2 (Accesos) y asigna roles a los usuarios.",
+          },
+          200,
+          request,
+        );
+      }
+      return jsonResponse({ staff, empty: false }, 200, request);
+    }
+
+    if (!canManageUserAccess(user)) {
+      return jsonResponse(
+        {
+          message:
+            "Necesitas rol de administrador o superadmin. Si recién cambiaste la contraseña, cierra sesión y vuelve a entrar (el token debe actualizarse).",
+        },
+        403,
+        request,
+      );
+    }
 
     if (action === "list") {
       const { data, error } = await adminClient.auth.admin.listUsers({

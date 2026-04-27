@@ -12,22 +12,45 @@ import {
   FEATURE_CAJA_MESEROS,
 } from '../scripts/navigation.js';
 import { supabase } from '../scripts/supabase.js';
+import { listOperationalStaffForCaja } from '../scripts/operational-staff.js';
 
 /* ── Estado ── */
 let cajaOpen = false;
 let openedAt = null;
 let transactions = [];
-let passwordAction = null; // 'open' o 'close'
-const CAJA_PASSWORD = '9090';
-
-const meserosMock = [
-  { name: 'Carlos', mesa: 'Mesa 1', products: 0, status: 'available' },
-  { name: 'Maria',  mesa: 'Mesa 2', products: 0, status: 'busy' },
-  { name: 'Pedro',  mesa: 'Mesa 3', products: 0, status: 'available' },
-];
+/** @type {Array<{ name: string, mesa: string, products: number, status: string, role?: string, hasLiveStatus?: boolean }>} */
+let cajaTeamMeseros = [];
+let cajaTeamMessage = null;
+let cajaTeamOnboardingStep = null;
 
 function meserosForSession() {
-  return window.__mirestCajaMeserosEnabled ? meserosMock : [];
+  if (!window.__mirestCajaMeserosEnabled) return [];
+  return cajaTeamMeseros;
+}
+
+async function refreshOperationalTeam() {
+  if (!window.__mirestCajaMeserosEnabled) {
+    cajaTeamMeseros = [];
+    cajaTeamMessage = null;
+    cajaTeamOnboardingStep = null;
+    return;
+  }
+  const res = await listOperationalStaffForCaja();
+  if (!res.ok) {
+    cajaTeamMeseros = [];
+    cajaTeamMessage = res.errorMessage || 'No se pudo cargar el personal.';
+    cajaTeamOnboardingStep = null;
+    return;
+  }
+  if (res.empty) {
+    cajaTeamMeseros = [];
+    cajaTeamMessage = res.emptyMessage || 'Sin datos aún.';
+    cajaTeamOnboardingStep = res.onboardingStep != null ? res.onboardingStep : null;
+    return;
+  }
+  cajaTeamMeseros = res.meseros || [];
+  cajaTeamMessage = null;
+  cajaTeamOnboardingStep = null;
 }
 
 async function initCajaMeserosVisibility() {
@@ -62,6 +85,8 @@ const cajaTimeEl    = document.getElementById('cajaTime');
 /* ── Inicialización ── */
 document.addEventListener('DOMContentLoaded', async () => {
   await initCajaMeserosVisibility();
+  await refreshOperationalTeam();
+  if (cajaOpen) render(transactions, meserosForSession(), cajaTeamMessage, cajaTeamOnboardingStep);
   initSelectableButtons('incConceptGroup', 'incConcept');
   initSelectableButtons('incMethodGroup', 'incMethod');
   initSelectableButtons('expConceptGroup', 'expConcept');
@@ -69,44 +94,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 });
 
-/* ── Lógica de Seguridad (Password) ── */
-const passwordModal = document.getElementById('passwordModal');
-const passwordInput = document.getElementById('cajaPassword');
-const passwordError = document.getElementById('passwordError');
-const btnConfirmPassword = document.getElementById('btnConfirmPassword');
-
-function openPasswordModal(action) {
-  passwordAction = action;
-  if (passwordInput) passwordInput.value = '';
-  if (passwordError) passwordError.style.display = 'none';
-  openModal('passwordModal');
-  setTimeout(() => { if (passwordInput) passwordInput.focus(); }, 100);
-}
-
-if (btnConfirmPassword) {
-  btnConfirmPassword.addEventListener('click', () => {
-    if (passwordInput.value === CAJA_PASSWORD) {
-      closeModal('passwordModal');
-      if (passwordAction === 'open') performOpenCaja();
-      else if (passwordAction === 'close') performCloseCaja();
-    } else {
-      if (passwordError) passwordError.style.display = 'block';
-      if (passwordInput) {
-        passwordInput.value = '';
-        passwordInput.focus();
-      }
-    }
-  });
-}
-
-if (passwordInput) {
-  passwordInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') btnConfirmPassword.click();
-  });
-}
+/* Abrir / cerrar caja: sin contraseña fija; la sesión real se valida con Supabase (rol + caja en backend en despliegues con API). */
 
 /* ── Abrir Caja ── */
-function performOpenCaja() {
+async function performOpenCaja() {
   cajaOpen = true;
   openedAt = new Date();
   if (cajaBadge) {
@@ -116,15 +107,20 @@ function performOpenCaja() {
   if (closedScreen) closedScreen.style.display = 'none';
   if (openContent) openContent.style.display  = 'block';
 
+  await refreshOperationalTeam();
   showToast('welcomeToast', 'welcomeToastMsg', '¡Bienvenido, Cajero! <strong>Turno iniciado</strong>', 'welcomeToastIcon', 'check-circle');
-  render(transactions, meserosForSession());
+  render(transactions, meserosForSession(), cajaTeamMessage, cajaTeamOnboardingStep);
   
   // Iniciar onboarding si corresponde
   if (window.startCajaOnboarding) window.startCajaOnboarding();
 }
 
 if (btnToggle) {
-  btnToggle.addEventListener('click', () => openPasswordModal('open'));
+  btnToggle.addEventListener('click', () => {
+    if (confirm('¿Iniciar turno de caja?')) {
+      void performOpenCaja();
+    }
+  });
 }
 
 /* ── Cerrar Caja ── */
@@ -143,7 +139,7 @@ function performCloseCaja() {
 if (btnClose) {
   btnClose.addEventListener('click', () => {
     if (confirm('¿Confirmas el cierre de caja para este turno?')) {
-      openPasswordModal('close');
+      performCloseCaja();
     }
   });
 }
@@ -201,7 +197,7 @@ if (submitIncome) {
     document.getElementById('incAmount').value = '';
     document.getElementById('incNote').value   = '';
     closeAllModals();
-    render(transactions, meserosForSession());
+    render(transactions, meserosForSession(), cajaTeamMessage, cajaTeamOnboardingStep);
   });
 }
 
@@ -223,6 +219,6 @@ if (submitExpense) {
     document.getElementById('expAmount').value = '';
     document.getElementById('expNote').value   = '';
     closeAllModals();
-    render(transactions, meserosForSession());
+    render(transactions, meserosForSession(), cajaTeamMessage, cajaTeamOnboardingStep);
   });
 }

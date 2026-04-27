@@ -13,11 +13,24 @@ function renderCategoryTabs(categories) {
 }
 
 export function renderMenuModule({ refData, embedded = false, selectedContext = null }) {
-  const cards = refData.products.map((product) => {
-    const isAvailable = Boolean(refData.recipeAvailability?.[product.id]?.inStock);
-    const station = refData.recipeAvailability?.[product.id]?.kitchenStation || 'cocina';
+  if (!refData.products || refData.products.length === 0) {
     return `
-      <article class="menu-product-card ${isAvailable ? '' : 'is-unavailable'}">
+    <section class="module-shell module-shell--menu ${embedded ? 'module-shell--menu-embedded' : ''}">
+      <section class="module-section-card">
+        <p class="eyebrow">Menú del día</p>
+        <h3>Sin productos aún</h3>
+        <p class="workspace-note">No hay filas en <code>productos</code> o la sesión no está vinculada a tu restaurante. Completa el <strong>onboarding</strong> (categorías y platos de venta en <strong>Productos</strong>) o inicia sesión con tenant en el JWT.</p>
+      </section>
+    </section>`;
+  }
+  const cards = refData.products.map((product) => {
+    const r = refData.recipeAvailability?.[product.id];
+    const hasRecipe = Boolean(r);
+    const inStock = Boolean(r?.inStock);
+    const station = r?.kitchenStation || '—';
+    const estado = !hasRecipe ? 'Sin receta' : inStock ? 'Disponible' : 'No disponible';
+    return `
+      <article class="menu-product-card ${!hasRecipe || !inStock ? 'is-unavailable' : ''}">
         <div class="menu-product-card__header">
           <strong>${escapeHtml(product.name)}</strong>
           <span>${escapeHtml(product.emoji || '🍽️')}</span>
@@ -25,7 +38,7 @@ export function renderMenuModule({ refData, embedded = false, selectedContext = 
         <p>${escapeHtml(product.categoryLabel || product.category)}</p>
         <div class="detail-row"><span>Estación</span><strong>${escapeHtml(station)}</strong></div>
         <div class="detail-row"><span>Precio</span><strong>S/ ${Number(product.price).toFixed(2)}</strong></div>
-        <div class="detail-row"><span>Estado</span><strong>${isAvailable ? 'Disponible' : 'Agotado'}</strong></div>
+        <div class="detail-row"><span>Estado</span><strong>${escapeHtml(estado)}</strong></div>
       </article>
     `;
   }).join('');

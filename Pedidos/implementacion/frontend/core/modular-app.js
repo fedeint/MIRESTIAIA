@@ -333,7 +333,7 @@ function openLogoutSessionGuide() {
 
 function renderPwaModuleStrip(activeModule) {
   const ids = getModulesByCurrentRole();
-  if (ids.length < 2) {
+  if (ids.length < 1) {
     return { html: '', show: false };
   }
   const html = ids
@@ -611,14 +611,14 @@ function renderApp() {
       ? (MODE_META[state.mode] || MODE_META.salon)
       : (MODULE_META[state.activeModule] || MODULE_META.pedidos);
   }
-  const shouldHideModeHero = state.activeModule === 'pedidos' || Boolean(currentView.hideHero);
+  const shouldHideModeHero = Boolean(currentView.hideHero);
 
   refs.body.dataset.mode = state.mode;
   refs.body.dataset.module = state.activeModule;
   refs.appShell.dataset.mode = state.mode;
   refs.workspaceLayout.dataset.mode = state.mode;
   refs.topbarEyebrow.textContent = meta.eyebrow;
-  refs.topbarTitle.textContent = meta.title;
+  refs.topbarTitle.textContent = meta.title || meta.heroTitle;
   if (refs.modeSwitcher) refs.modeSwitcher.innerHTML = state.activeModule === 'pedidos' ? renderModeSwitcher(state.mode) : '';
   const pwaStrip = document.getElementById("pwaModuleStrip");
   if (pwaStrip) {

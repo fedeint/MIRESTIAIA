@@ -278,6 +278,145 @@ const ConfigStore = {
 };
 
 const ConfigUI = {
+  role: "demo",
+  sectionAccess: {},
+  sectionMap: {
+    dallia: "cfg-sect-dallia",
+    alertas: "cfg-sect-alertas",
+    modulos: "cfg-sect-modulos",
+    horarios: "cfg-sect-horarios",
+    tour: "cfg-sect-tour",
+    usuarios: "cfg-sect-usuarios",
+    restaurante: "cfg-sect-restaurante",
+  },
+
+  resolveSectionAccess(role) {
+    if (role === "superadmin") {
+      return {
+        "cfg-sect-dallia": "edit",
+        "cfg-sect-alertas": "edit",
+        "cfg-sect-modulos": "edit",
+        "cfg-sect-horarios": "edit",
+        "cfg-sect-tour": "edit",
+        "cfg-sect-usuarios": "edit",
+        "cfg-sect-restaurante": "edit",
+      };
+    }
+    if (role === "admin") {
+      return {
+        "cfg-sect-dallia": "none",
+        "cfg-sect-alertas": "edit",
+        "cfg-sect-modulos": "edit",
+        "cfg-sect-horarios": "read",
+        "cfg-sect-tour": "edit",
+        "cfg-sect-usuarios": "edit",
+        "cfg-sect-restaurante": "read",
+      };
+    }
+    return {
+      "cfg-sect-dallia": "none",
+      "cfg-sect-alertas": "none",
+      "cfg-sect-modulos": "none",
+      "cfg-sect-horarios": "none",
+      "cfg-sect-tour": "none",
+      "cfg-sect-usuarios": "none",
+      "cfg-sect-restaurante": "none",
+    };
+  },
+
+  modeForSection(sectionId) {
+    return this.sectionAccess[sectionId] || "none";
+  },
+
+  sectionGuard(sectionId) {
+    const mode = this.modeForSection(sectionId);
+    if (mode === "edit") return true;
+    this.cfgToast(
+      mode === "read"
+        ? "Sección en modo lectura para tu rol."
+        : "No tienes permiso para esta sección."
+    );
+    return false;
+  },
+
+  applySectionMode(sectionId) {
+    const sec = document.getElementById(sectionId);
+    if (!sec) return;
+    const mode = this.modeForSection(sectionId);
+    sec.dataset.cfgMode = mode;
+    sec.querySelectorAll(".cfg-role-hint").forEach((n) => n.remove());
+    if (mode === "none") {
+      sec.classList.remove("active");
+      sec.hidden = true;
+      return;
+    }
+    sec.hidden = false;
+    if (mode === "read") {
+      const hint = document.createElement("div");
+      hint.className = "cfg-role-hint";
+      hint.style.cssText =
+        "margin:0 0 10px 0;padding:8px 10px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-muted);font-size:12px;color:var(--color-text-muted);font-weight:600;";
+      hint.textContent = "Modo lectura para tu rol";
+      sec.prepend(hint);
+    }
+    const lock = mode === "read";
+    sec.querySelectorAll("input, select, textarea, button").forEach((el) => {
+      const id = el.id || "";
+      if (id === "btnModuleOnbList") return;
+      if (id === "btnModuleOnbConfig" && mode !== "none") return;
+      const shouldLock =
+        lock &&
+        (id.startsWith("btn") ||
+          id.startsWith("cfg-alt-prueba-") ||
+          el.matches("input,select,textarea"));
+      if (shouldLock) {
+        el.setAttribute("disabled", "true");
+        el.setAttribute("aria-disabled", "true");
+        if (id.startsWith("btn")) {
+          el.style.opacity = "0.55";
+          el.style.pointerEvents = "none";
+        }
+      } else {
+        el.removeAttribute("disabled");
+        el.removeAttribute("aria-disabled");
+        if (id.startsWith("btn")) {
+          el.style.opacity = "";
+          el.style.pointerEvents = "";
+        }
+      }
+    });
+  },
+
+  applyRoleAccess() {
+    const role =
+      (window.currentUserRole && String(window.currentUserRole).toLowerCase()) ||
+      document.body.dataset.userRole ||
+      "demo";
+    this.role = role;
+    this.sectionAccess = this.resolveSectionAccess(role);
+    const navItems = document.querySelectorAll(".cfg-nav-item");
+    navItems.forEach((btn) => {
+      const target = btn.dataset.target;
+      const secId = this.sectionMap[target];
+      btn.style.display = this.modeForSection(secId) === "none" ? "none" : "";
+    });
+    Object.values(this.sectionMap).forEach((sectionId) =>
+      this.applySectionMode(sectionId)
+    );
+    const active = document.querySelector(".cfg-nav-item.active");
+    if (!active || active.style.display === "none") {
+      const firstVisible = Array.from(document.querySelectorAll(".cfg-nav-item")).find(
+        (n) => n.style.display !== "none"
+      );
+      if (firstVisible) {
+        navItems.forEach((n) => n.classList.remove("active"));
+        firstVisible.classList.add("active");
+        const tgt = firstVisible.dataset.target;
+        document.querySelectorAll(".cfg-section").forEach((s) => s.classList.remove("active"));
+        document.getElementById(`cfg-sect-${tgt}`)?.classList.add("active");
+      }
+    }
+  },
   updatePersistStatus() {
     const el = document.getElementById("cfg-persist-status");
     if (!el) return;
@@ -306,6 +445,7 @@ const ConfigUI = {
     this.setupUsuariosHandlers();
     this.setupRestauranteHandlers();
     this.setupModuleOnboarding();
+    this.applyRoleAccess();
   },
 
   /**
@@ -474,6 +614,7 @@ const ConfigUI = {
       });
     }
     if (window.lucide) window.lucide.createIcons();
+    this.applySectionMode("cfg-sect-alertas");
   },
 
   setupModuleOnboarding() {
@@ -502,13 +643,14 @@ const ConfigUI = {
     const navItems = document.querySelectorAll(".cfg-nav-item");
     navItems.forEach(btn => {
       btn.addEventListener("click", () => {
+        if (btn.style.display === "none") return;
         navItems.forEach(n => n.classList.remove("active"));
         btn.classList.add("active");
 
         const target = btn.dataset.target;
         document.querySelectorAll(".cfg-section").forEach(s => s.classList.remove("active"));
         const sec = document.getElementById(`cfg-sect-${target}`);
-        if(sec) sec.classList.add("active");
+        if (sec && this.modeForSection(sec.id) !== "none") sec.classList.add("active");
       });
     });
   },
@@ -552,6 +694,8 @@ const ConfigUI = {
     this.renderTour();
     this.renderToursInteractivosModulos();
     this.renderUsuarios();
+    this.applySectionMode("cfg-sect-dallia");
+    this.applySectionMode("cfg-sect-restaurante");
   },
 
   // ── DALL IA HANDLERS
@@ -569,6 +713,7 @@ const ConfigUI = {
     attachSeg("cfg-ia-person");
 
     document.getElementById("btnSaveDallia").addEventListener("click", async () => {
+      if (!this.sectionGuard("cfg-sect-dallia")) return;
       const name = document.getElementById("cfg-ia-name").value.trim();
       if (!name) {
         document.getElementById("err-ia-name").style.display = "block";
@@ -621,6 +766,7 @@ const ConfigUI = {
     const btn = document.getElementById("btnSaveAlertas");
     if (!btn) return;
     btn.addEventListener("click", async () => {
+      if (!this.sectionGuard("cfg-sect-alertas")) return;
       const errs = [];
       for (const tipo of ALERTA_TIPOS) {
         const activo = !!document.getElementById(`cfg-alt-activo-${tipo}`)?.checked;
@@ -666,6 +812,7 @@ const ConfigUI = {
   // ── Modulos
   setupModulesHandlers() {
     document.getElementById("btnSaveModulos").addEventListener("click", async () => {
+      if (!this.sectionGuard("cfg-sect-modulos")) return;
       const btn = document.getElementById("btnSaveModulos");
       document.querySelectorAll(".cfg-mod-toggle").forEach((cb) => {
         if (cb instanceof HTMLInputElement) {
@@ -732,10 +879,12 @@ const ConfigUI = {
         document.getElementById(`hr-grp-cierre-${day}`).style.pointerEvents = checked ? "none" : "auto";
       });
     });
+    this.applySectionMode("cfg-sect-horarios");
   },
 
   setupHorariosHandlers() {
     document.getElementById("btnSaveHorarios").addEventListener("click", async () => {
+      if (!this.sectionGuard("cfg-sect-horarios")) return;
       const list = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
       list.forEach((day) => {
         const c = document.getElementById(`cfg-hr-t-${day}`)?.checked;
@@ -793,6 +942,7 @@ const ConfigUI = {
     document.getElementById("tourProgressFill").style.width = percent + "%";
     document.getElementById("tourProgressText").textContent = percent + "% Completado";
     if (window.lucide) window.lucide.createIcons();
+    this.applySectionMode("cfg-sect-tour");
   },
 
   /** Toggles de tours con verificación (módulo shell + PWA Pedidos), persistidos en `tour` / Supabase. */
@@ -822,10 +972,12 @@ const ConfigUI = {
         <span style="font-weight:600">${d.icon || ""} ${d.label || k}</span>`;
       host.appendChild(row);
     });
+    this.applySectionMode("cfg-sect-tour");
   },
 
   setupTourHandlers() {
     document.getElementById("btnRestartTour")?.addEventListener("click", () => {
+       if (!this.sectionGuard("cfg-sect-tour")) return;
        const pasos = ConfigStore.state.tour.pasos;
        Object.values(pasos).forEach(p => p.estado = "Pendiente");
        ConfigStore.persist();
@@ -833,12 +985,14 @@ const ConfigUI = {
     });
     
     window.cfgTouchTourStepComplete = (key) => {
+       if (!this.sectionGuard("cfg-sect-tour")) return;
        ConfigStore.state.tour.pasos[key].estado = "Completado";
        ConfigStore.persist();
        this.renderTour();
     };
 
     document.getElementById("btnSaveToursInteractivos")?.addEventListener("click", () => {
+      if (!this.sectionGuard("cfg-sect-tour")) return;
       if (!ConfigStore.state.tour) return;
       const master = document.getElementById("tourModulosHabilitado");
       if (master) ConfigStore.state.tour.modulosHabilitado = master.checked;
@@ -885,10 +1039,12 @@ const ConfigUI = {
       cont.appendChild(row);
     });
     if (window.lucide) window.lucide.createIcons();
+    this.applySectionMode("cfg-sect-usuarios");
   },
 
   setupUsuariosHandlers() {
     document.getElementById("btnAddUser").addEventListener("click", () => {
+       if (!this.sectionGuard("cfg-sect-usuarios")) return;
        const u = prompt("Nombre del nuevo administrador:");
        if(u) {
           ConfigStore.state.usuarios.push({
@@ -905,6 +1061,7 @@ const ConfigUI = {
     });
 
     window.cfgRemoveLocalUser = (id) => {
+       if (!this.sectionGuard("cfg-sect-usuarios")) return;
        if(ConfigStore.state.usuarios.length <= 1) {
           alert("No puedes eliminar al único administrador del sistema.");
           return;
@@ -918,6 +1075,7 @@ const ConfigUI = {
   // ── Restaurante
   setupRestauranteHandlers() {
     document.getElementById("btnSaveRest").addEventListener("click", async () => {
+      if (!this.sectionGuard("cfg-sect-restaurante")) return;
       const ruc = document.getElementById("cfg-rest-ruc").value.trim();
       const errRuc = document.getElementById("err-rest-ruc");
 

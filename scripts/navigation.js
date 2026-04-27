@@ -1,4 +1,5 @@
 import { APP_ROLE_TO_SHELL } from "./mirest-role-maps.js";
+import { getCachedMirestConfig } from "./mirest-app-config.js";
 
 /** Solo luna/sol para el FAB de tema: evita cargar auth-inline-icons.js en todos los módulos. */
 function iconThemeFab(isDark) {
@@ -383,6 +384,163 @@ export function getModulesByRole(role, permissions) {
   return NAV_ITEMS.filter((item) => item.key === "dashboard" || perms.includes(item.key));
 }
 
+function isModuleGloballyEnabled(key) {
+  const cfg = getCachedMirestConfig();
+  const mod = cfg?.modulos;
+  if (!mod || typeof mod !== "object") return true;
+  if (!Object.prototype.hasOwnProperty.call(mod, key)) return true;
+  return mod[key] !== false;
+}
+
+export function getEffectiveNavItems(role, permissions) {
+  return getModulesByRole(role, permissions).filter((item) => {
+    if (item.key === "dashboard") return true;
+    return isModuleGloballyEnabled(item.key);
+  });
+}
+
+const MOBILE_SLOT_PRIORITY = {
+  superadmin: ["dashboard", "pedidos", "configuracion", "reportes"],
+  admin: ["dashboard", "pedidos", "caja", "reportes"],
+  caja: ["caja", "pedidos", "productos"],
+  chef: ["cocina", "pedidos", "recetas"],
+  pedidos: ["pedidos", "caja", "productos"],
+  almacen: ["almacen", "proveedores", "recetas"],
+  marketing: ["dashboard", "clientes", "reportes", "productos"],
+  demo: ["dashboard", "pedidos", "caja", "reportes"],
+};
+
+function buildMobilePrimary(role, allowed) {
+  const allowedSet = new Set(allowed.map((i) => i.key));
+  const priority = MOBILE_SLOT_PRIORITY[role] || MOBILE_SLOT_PRIORITY.demo;
+  const primary = [];
+  for (const key of priority) {
+    if (!allowedSet.has(key)) continue;
+    const it = allowed.find((x) => x.key === key);
+    if (it && !primary.some((x) => x.key === it.key)) primary.push(it);
+    if (primary.length >= 4) break;
+  }
+  if (primary.length < 4) {
+    for (const it of allowed) {
+      if (primary.some((x) => x.key === it.key)) continue;
+      primary.push(it);
+      if (primary.length >= 4) break;
+    }
+  }
+  return primary;
+}
+
+function renderBottomNavItem(item, activeKey) {
+  const isActive = item.key === activeKey;
+  return `
+    <a class="mirest-bottom-nav__item ${isActive ? "is-active" : ""}" href="${toHref(item.path)}" data-nav-key="${item.key}">
+      <i data-lucide="${item.icon || "circle"}" aria-hidden="true"></i>
+      <span>${item.label}</span>
+    </a>
+  `;
+}
+
+export function renderBottomNavigation({
+  activeKey,
+  userRole,
+  permissions,
+  onLogout,
+}) {
+  document.getElementById("mirestBottomNav")?.remove();
+  document.getElementById("mirestBottomSheet")?.remove();
+  document.getElementById("mirestBottomSheetBackdrop")?.remove();
+
+  const all = getEffectiveNavItems(userRole, permissions).filter((x) => x.key !== "accesos");
+  const primary = buildMobilePrimary(userRole, all);
+  const primarySet = new Set(primary.map((x) => x.key));
+  const secondary = all.filter((x) => !primarySet.has(x.key));
+
+  const nav = document.createElement("nav");
+  nav.id = "mirestBottomNav";
+  nav.className = "mirest-bottom-nav";
+  nav.setAttribute("aria-label", "Navegación móvil");
+  nav.innerHTML = `
+    ${primary.map((item) => renderBottomNavItem(item, activeKey)).join("")}
+    <button type="button" class="mirest-bottom-nav__item ${activeKey === "__more__" ? "is-active" : ""}" id="mirestBottomMoreBtn" aria-expanded="false" aria-controls="mirestBottomSheet">
+      <i data-lucide="ellipsis" aria-hidden="true"></i>
+      <span>Más</span>
+    </button>
+  `;
+  document.body.appendChild(nav);
+
+  const backdrop = document.createElement("button");
+  backdrop.type = "button";
+  backdrop.id = "mirestBottomSheetBackdrop";
+  backdrop.className = "mirest-bottom-sheet-backdrop";
+  backdrop.setAttribute("aria-label", "Cerrar menú");
+  document.body.appendChild(backdrop);
+
+  const showConfigQuick = userRole === "admin" || userRole === "superadmin";
+  const sheet = document.createElement("section");
+  sheet.id = "mirestBottomSheet";
+  sheet.className = "mirest-bottom-sheet";
+  sheet.setAttribute("role", "dialog");
+  sheet.setAttribute("aria-label", "Más opciones");
+  sheet.innerHTML = `
+    <header class="mirest-bottom-sheet__header">
+      <strong>Más módulos</strong>
+    </header>
+    <div class="mirest-bottom-sheet__list">
+      ${secondary.map((item) => `
+        <a class="mirest-bottom-sheet__link" href="${toHref(item.path)}">
+          <i data-lucide="${item.icon || "circle"}"></i>
+          <span>${item.label}</span>
+        </a>
+      `).join("")}
+    </div>
+    <footer class="mirest-bottom-sheet__footer">
+      <span class="mirest-bottom-sheet__account-title">Cuenta</span>
+      ${showConfigQuick ? `
+        <a class="mirest-bottom-sheet__link" href="${toHref("Configuracion/configuracion.html")}">
+          <i data-lucide="settings"></i>
+          <span>Configuración</span>
+        </a>
+      ` : ""}
+      <a class="mirest-bottom-sheet__link" href="${toHref("Soporte/soporte.html")}">
+        <i data-lucide="life-buoy"></i>
+        <span>Soporte</span>
+      </a>
+      <button type="button" class="mirest-bottom-sheet__link mirest-bottom-sheet__logout" id="mirestBottomSheetLogout">
+        <i data-lucide="log-out"></i>
+        <span>Cerrar sesión</span>
+      </button>
+    </footer>
+  `;
+  document.body.appendChild(sheet);
+
+  const closeSheet = () => {
+    sheet.classList.remove("is-open");
+    backdrop.classList.remove("is-open");
+    document.getElementById("mirestBottomMoreBtn")?.setAttribute("aria-expanded", "false");
+  };
+  const openSheet = () => {
+    sheet.classList.add("is-open");
+    backdrop.classList.add("is-open");
+    document.getElementById("mirestBottomMoreBtn")?.setAttribute("aria-expanded", "true");
+  };
+
+  document.getElementById("mirestBottomMoreBtn")?.addEventListener("click", () => {
+    if (sheet.classList.contains("is-open")) {
+      closeSheet();
+    } else {
+      openSheet();
+    }
+  });
+  backdrop.addEventListener("click", closeSheet);
+  sheet.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeSheet));
+  sheet.querySelector("#mirestBottomSheetLogout")?.addEventListener("click", async () => {
+    closeSheet();
+    if (typeof onLogout === "function") await onLogout();
+  });
+
+  if (window.lucide) window.lucide.createIcons();
+}
+
 export function getAssignableModules() {
   return MODULES;
 }
@@ -405,9 +563,10 @@ export function getRoleLabel(role) {
 export function renderSidebar(target, activeKey, userRole = "admin", permissions = null) {
   if (!target) return;
 
-  const allowedItems = getModulesByRole(userRole, permissions);
+  const allowedItems = getEffectiveNavItems(userRole, permissions);
   const dashboardItem = allowedItems.find(i => i.key === "dashboard");
-  const moduleItems = allowedItems.filter(i => i.key !== "dashboard");
+  const configItems = allowedItems.filter((i) => i.key === "configuracion" || i.key === "accesos");
+  const moduleItems = allowedItems.filter(i => i.key !== "dashboard" && i.key !== "configuracion" && i.key !== "accesos");
 
   target.innerHTML = `
     <section class="sidebar-group">
@@ -422,6 +581,14 @@ export function renderSidebar(target, activeKey, userRole = "admin", permissions
         ${moduleItems.map((item) => renderNavItem(item, activeKey)).join("")}
       </div>
     </section>
+    ${configItems.length > 0 ? `
+      <section class="sidebar-group">
+        <span class="sidebar-group__label">Configuración</span>
+        <div class="sidebar-list">
+          ${configItems.map((item) => renderNavItem(item, activeKey)).join("")}
+        </div>
+      </section>
+    ` : ""}
     <section class="sidebar-group">
       <span class="sidebar-group__label">Cuenta</span>
       <div class="sidebar-list">
@@ -472,6 +639,22 @@ export function initializeThemeToggle(button) {
       applyTheme(nextTheme, button);
     });
   }
+}
+
+const CONFIG_SECTION_ACCESS = {
+  "cfg-sect-dallia": ["superadmin"],
+  "cfg-sect-alertas": ["superadmin", "admin"],
+  "cfg-sect-modulos": ["superadmin", "admin"],
+  "cfg-sect-horarios": ["superadmin", "admin", "caja"],
+  "cfg-sect-tour": ["superadmin", "admin"],
+  "cfg-sect-usuarios": ["superadmin", "admin"],
+  "cfg-sect-restaurante": ["superadmin", "admin"],
+};
+
+export function canAccessConfigSection(role, sectionId) {
+  const allowed = CONFIG_SECTION_ACCESS[sectionId];
+  if (!allowed) return role === "superadmin" || role === "admin";
+  return allowed.includes(role);
 }
 
 function applyTheme(theme, button) {

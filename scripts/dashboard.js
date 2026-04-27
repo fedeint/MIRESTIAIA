@@ -1,4 +1,4 @@
-import { getModulesByRole, toHref } from "./navigation.js";
+import { getEffectiveNavItems, toHref } from "./navigation.js";
 import { fetchDashboardSnapshot } from "./dashboard-metrics.js";
 import { supabase } from "./supabase.js";
 import { renderAdminOnboardingPanel } from "./mirest-onboarding.js";
@@ -283,7 +283,7 @@ function renderModuleGrid(profile) {
   const target = document.getElementById("moduleGrid");
   if (!target) return;
 
-  const allowed = getModulesByRole(profile.role, profile.permissions).filter((item) => item.key !== "dashboard");
+  const allowed = getEffectiveNavItems(profile.role, profile.permissions).filter((item) => item.key !== "dashboard");
 
   if (allowed.length === 0) {
     target.innerHTML = `

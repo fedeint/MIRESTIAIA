@@ -16,7 +16,7 @@
   font-size: 13px;
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 8; /* bajo el panel global (styles/layout) */
   box-shadow: 0 1px 0 rgba(15, 25, 44, 0.04);
 }
 

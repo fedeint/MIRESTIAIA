@@ -297,52 +297,7 @@ body[data-mode="takeaway"] .chip.is-active {
   bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   21. SIDEBAR PUSH LAYOUT (DESKTOP)
-   Evita que el dashboard oculte el contenido al abrirse.
-   ══════════════════════════════════════════════════════════════ */
-
-@media (min-width: 1081px) {
-  /* Definimos el ancho constante para el cálculo */
-  :root {
-    --sidebar-width: 320px !important;
-  }
-
-  body.sidebar-open .sidebar {
-    width: var(--sidebar-width) !important;
-  }
-
-  body.sidebar-open .app-shell {
-    grid-template-columns: var(--sidebar-width) 1fr !important;
-  }
-
-  /* Transición suave para el contenido principal */
-  .app-main {
-    transition: margin-left var(--app-transition-base, 220ms ease) !important;
-  }
-
-  /* Cuando el sidebar está abierto, empujamos el contenido */
-  body.sidebar-open .app-main {
-    margin-left: 0 !important;
-  }
-
-  /* En desktop no necesitamos el backdrop oscuro si estamos empujando */
-  body.sidebar-open .sidebar-backdrop {
-    display: none !important;
-  }
-
-  /* El sidebar permanece fixed pero ahora tiene un "espacio" reservado en el layout */
-  .sidebar {
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12) !important;
-  }
-}
-
-/* Ajuste fino para la topbar sticky al empujar */
-@media (min-width: 1081px) {
-  body.sidebar-open .topbar {
-    width: auto !important;
-  }
-}
+/* (21) El shell lateral lo define styles/layout.css del proyecto raíz. */
 
 /* ══════════════════════════════════════════════════════════════
    PANEL SHEET — Management panel como bottom-sheet en mobile

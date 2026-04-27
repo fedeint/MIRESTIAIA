@@ -29,14 +29,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..800&display=swap" rel="stylesheet" />
+  <script>document.documentElement.classList.add('js');</script>
 
-  <!-- Design System — orden obligatorio:
-       tokens → base → components → modules → [legacy styles.css] → patch -->
+  <!-- Design System — raíz (shell global) → módulo Pedidos → legacy → patch -->
   <script>
-    window.__MIREST_ASSET_VERSION__ = 'smart-waiter-v2-20260427-global-bridge';
+    window.__MIREST_ASSET_VERSION__ = 'pedidos-principal-nav-20260428';
     window.__MIREST_DEV_BUST__ = ['localhost', '127.0.0.1'].includes(window.location.hostname)
       ? `?v=${window.__MIREST_ASSET_VERSION__}`
       : '';
+    document.write(`<link rel="stylesheet" href="../../styles/tokens.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="../../styles/base.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="../../styles/layout.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="../../styles/components.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="../../styles/premium-modules.css${window.__MIREST_DEV_BUST__}" />`);
+    document.write(`<link rel="stylesheet" href="../../styles/mobile.css${window.__MIREST_DEV_BUST__}" />`);
     document.write(`<link rel="stylesheet" href="./frontend/styles/tokens.css${window.__MIREST_DEV_BUST__}" />`);
     document.write(`<link rel="stylesheet" href="./frontend/styles/base.css${window.__MIREST_DEV_BUST__}" />`);
     document.write(`<link rel="stylesheet" href="./frontend/styles/components.css${window.__MIREST_DEV_BUST__}" />`);
@@ -63,55 +70,38 @@
       }, { once: true });
     }
   </script>
+  <script src="https://unpkg.com/lucide@latest" defer></script>
 </head>
 
-<body data-theme="light" data-mode="salon" data-module="pedidos">
+<body
+  class="pedidos-module"
+  data-theme="light"
+  data-mode="salon"
+  data-module="pedidos"
+  data-page-type="module"
+  data-module-key="pedidos"
+  data-root-path="../../"
+>
   <div class="app-shell" id="appShell">
 
-    <!-- ── SIDEBAR (desktop) ─────────────────────────────────── -->
-    <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
-      <div class="brand">
-        <div class="brand__logo" aria-hidden="true">IA</div>
-        <div class="brand__copy">
+    <!-- Mismo panel lateral que el dashboard principal (index.html) -->
+    <aside class="sidebar" id="appSidebar" aria-label="Navegación de la plataforma">
+      <div class="sidebar__brand">
+        <div class="brand-mark" aria-hidden="true">IA</div>
+        <div class="brand-copy">
+          <span class="brand-copy__eyebrow">MiRest</span>
           <strong>MiRest con IA</strong>
-          <span>Gestión operativa</span>
-        </div>
-        <button
-          type="button"
-          class="sidebar-close"
-          id="sidebarCloseButton"
-          data-close-dashboard
-          aria-label="Cerrar dashboard"
-        >
-          ‹
-        </button>
-      </div>
-
-      <div id="dashboardNav"></div>
-      <div class="dashboard-sidebar-content" id="dashboardContent"></div>
-
-      <div class="sidebar__group sidebar__group--footer">
-        <div class="active-module-card">
-          <p class="sidebar__label">Módulo activo</p>
-          <strong>Pedidos</strong>
-          <span>Área principal</span>
-        </div>
-        <div class="profile-card">
-          <div class="profile-card__avatar" aria-hidden="true">DA</div>
-          <div>
-            <strong>Dalia</strong>
-            <span>Administradora</span>
-          </div>
+          <span>Dashboard administrativo base</span>
         </div>
       </div>
+      <nav id="sidebarNav" class="sidebar__nav" aria-label="Menú principal y módulos"></nav>
     </aside>
 
-    <!-- Backdrop del sidebar (mobile) -->
     <button
       type="button"
       class="sidebar-backdrop"
       id="sidebarBackdrop"
-      aria-label="Cerrar navegación"
+      aria-label="Cerrar navegación lateral"
       tabindex="-1"
     ></button>
 
@@ -128,18 +118,17 @@
       </nav>
 
       <!-- TOPBAR -->
-      <header class="topbar" id="topbar">
+      <header class="topbar topbar--pedidos" id="topbar">
         <div class="topbar__left">
           <button
             type="button"
-            class="topbar-dashboard-btn"
-            id="dashboardToggle"
-            data-open-dashboard
-            aria-label="Abrir o contraer dashboard"
+            class="icon-button topbar__menu-toggle topbar--pedidos__open-nav"
+            id="sidebarToggle"
+            aria-label="Abrir o cerrar la navegación de la plataforma"
+            aria-controls="appSidebar"
             aria-expanded="false"
-            aria-controls="sidebar"
           >
-            <span class="topbar-dashboard-btn__icon" aria-hidden="true">☰</span>
+            <i data-lucide="menu" aria-hidden="true"></i>
           </button>
           <div>
             <p class="eyebrow" id="topbarEyebrow">Módulo</p>
@@ -149,7 +138,6 @@
 
         <!-- Mode switcher (desktop/tablet) -->
         <div class="topbar__center" id="modeSwitcher" aria-label="Selector de área operativa"></div>
-
       </header>
 
       <!-- CONTENIDO PRINCIPAL -->

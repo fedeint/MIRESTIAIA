@@ -48,7 +48,6 @@ import {
   initOnboardingPRE,
   restartOnboardingPRO,
 } from '../modules/pedidos/onboarding.js';
-import { renderDashboardContent, renderDashboardNav } from '../modules/dashboard/index.js';
 import { renderFacturasModule } from '../modules/facturas/index.js';
 import { renderConfiguracionModule, renderPrinterCenter } from '../modules/configuracion/index.js';
 import { renderCajaModule } from '../modules/caja/index.js';
@@ -99,19 +98,13 @@ const MODULE_META = {
 let refs;
 let initialized = false;
 
-const DESKTOP_SIDEBAR_MQ = window.matchMedia('(min-width: 960px)');
-let _viewportSidebarMqlBound = false;
-
 function cacheRefs() {
   refs = {
     body: document.body,
     appShell: document.getElementById('appShell'),
-    sidebar: document.getElementById('sidebar'),
+    sidebar: document.getElementById('appSidebar'),
     sidebarBackdrop: document.getElementById('sidebarBackdrop'),
-    dashboardToggle: document.getElementById('dashboardToggle'),
-    dashboardNav: document.getElementById('dashboardNav'),
-    dashboardContent: document.getElementById('dashboardContent'),
-    sidebarCloseButton: document.getElementById('sidebarCloseButton'),
+    sidebarToggle: document.getElementById('sidebarToggle'),
     topbarEyebrow: document.getElementById('topbarEyebrow'),
     topbarTitle: document.getElementById('topbarTitle'),
     modeSwitcher: document.getElementById('modeSwitcher'),
@@ -147,29 +140,14 @@ function applyTheme(theme) {
 
 function closeSidebar() {
   refs.body.classList.remove('sidebar-open');
-  refs.dashboardToggle?.setAttribute('aria-expanded', 'false');
+  refs.sidebar?.classList.remove('sidebar--open');
+  refs.sidebarToggle?.setAttribute('aria-expanded', 'false');
 }
 
 function openSidebar() {
   refs.body.classList.add('sidebar-open');
-  refs.dashboardToggle?.setAttribute('aria-expanded', 'true');
-}
-
-function toggleSidebar() {
-  if (refs.body.classList.contains('sidebar-open')) closeSidebar();
-  else openSidebar();
-}
-
-/**
- * Alinea `sidebar-open` con el ancho y con el shell PWA.
- * Llamar tras `initModularApp` (y PWA) para que en escritorio el dashboard lateral
- * muestre lista + contenido, no cajón cerrado o rail sin etiquetas.
- */
-export function applyViewportSidebarState() {
-  if (!refs || !refs.body) cacheRefs();
-  if (refs.body.classList.contains('pwa-shell')) return;
-  if (DESKTOP_SIDEBAR_MQ.matches) openSidebar();
-  else closeSidebar();
+  refs.sidebar?.classList.add('sidebar--open');
+  refs.sidebarToggle?.setAttribute('aria-expanded', 'true');
 }
 
 function openPrinterCenter() {
@@ -636,9 +614,7 @@ function renderApp() {
   refs.workspaceLayout.dataset.mode = state.mode;
   refs.topbarEyebrow.textContent = meta.eyebrow;
   refs.topbarTitle.textContent = meta.title;
-  if (refs.dashboardNav) refs.dashboardNav.innerHTML = renderDashboardNav({ state });
-  if (refs.dashboardContent) refs.dashboardContent.innerHTML = renderDashboardContent({ state, stats, refData });
-  refs.modeSwitcher.innerHTML = state.activeModule === 'pedidos' ? renderModeSwitcher(state.mode) : '';
+  if (refs.modeSwitcher) refs.modeSwitcher.innerHTML = state.activeModule === 'pedidos' ? renderModeSwitcher(state.mode) : '';
   refs.modeHero.style.display = shouldHideModeHero ? 'none' : '';
   refs.summaryStats.style.display = currentView.hideSummary ? 'none' : '';
   refs.modeHero.innerHTML = shouldHideModeHero ? '' : renderHero(state.mode, stats);
@@ -978,16 +954,6 @@ function bindEvents() {
       return;
     }
 
-    if (target.closest('#dashboardToggle') || target.closest('[data-open-dashboard]')) {
-      toggleSidebar();
-      return;
-    }
-
-    if (target.closest('#sidebarBackdrop') || target.closest('#sidebarCloseButton') || target.closest('[data-close-dashboard]')) {
-      closeSidebar();
-      return;
-    }
-
     if (target.closest('[data-open-guide]')) {
       restartOnboardingPRO();
       return;
@@ -1095,12 +1061,6 @@ export function initModularApp() {
   console.debug('[modular-app] Render inicial completado');
   initOnboarding();
   console.debug('[modular-app] Onboarding inicializado');
-  if (!_viewportSidebarMqlBound) {
-    DESKTOP_SIDEBAR_MQ.addEventListener('change', () => {
-      applyViewportSidebarState();
-    });
-    _viewportSidebarMqlBound = true;
-  }
   initialized = true;
   console.info('[modular-app] Runtime modular activo ✓');
 }

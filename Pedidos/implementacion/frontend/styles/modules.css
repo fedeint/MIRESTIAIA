@@ -1,263 +1,29 @@
 /* =============================================================
    MODULES — MiRest con IA
-   Layout de módulos específicos del sistema.
-   Depende de: tokens.css + base.css + components.css
+   Área de trabajo PWA. El shell lateral = ../../styles/layout.css
+   (Menu principal + Modulos) desde el dashboard base.
    ============================================================= */
 
-/* ══════════════════════════════════════════════════════════════
-   1. APP SHELL
-   ══════════════════════════════════════════════════════════════ */
-
-.app-shell {
-  min-height: 100dvh;
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-/* ── App main area ───────────────────────────────────────── */
-.app-main {
+/* Área de contenido: columnas, sin tocar #appSidebar */
+body.pedidos-module .app-main {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   2. SIDEBAR (desktop)
-   ══════════════════════════════════════════════════════════════ */
-
-.sidebar {
-  position: fixed;
-  inset: 8px auto 8px 8px;
-  width: min(272px, calc(100vw - 16px));
-  height: auto;
-  max-height: calc(100dvh - 16px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 14px 12px;
-  padding-left: calc(12px + var(--app-safe-left));
-  background: var(--app-gradient-sidebar);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 32;
-  transform: translateX(-100%);
-  transition: transform var(--app-transition-base);
-  scrollbar-width: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  box-shadow: 0 24px 60px rgba(7, 10, 24, 0.5);
-}
-.sidebar::-webkit-scrollbar {
-  display: none;
-}
-.sidebar-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 28;
-  background: rgba(15, 23, 42, 0.48);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  border: none;
-  cursor: pointer;
-}
-body.sidebar-open .sidebar {
-  transform: translateX(0);
-}
-body.sidebar-open .sidebar-backdrop {
-  display: block;
-}
-
-/* ── Brand ───────────────────────────────────────────────── */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px 12px;
-  border-bottom: 1px solid var(--app-color-sidebar-line);
-}
-.brand__logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 12px;
-  font-weight: var(--app-font-weight-extrabold);
-  background: var(--app-gradient-primary);
-  box-shadow: 0 8px 20px rgba(222, 90, 37, 0.32);
-  flex-shrink: 0;
-}
-.brand__copy {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-.brand strong {
-  display: block;
-  font-size: 16px;
-  font-weight: var(--app-font-weight-extrabold);
-  color: #fff;
-}
-.brand span {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.58);
-}
-.sidebar-close {
-  margin-left: auto;
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.88);
-  display: inline-grid;
-  place-items: center;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition: all var(--app-transition-fast);
-}
-.sidebar-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* ── Nav items ───────────────────────────────────────────── */
-.sidebar__group {
-  display: grid;
-  gap: 4px;
-}
-.dashboard-sidebar-content {
-  display: grid;
-  gap: 10px;
-  padding: 0 4px;
-}
-
-.dashboard-sidebar-content:empty {
-  display: none;
-}
-.sidebar__group--footer {
-  margin-top: auto;
-}
-.sidebar__label {
-  margin: 0;
-  padding: 0 10px;
-  font-size: 10px;
-  font-weight: var(--app-font-weight-extrabold);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--app-color-sidebar-section);
-  margin-bottom: 6px;
-}
-.sidebar__nav {
-  display: grid;
-  gap: 2px;
-}
-.sidebar__item {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--app-color-sidebar-text);
+  max-width: none;
+  margin: 0 auto;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: var(--app-font-weight-semibold);
-  text-align: left;
-  cursor: pointer;
-  transition: all var(--app-transition-fast);
-  border: 1px solid transparent;
-}
-.sidebar__item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--app-color-sidebar-text-hover);
-  transform: translateX(2px);
-}
-.sidebar__item.is-active {
-  background: var(--app-gradient-primary);
-  color: #fff;
-  font-weight: var(--app-font-weight-semibold);
-  box-shadow: 0 12px 24px rgba(222, 90, 37, 0.34);
+  flex-direction: column;
+  min-height: 100dvh;
+  /* El padding de layout.css aplica; el flujo PWA llena .page-content */
+  box-sizing: border-box;
 }
 
-.nav-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  display: grid;
-  place-items: center;
-  font-size: 10px;
-  font-weight: var(--app-font-weight-extrabold);
-  color: rgba(255, 255, 255, 0.56);
-  flex-shrink: 0;
-  transition: all var(--app-transition-fast);
-}
-.sidebar__item:hover .nav-icon {
-  background: rgba(255, 255, 255, 0.18);
+/* Botón hamburguesa del topbar: mismo hit target que en otros módulos */
+.topbar--pedidos__open-nav {
   color: #fff;
-}
-.sidebar__item.is-active .nav-icon {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
-
-/* ── Active module card ──────────────────────────────────── */
-.active-module-card {
-  margin: 8px 4px 0;
-  padding: 12px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  display: grid;
-  gap: 4px;
-}
-.active-module-card .sidebar__label {
-  padding: 0;
-  margin-bottom: 4px;
-}
-.active-module-card strong {
-  font-size: 14px;
-  color: #fff;
-  display: block;
-}
-.active-module-card span {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.48);
-}
-
-/* ── Profile card ────────────────────────────────────────── */
-.profile-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px 0;
-  border-top: 1px solid var(--app-color-sidebar-line);
-}
-.profile-card__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 11px;
-  font-weight: var(--app-font-weight-extrabold);
-  background: var(--app-gradient-primary);
-  flex-shrink: 0;
-}
-.profile-card strong {
-  display: block;
-  font-size: 13px;
-  color: #fff;
-}
-.profile-card span {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.48);
+  background: var(--app-gradient-primary, var(--color-primary-gradient, #de5a25));
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(222, 90, 37, 0.22);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1990,102 +1756,28 @@ body.has-scrolled .topbar {
 
 /* ══════════════════════════════════════════════════════════════
    10. BREAKPOINTS DESKTOP
+   (El panel lateral = layout.css del repositorio; aquí solo workspace.)
    ══════════════════════════════════════════════════════════════ */
 
 @media (min-width: 960px) {
-  /* Sidebar fijo en desktop */
-  .sidebar {
-    position: static;
-    transform: none;
-    flex: 0 0 280px;
-    transition: width var(--app-transition-base), transform var(--app-transition-base);
-  }
-  body.sidebar-open .sidebar {
-    width: var(--app-sidebar-width);
-  }
-  .sidebar-backdrop {
-    display: none !important;
-  }
-
-  /* App shell con sidebar */
-  .app-shell {
-    display: flex;
-    flex-direction: row;
-  }
-  body.sidebar-open .app-shell {
-    display: flex;
-  }
-  .app-main {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* Topbar ocupa solo el ancho del main */
   .topbar__right {
     display: flex;
-  } /* CORREGIDO: right visible en desktop */
-
-  /* Page content con más espacio */
+  }
   .page-content {
     padding: 16px 20px 28px;
   }
-
-  /* Mode switcher centrado con buen ancho */
   .mode-switcher {
     width: min(100%, 380px);
   }
-
-  /* Summary grid: 4 columnas en pantalla grande */
   .summary-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-
-  /* Topbar h1 más grande */
   .topbar h1 {
     font-size: 2rem;
-  }
-
-  body:not(.sidebar-open) .sidebar {
-    padding-inline: 8px;
-  }
-
-  body:not(.sidebar-open) .sidebar .brand {
-    justify-content: center;
-    padding-inline: 0;
-  }
-
-  body:not(.sidebar-open) .sidebar .brand__copy,
-  body:not(.sidebar-open) .sidebar .sidebar-close,
-  body:not(.sidebar-open) .sidebar .dashboard-nav__item span,
-  body:not(.sidebar-open) .sidebar .dashboard-sidebar-content,
-  body:not(.sidebar-open) .sidebar .active-module-card,
-  body:not(.sidebar-open) .sidebar .profile-card,
-  body:not(.sidebar-open) .sidebar .sidebar__label {
-    display: none;
-  }
-
-  body:not(.sidebar-open) .sidebar .sidebar__item {
-    width: 48px;
-    padding: 8px;
-    justify-content: center;
-    margin-inline: auto;
-    border-radius: 14px;
-  }
-
-  body:not(.sidebar-open) .sidebar .nav-icon {
-    width: 32px;
-    height: 32px;
-    margin: 0;
   }
 }
 
 @media (min-width: 1200px) {
-  body.sidebar-open .sidebar {
-    width: 280px;
-  }
-  body.sidebar-open .app-shell {
-    grid-template-columns: 280px 1fr;
-  }
   .workspace-layout {
     grid-template-columns: minmax(0, 1.6fr) var(--app-panel-width);
   }

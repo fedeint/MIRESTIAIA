@@ -12,7 +12,8 @@ try {
   console.info('[boot] Iniciando bootstrap modular...');
   // ── 1. Arrancar runtime modular ──────────────────────────────────
   console.debug('[boot] Importando runtime modular: ./modular-app.js');
-  const { initModularApp, applyViewportSidebarState } = await import('./modular-app.js');
+  const { initModularApp } = await import('./modular-app.js');
+  const { initGlobalAppShell } = await import('./global-app-shell.js');
   console.debug('[boot] Runtime modular importado. Ejecutando initModularApp()');
   initModularApp();
   console.debug('[boot] initModularApp() completado');
@@ -31,8 +32,8 @@ try {
   console.debug('[boot] Importando PWA shell: ./pwa.js');
   await import('./pwa.js');
   console.debug('[boot] PWA shell importado');
-  applyViewportSidebarState();
-  console.debug('[boot] Estado del sidebar ajustado al viewport / PWA');
+  await initGlobalAppShell();
+  console.debug('[boot] Navegación del dashboard global (shell) en Pedidos');
 
   // ── 4. Bridge mobile: FAB ↔ runtime modular ─────────────────────
   console.debug('[boot] Importando bridge mobile: ./mesero-bridge.js');

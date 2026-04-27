@@ -421,6 +421,7 @@ function initializeIAWidget(rootPath) {
   const topbarActions = document.querySelector(".topbar__actions");
   if (!topbarActions) return;
   if (document.getElementById("dalia-dock")) return;
+  if (document.querySelector(".ia-widget-btn")) return;
 
   const iaRoot = rootPath ? `${rootPath}/IA` : "./IA";
   const imgSrc = `${iaRoot}/DalIA.webp`;

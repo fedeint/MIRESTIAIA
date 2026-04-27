@@ -30,7 +30,7 @@
       position: fixed;
       right: max(12px, env(safe-area-inset-right));
       bottom: calc(88px + env(safe-area-inset-bottom));
-      z-index: 9000;
+      z-index: 10050;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -137,7 +137,7 @@
       box-shadow: 0 16px 48px rgba(0,0,0,.5);
       display: flex;
       flex-direction: column;
-      z-index: 9000;
+      z-index: 10050;
       overflow: hidden;
       animation: dalia-widget-in .25s cubic-bezier(.34,1.56,.64,1);
       transform-origin: bottom right;
@@ -426,6 +426,9 @@
     dock.appendChild(fabWrap);
     dock.appendChild(toggleWrap);
     document.body.appendChild(dock);
+    /* Si app.js ya montó el chat del topbar (DallIA), evitar duplicado y capas fantasma */
+    document.querySelector(".ia-widget-btn")?.remove();
+    document.querySelector(".ia-widget-panel")?.remove();
 
     const switchPill = toggleWrap.querySelector("#dalia-switch-pill");
     const isActive = () => localStorage.getItem(STORAGE_KEY) === "1";

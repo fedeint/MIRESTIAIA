@@ -332,10 +332,16 @@ function openLogoutSessionGuide() {
   syncConfirmState();
 }
 
+/** En la PWA de Pedidos no enlazamos Menú / Facturas / Config desde la cinta (van al shell o son placeholders); evita pills muertos. */
+const PWA_MODULE_STRIP_SKIP = new Set(["menu", "facturas", "configuracion"]);
+
 function renderPwaModuleStrip(activeModule) {
-  const ids = getModulesByCurrentRole();
+  const ids = getModulesByCurrentRole().filter((id) => !PWA_MODULE_STRIP_SKIP.has(id));
   if (ids.length < 1) {
-    return { html: '', show: false };
+    return { html: "", show: false };
+  }
+  if (ids.length < 2) {
+    return { html: "", show: false };
   }
   const html = ids
     .map((id) => {

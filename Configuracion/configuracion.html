@@ -670,9 +670,16 @@
                 <div class="cfg-card" style="margin-top:1rem">
                   <h3 class="cfg-card-title">Tutoriales al abrir módulo (PWA y shell)</h3>
                   <p class="cfg-card-description">
-                    Desde aquí el administrador o superadministrador decide si los recorridos (spotlight, verificación en
-                    nube, PWA Pedidos) se ofrecen automáticamente. Los cambios se guardan con el botón inferior; se
-                    publican a Supabase (mirest_shell_v1) y al caché de todos los kioscos que compartan el mismo local.
+                    Control centralizado: maestro y casillas por módulo. Aplica al <strong>shell</strong> (tours con
+                    verificación) y, cuando corresponda, a
+                    <strong>Pedidos (PWA)</strong> —onboarding PRE / PRO / POST de
+                    <code style="font-size:12px">Pedidos/implementacion</code>— y al
+                    <strong>tour interactivo del CRM</strong> de Clientes
+                    (<code style="font-size:12px">tour-interactivo.js</code>).
+                    Los cambios se publican a Supabase (clave <code style="font-size:12px">mirest_shell_v1</code> →
+                    <code style="font-size:12px">tour</code>) y al caché local. Para que kioscos sin abrir nunca
+                    Configuración reciban el estado, vuelve a abrir al menos un dispositivo con la sesión del local tras
+                    guardar.
                   </p>
                   <label
                     for="tourModulosHabilitado"

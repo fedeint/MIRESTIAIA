@@ -529,7 +529,7 @@ export const MIREST_MODULE_ONBOARDING = {
     { paso: 2, titulo: "Configura envío (cuando exista módulo)", descripcion: "Aún no hay `reportes_config` en el esquema. Usa destinatario (local) como proxy hasta migración.", accion: "Guarda email/pref. en UI o mira señal local; `localStorage` mirest_onb_reportes_destinatario.", completado_cuando: "Cualquier string en clave `mirest_onb_reportes_dest` (o flag local).", element: "body", verifyId: "localReportesCfg" },
     { paso: 3, titulo: "Vista o export", descripcion: "Abre reporte; marca en local (no hay tabla todavía de reportes_generados en repo).", accion: "Botón «Visto» en UI; `mirest_onb_reporte_visto=1`.", completado_cuando: "localStorage o futura `reportes_generados`.", element: "body", verifyId: "localReporteGen" },
   ]},
-  clientes: { id: "clientes", label: "Clientes (CRM)", icon: "👥", storageKey: "mirest_onb_done_clientes", steps: [
+  clientes: { id: "clientes", label: "Clientes — CRM (tour multivista + shell)", icon: "👥", storageKey: "mirest_onb_done_clientes", steps: [
     { paso: 1, titulo: "Tu base de contactos", descripcion: "Desde Clientes unificas leads, campañas e inbox. Importa o crea al menos un contacto de prueba.", accion: "Crea o importa 1+ contacto y verifica la ficha básica.", completado_cuando: "Revisa en UI que el listado muestre al menos un registro; o pulsa «Marcar como visto» en la plantilla de tu local.", element: "main, body", verifyId: "alwaysTrue" },
     { paso: 2, titulo: "Conecta con pedidos y marketing", descripcion: "El CRM gana contexto con ventas reales y canales (WhatsApp, campañas).", accion: "Abre un submódulo (campañas, inbox) y vuelve al listado principal.", completado_cuando: "Cierre: paso 1 listo en tu flujo operativo.", element: "body", verifyId: "alwaysTrue" },
   ]},
@@ -540,7 +540,7 @@ export const MIREST_MODULE_ONBOARDING = {
   soporte: { id: "soporte", label: "Soporte", icon: "🛟", storageKey: "mirest_onb_done_soporte", steps: [
     { paso: 1, titulo: "Centro de ayuda", descripcion: "Desde aquí accedes a recursos, tickets o documentación del producto (según lo que tengas conectado).", accion: "Localiza el canal de contacto o la base de artículos en esta pantalla.", completado_cuando: "Vista reconocida; o pulsa «Siguiente» si aún no hay integración de tickets.", element: "main, body", verifyId: "alwaysTrue" },
   ]},
-  pedidos: { id: "pedidos", label: "Pedidos (PWA / shell)", icon: "🍴", storageKey: "mirest_onb_done_pedidos", steps: [
+  pedidos: { id: "pedidos", label: "Pedidos — PWA operación (PRE/PRO/POST) + shell", icon: "🍴", storageKey: "mirest_onb_done_pedidos", steps: [
     { paso: 1, titulo: "Operación multicanal", descripcion: "El módulo de Pedidos concentra salón, delivery y para llevar. El PWA abre con PRE/PRO/POST y tours internos.", accion: "Usa el recorrido interno de la PWA; aquí en shell solo señalamos el arranque coordinado con Configuración.", completado_cuando: "Ajusta en Configuración el interruptor «Pedidos» bajo tutoriales; y completa el PRO en la PWA si aplica.", element: "body, #onboardingRoot, main", verifyId: "alwaysTrue" },
   ]},
   ia: { id: "ia", label: "Módulo IA", icon: "🤖", storageKey: "mirest_onb_done_ia", steps: [

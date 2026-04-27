@@ -506,8 +506,18 @@ export class TourInteractivo {
 
 // ==========================================
 // AUTO-INICIALIZACIÓN GLOBAL
+// Misma clave "clientes" que el panel Configuración → tour.activoPorModulo
+// (scripts/mirest-tour-policy.js) y el tour del shell bajo `data-module-key=clientes`.
 // ==========================================
-const initTour = () => {
+const initTour = async () => {
+  let permitir = true;
+  try {
+    const { isMirestModuleTourEnabled } = await import('../scripts/mirest-tour-policy.js');
+    permitir = isMirestModuleTourEnabled('clientes');
+  } catch (e) {
+    console.warn('[tour-crm] Política de tutoriales no disponible; se aplica el tour por defecto.', e);
+  }
+  if (!permitir) return;
   if (!window.tourInstance) {
     window.tourInstance = new TourInteractivo();
     
@@ -538,4 +548,8 @@ const initTour = () => {
   window.resetTour = () => { localStorage.clear(); window.location.reload(); };
 };
 
-if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initTour); } else { initTour(); }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { void initTour(); });
+} else {
+  void initTour();
+}

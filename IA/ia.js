@@ -222,21 +222,75 @@ async function getEmbedding(text) {
   
   // LUEGO: Intentar con el endpoint real
   console.log('[getEmbedding] Trying real endpoint...');
-  const response = await fetch("/api/ai-embedding", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-gemini-key": geminiKey,
-    },
-    body: requestBody,
+  
+  // Construir URL absoluta para evitar problemas de routing
+  const baseUrl = window.location.origin;
+  const embeddingUrl = `${baseUrl}/api/ai-embedding`;
+  
+  console.log('[getEmbedding] Full URL:', embeddingUrl);
+  console.log('[getEmbedding] Request headers:', {
+    "Content-Type": "application/json",
+    "x-gemini-key": geminiKey ? 'present' : 'missing'
   });
+  
+  let response;
+  try {
+    response = await fetch(embeddingUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-gemini-key": geminiKey,
+      },
+      body: requestBody,
+    });
+    console.log('[getEmbedding] Response status:', response.status);
+    console.log('[getEmbedding] Response headers:', Object.fromEntries(response.headers.entries()));
+  } catch (fetchError) {
+    console.error('[getEmbedding] Fetch failed:', fetchError);
+    throw new Error(`Error de red al contactar el endpoint: ${fetchError.message}`);
+  }
 
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (jsonError) {
+    console.error('[getEmbedding] Failed to parse JSON response:', jsonError);
+    throw new Error('Respuesta inválida del servidor');
+  }
 
   if (!response.ok) {
-    throw new Error(
-      `Error al generar el embedding: ${data.error || response.statusText}`
-    );
+    console.error('[getEmbedding] Endpoint error:', data);
+    
+    // FALLBACK: Intentar directamente con Gemini API
+    console.log('[getEmbedding] Trying direct Gemini API fallback...');
+    try {
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: "models/text-embedding-004",
+            content: { parts: [{ text: text.trim() }] }
+          })
+        }
+      );
+      
+      const geminiData = await geminiResponse.json();
+      
+      if (!geminiResponse.ok) {
+        throw new Error(`Gemini API error: ${geminiData.error?.message || geminiResponse.statusText}`);
+      }
+      
+      console.log('[getEmbedding] Direct Gemini API success!');
+      return geminiData.embedding.values;
+      
+    } catch (fallbackError) {
+      console.error('[getEmbedding] Fallback also failed:', fallbackError);
+      throw new Error(
+        `Error al generar el embedding: ${data.error || response.statusText}. Fallback: ${fallbackError.message}`
+      );
+    }
   }
 
   return data.embedding;

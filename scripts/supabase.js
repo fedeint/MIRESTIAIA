@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 const supabaseUrl = 'https://twneirdsvyxsdsneidhi.supabase.co';
-const supabaseKey = 'sb_publishable_A0yo_kDAGY3OamrUOOL9Bw_ShVWdBMF';
+const supabaseKey = localStorage.getItem("mirest_supabase_key") || "";
 const SUPABASE_SINGLETON_KEY = '__mirest_supabase_client__';
 
 const globalScope = globalThis;

@@ -6,21 +6,15 @@ let conversationHistory = []; // Array<{role: string, content: string}>
 let ragDisabled = false;
 let supabaseWarning = false;
 
-// Configuración inicial con las nuevas credenciales de Supabase
+// Configuración inicial con Supabase (las credenciales se configuran por usuario)
 window.MIREST_CONFIG = window.MIREST_CONFIG || {
   supabaseUrl: "https://twneirdsvyxsdsneidhi.supabase.co",
-  supabaseAnonKey: "sb_publishable_A0yo_kDAGY3OamrUOOL9Bw_ShVWdBMF"
+  supabaseAnonKey: localStorage.getItem("mirest_supabase_key") || ""
 };
 
 // ─── Gestión de proveedor y credenciales ──────────────────────────────────────
 function getProvider() { 
-  // Configurar Gemini como proveedor por defecto
-  const existingProvider = localStorage.getItem("mirest_ai_provider");
-  if (!existingProvider) {
-    localStorage.setItem("mirest_ai_provider", "gemini");
-    return "gemini";
-  }
-  return existingProvider;
+  return localStorage.getItem("mirest_ai_provider") || "";
 }
 function saveProvider(p) { localStorage.setItem("mirest_ai_provider", p); }
 
@@ -28,14 +22,7 @@ function getGroqKey() { return localStorage.getItem("mirest_groq_key") || ""; }
 function saveGroqKey(k) { localStorage.setItem("mirest_groq_key", k.trim()); }
 
 function getGeminiKey() { 
-  // Configurar automáticamente la API key si no existe
-  const existingKey = localStorage.getItem("mirest_gemini_key");
-  if (!existingKey) {
-    const defaultKey = "AIzaSyAh80CS0iJ1qgCiBB96zMuq8RgO3bfdgqM";
-    localStorage.setItem("mirest_gemini_key", defaultKey);
-    return defaultKey;
-  }
-  return existingKey;
+  return localStorage.getItem("mirest_gemini_key") || "";
 }
 function saveGeminiKey(k) { localStorage.setItem("mirest_gemini_key", k.trim()); }
 

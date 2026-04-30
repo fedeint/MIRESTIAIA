@@ -4,8 +4,13 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const API_KEY = "AIzaSyAh80CS0iJ1qgCiBB96zMuq8RgO3bfdgqM";
+  // Obtener API key del usuario desde headers (no hardcodear)
+  const API_KEY = req.headers['x-gemini-key'];
   const testText = "This is a test text for embedding";
+
+  if (!API_KEY) {
+    return res.status(401).json({ error: 'API Key requerida en header x-gemini-key' });
+  }
 
   try {
     console.log('[test-gemini] Testing Gemini API with key:', API_KEY.substring(0, 10) + '...');

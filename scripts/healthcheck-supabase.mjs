@@ -9,7 +9,7 @@ const url =
   process.env.SUPABASE_URL || "https://twneirdsvyxsdsneidhi.supabase.co";
 const anonKey =
   process.env.SUPABASE_ANON_KEY ||
-  "sb_publishable_A0yo_kDAGY3OamrUOOL9Bw_ShVWdBMF";
+  process.env.SUPABASE_ANON_KEY || "";
 
 const MODULOS = {
   "Operación / catálogo (vistas)": [

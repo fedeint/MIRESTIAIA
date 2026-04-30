@@ -621,12 +621,8 @@
   // ── Inicializar: respeta tenants.dalla_activo_por_modulo (vía mirest-dallia-visibility.js) ─
   async function bootDalia() {
     try {
-      // Normalizar ruta para evitar duplicados como /scripts/scripts/
-      let rootPath = ROOT;
-      if (rootPath.endsWith("scripts/")) {
-        rootPath = rootPath.slice(0, -8); // quitar "scripts/" del final
-      }
-      const visibilityPath = (rootPath.endsWith("/") ? rootPath : rootPath + "/") + "scripts/mirest-dallia-visibility.js";
+      // Construir ruta correcta para el módulo de visibilidad
+      const visibilityPath = ROOT + "mirest-dallia-visibility.js";
       const { shouldShowDallAForCurrentPage } = await import(visibilityPath);
       const ok = await shouldShowDallAForCurrentPage();
       if (!ok) return;

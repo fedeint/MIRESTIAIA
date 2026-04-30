@@ -14,6 +14,14 @@
 
 /* ---------- Topbar: compact on mobile ---------- */
 @media (max-width: 860px) {
+  /* Hide hamburger menu in all modules */
+  .topbar__menu-toggle,
+  button.topbar__menu-toggle,
+  .icon-button.topbar__menu-toggle,
+  .topbar__menu-toggle.icon-button {
+    display: none !important;
+  }
+
   .topbar {
     flex-direction: row;
     align-items: center;
@@ -111,6 +119,14 @@
 }
 
 @media (max-width: 480px) {
+  /* Hide hamburger menu in all modules for smaller screens */
+  .topbar__menu-toggle,
+  button.topbar__menu-toggle,
+  .icon-button.topbar__menu-toggle,
+  .topbar__menu-toggle.icon-button {
+    display: none !important;
+  }
+
   .topbar h1,
   .topbar__copy h1 {
     font-size: 17px;

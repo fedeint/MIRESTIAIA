@@ -13,13 +13,30 @@ window.MIREST_CONFIG = window.MIREST_CONFIG || {
 };
 
 // ─── Gestión de proveedor y credenciales ──────────────────────────────────────
-function getProvider() { return localStorage.getItem("mirest_ai_provider") || ""; }
+function getProvider() { 
+  // Configurar Gemini como proveedor por defecto
+  const existingProvider = localStorage.getItem("mirest_ai_provider");
+  if (!existingProvider) {
+    localStorage.setItem("mirest_ai_provider", "gemini");
+    return "gemini";
+  }
+  return existingProvider;
+}
 function saveProvider(p) { localStorage.setItem("mirest_ai_provider", p); }
 
 function getGroqKey() { return localStorage.getItem("mirest_groq_key") || ""; }
 function saveGroqKey(k) { localStorage.setItem("mirest_groq_key", k.trim()); }
 
-function getGeminiKey() { return localStorage.getItem("mirest_gemini_key") || ""; }
+function getGeminiKey() { 
+  // Configurar automáticamente la API key si no existe
+  const existingKey = localStorage.getItem("mirest_gemini_key");
+  if (!existingKey) {
+    const defaultKey = "AIzaSyAh80CS0iJ1qgCiBB96zMuq8RgO3bfdgqM";
+    localStorage.setItem("mirest_gemini_key", defaultKey);
+    return defaultKey;
+  }
+  return existingKey;
+}
 function saveGeminiKey(k) { localStorage.setItem("mirest_gemini_key", k.trim()); }
 
 function getCfToken() { return localStorage.getItem("mirest_cf_token") || ""; }

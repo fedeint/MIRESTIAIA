@@ -1,0 +1,5 @@
+# Elimina el rastro del índice
+git rm -r --cached mirest/src/modules/pedidos
+
+# Borra la carpeta oculta .git dentro de pedidos (esto es clave)
+Remove-Item -Recurse -Force mirest/src/modules/pedidos/.git

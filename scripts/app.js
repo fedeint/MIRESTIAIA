@@ -3,6 +3,7 @@ import {
   formatCurrentDate,
   getGreeting,
   getModuleByKey,
+  isSuperadminRole,
   getRoleLabel,
   initializeThemeToggle,
   isDemoRole,
@@ -392,7 +393,24 @@ function initializeMobileBottomNav(activeKey, userRole, userPermissions) {
   const byKey = new Map(allowed.map((item) => [item.key, item]));
   const preferred = priorityKeys.map((key) => byKey.get(key)).filter(Boolean);
   const remaining = allowed.filter((item) => !priorityKeys.includes(item.key));
-  const finalItems = [...preferred, ...remaining].slice(0, maxItems);
+  const isSuperadmin = isSuperadminRole(userRole);
+
+  const baseItems = isSuperadmin
+    ? [
+        byKey.get("dashboard"),
+        byKey.get("reportes"),
+        byKey.get("caja"),
+      ].filter(Boolean)
+    : [...preferred, ...remaining];
+
+  const finalItems = isSuperadmin
+    ? [
+        ...baseItems,
+        { key: "alertas", label: "Alertas", icon: "bell", path: "index.html#operationalChecklist" },
+        { key: "menu", label: "Menú", icon: "menu", action: "open-menu" },
+      ].slice(0, maxItems)
+    : baseItems.slice(0, maxItems);
+
   if (finalItems.length === 0) return;
 
   let nav = document.getElementById(navId);
@@ -406,8 +424,20 @@ function initializeMobileBottomNav(activeKey, userRole, userPermissions) {
 
   nav.innerHTML = finalItems
     .map((item) => {
-      const isActive = item.key === activeKey;
+      const isAlertActive =
+        item.key === "alertas" &&
+        window.location.pathname.endsWith("/index.html") &&
+        window.location.hash === "#operationalChecklist";
+      const isActive = item.key === activeKey || isAlertActive;
       const icon = item.icon || fallbackIcon;
+      if (item.action === "open-menu") {
+        return `
+          <button class="mobile-bottom-nav__item ${isActive ? "is-active" : ""}" type="button" data-mobile-action="open-menu" aria-label="Abrir menú de módulos">
+            <span class="mobile-bottom-nav__icon" aria-hidden="true"><i data-lucide="${icon}"></i></span>
+            <span class="mobile-bottom-nav__label">${item.label}</span>
+          </button>
+        `;
+      }
       return `
         <a class="mobile-bottom-nav__item ${isActive ? "is-active" : ""}" href="${toHref(item.path)}" aria-current="${isActive ? "page" : "false"}">
           <span class="mobile-bottom-nav__icon" aria-hidden="true"><i data-lucide="${icon}"></i></span>
@@ -416,6 +446,15 @@ function initializeMobileBottomNav(activeKey, userRole, userPermissions) {
       `;
     })
     .join("");
+
+  const sidebar = document.getElementById("appSidebar");
+  const toggle = document.getElementById("sidebarToggle");
+  nav.querySelectorAll('[data-mobile-action="open-menu"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!sidebar || !toggle) return;
+      setSidebarState(true, sidebar, toggle);
+    });
+  });
 
   const syncVisibility = () => {
     const show = isMobileViewport();

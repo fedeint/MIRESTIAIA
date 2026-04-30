@@ -28,15 +28,24 @@
     /* ── Dock DallA (misma zona que el antiguo FAB circular: esquina inferior) ── */
     #dalia-dock {
       position: fixed;
-      right: max(12px, env(safe-area-inset-right));
-      bottom: calc(88px + env(safe-area-inset-bottom));
+      right: max(14px, env(safe-area-inset-right));
+      top: max(14px, env(safe-area-inset-top));
       z-index: 10050;
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 10px;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
       max-width: min(100vw - 24px, 320px);
       pointer-events: none;
+    }
+    #dalia-dock.dalia-dock--topbar {
+      position: static;
+      right: auto;
+      top: auto;
+      max-width: none;
+      z-index: auto;
+      pointer-events: auto;
+      margin-left: 6px;
     }
     #dalia-dock > * {
       pointer-events: auto;
@@ -343,12 +352,13 @@
     @media (max-width: 640px) {
       #dalia-dock {
         right: max(8px, env(safe-area-inset-right));
-        bottom: calc(82px + env(safe-area-inset-bottom));
+        top: max(10px, env(safe-area-inset-top));
       }
       #dalia-widget {
         width: calc(100vw - 20px);
         right: max(8px, env(safe-area-inset-right));
-        bottom: calc(188px + env(safe-area-inset-bottom));
+        top: calc(72px + env(safe-area-inset-top));
+        bottom: auto;
         max-height: min(560px, 72dvh);
       }
     }
@@ -425,7 +435,13 @@
     fabWrap.appendChild(fab);
     dock.appendChild(fabWrap);
     dock.appendChild(toggleWrap);
-    document.body.appendChild(dock);
+    const topbarActions = document.querySelector(".topbar__actions");
+    if (topbarActions) {
+      dock.classList.add("dalia-dock--topbar");
+      topbarActions.prepend(dock);
+    } else {
+      document.body.appendChild(dock);
+    }
     /* Si app.js ya montó el chat del topbar (DallIA), evitar duplicado y capas fantasma */
     document.querySelector(".ia-widget-btn")?.remove();
     document.querySelector(".ia-widget-panel")?.remove();

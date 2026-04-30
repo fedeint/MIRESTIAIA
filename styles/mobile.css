@@ -645,9 +645,11 @@ body {
 }
 
 .mobile-bottom-nav__item {
+  border: none;
   min-width: 0;
   border-radius: 16px;
   padding: 8px 6px;
+  background: transparent;
   text-decoration: none;
   color: var(--color-text-muted);
   display: grid;

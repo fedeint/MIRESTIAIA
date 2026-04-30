@@ -198,6 +198,30 @@ async function getEmbedding(text) {
   const requestBody = JSON.stringify({ text: text.trim() });
   console.log('[getEmbedding] request body:', requestBody);
   
+  // PRIMERO: Probar endpoint de test
+  try {
+    console.log('[getEmbedding] Testing with test endpoint...');
+    const testResponse = await fetch("/api/ai-embedding-test", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-gemini-key": geminiKey,
+      },
+      body: requestBody,
+    });
+    
+    const testData = await testResponse.json();
+    console.log('[getEmbedding] Test endpoint response:', testData);
+    
+    if (!testResponse.ok) {
+      console.error('[getEmbedding] Test endpoint failed:', testData);
+    }
+  } catch (testError) {
+    console.error('[getEmbedding] Test endpoint error:', testError);
+  }
+  
+  // LUEGO: Intentar con el endpoint real
+  console.log('[getEmbedding] Trying real endpoint...');
   const response = await fetch("/api/ai-embedding", {
     method: "POST",
     headers: {

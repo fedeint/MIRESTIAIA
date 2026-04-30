@@ -56,65 +56,44 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        // Intentar primero con text-embedding-004
-        let response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${GEMINI_API_KEY}`,
+        // Usar gemini-embedding-001 (text-embedding-004 fue deprecado en enero 2026)
+        console.log('[ai-embedding] Using gemini-embedding-001 (3072 dimensions)');
+        
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: "models/text-embedding-004",
+                    model: "models/gemini-embedding-001",
                     content: { parts: [{ text }] }
                 })
             }
         );
 
-        let data = await response.json();
+        const data = await response.json();
 
-        // Si falla text-embedding-004, intentar con gemini-embedding-001
         if (!response.ok) {
-            console.log('[ai-embedding] text-embedding-004 failed, trying gemini-embedding-001...');
-            console.log('[ai-embedding] Error details:', JSON.stringify(data));
-            
-            response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${GEMINI_API_KEY}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: "models/gemini-embedding-001",
-                        content: { parts: [{ text }] }
-                    })
-                }
-            );
-
-            data = await response.json();
-            
-            if (!response.ok) {
-                console.error('[ai-embedding] Both models failed. gemini-embedding-001 error:', response.status, JSON.stringify(data));
-                return res.status(response.status).json({ 
-                    error: 'Both embedding models failed', 
-                    textEmbeddingError: data,
-                    usedModel: 'none'
-                });
-            }
-            
-            console.log('[ai-embedding] Success with gemini-embedding-001');
-            return res.status(200).json({ 
-                ok: true, 
-                embedding: data.embedding.values,
+            console.error('[ai-embedding] Gemini embedding error:', response.status, JSON.stringify(data));
+            return res.status(response.status).json({ 
+                error: 'Gemini embedding API error', 
+                data: data,
                 usedModel: 'gemini-embedding-001'
             });
         }
 
-        console.log('[ai-embedding] Success with text-embedding-004');
+        console.log('[ai-embedding] Success with gemini-embedding-001');
         return res.status(200).json({ 
             ok: true, 
             embedding: data.embedding.values,
-            usedModel: 'text-embedding-004'
+            usedModel: 'gemini-embedding-001',
+            dimensions: data.embedding.values.length // debería ser 3072
         });
     } catch (error) {
         console.error('Embedding error:', error);
-        return res.status(500).json({ error: 'Internal server error', usedModel: 'none' });
+        return res.status(500).json({ 
+            error: 'Internal server error', 
+            usedModel: 'gemini-embedding-001'
+        });
     }
 }

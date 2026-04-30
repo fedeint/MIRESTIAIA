@@ -3,7 +3,6 @@ import {
   formatCurrentDate,
   getGreeting,
   getModuleByKey,
-  isSuperadminRole,
   getRoleLabel,
   initializeThemeToggle,
   isDemoRole,
@@ -393,23 +392,15 @@ function initializeMobileBottomNav(activeKey, userRole, userPermissions) {
   const byKey = new Map(allowed.map((item) => [item.key, item]));
   const preferred = priorityKeys.map((key) => byKey.get(key)).filter(Boolean);
   const remaining = allowed.filter((item) => !priorityKeys.includes(item.key));
-  const isSuperadmin = isSuperadminRole(userRole);
+  const fixedMainItems = [
+    byKey.get("dashboard") || { key: "dashboard", label: "Inicio", icon: "layout-dashboard", path: "index.html" },
+    byKey.get("reportes") || { key: "reportes", label: "Reportes", icon: "bar-chart-2", path: "index.html" },
+    byKey.get("caja") || { key: "caja", label: "Caja", icon: "banknote", path: "index.html" },
+    { key: "alertas", label: "Alertas", icon: "bell", path: "index.html#operationalChecklist" },
+    { key: "menu", label: "Menú", icon: "menu", action: "open-menu" },
+  ];
 
-  const baseItems = isSuperadmin
-    ? [
-        byKey.get("dashboard"),
-        byKey.get("reportes"),
-        byKey.get("caja"),
-      ].filter(Boolean)
-    : [...preferred, ...remaining];
-
-  const finalItems = isSuperadmin
-    ? [
-        ...baseItems,
-        { key: "alertas", label: "Alertas", icon: "bell", path: "index.html#operationalChecklist" },
-        { key: "menu", label: "Menú", icon: "menu", action: "open-menu" },
-      ].slice(0, maxItems)
-    : baseItems.slice(0, maxItems);
+  const finalItems = fixedMainItems.slice(0, maxItems);
 
   if (finalItems.length === 0) return;
 
@@ -449,6 +440,10 @@ function initializeMobileBottomNav(activeKey, userRole, userPermissions) {
 
   const sidebar = document.getElementById("appSidebar");
   const toggle = document.getElementById("sidebarToggle");
+  if (toggle) {
+    toggle.hidden = true;
+    toggle.setAttribute("aria-hidden", "true");
+  }
   nav.querySelectorAll('[data-mobile-action="open-menu"]').forEach((btn) => {
     btn.addEventListener("click", () => {
       if (!sidebar || !toggle) return;

@@ -47,6 +47,9 @@
       pointer-events: auto;
       margin-left: 6px;
     }
+    #dalia-dock.dalia-dock--topbar #dalia-fab-wrap {
+      display: none !important;
+    }
     #dalia-dock > * {
       pointer-events: auto;
     }
@@ -436,9 +439,14 @@
     dock.appendChild(fabWrap);
     dock.appendChild(toggleWrap);
     const topbarActions = document.querySelector(".topbar__actions");
+    const topbarAvatar = document.getElementById("topbarUserAvatar");
     if (topbarActions) {
       dock.classList.add("dalia-dock--topbar");
-      topbarActions.prepend(dock);
+      if (topbarAvatar && topbarAvatar.parentElement === topbarActions) {
+        topbarActions.insertBefore(dock, topbarAvatar);
+      } else {
+        topbarActions.appendChild(dock);
+      }
     } else {
       document.body.appendChild(dock);
     }

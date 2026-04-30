@@ -264,7 +264,8 @@ async function getEmbedding(text) {
     // FALLBACK: Intentar directamente con Gemini API
     console.log('[getEmbedding] Trying direct Gemini API fallback...');
     try {
-      const geminiResponse = await fetch(
+      // Intentar primero con text-embedding-004
+      let geminiResponse = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiKey}`,
         {
           method: 'POST',
@@ -276,13 +277,36 @@ async function getEmbedding(text) {
         }
       );
       
-      const geminiData = await geminiResponse.json();
+      let geminiData = await geminiResponse.json();
       
+      // Si falla text-embedding-004, intentar con gemini-embedding-001
       if (!geminiResponse.ok) {
-        throw new Error(`Gemini API error: ${geminiData.error?.message || geminiResponse.statusText}`);
+        console.log('[getEmbedding] text-embedding-004 failed in fallback, trying gemini-embedding-001...');
+        console.log('[getEmbedding] Fallback error details:', geminiData);
+        
+        geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: "models/gemini-embedding-001",
+              content: { parts: [{ text: text.trim() }] }
+            })
+          }
+        );
+        
+        geminiData = await geminiResponse.json();
+        
+        if (!geminiResponse.ok) {
+          throw new Error(`Both Gemini models failed. text-embedding-004: ${geminiData.error?.message || 'Unknown'}, gemini-embedding-001: ${geminiData.error?.message || 'Unknown'}`);
+        }
+        
+        console.log('[getEmbedding] Direct Gemini API success with gemini-embedding-001!');
+        return geminiData.embedding.values;
       }
       
-      console.log('[getEmbedding] Direct Gemini API success!');
+      console.log('[getEmbedding] Direct Gemini API success with text-embedding-004!');
       return geminiData.embedding.values;
       
     } catch (fallbackError) {

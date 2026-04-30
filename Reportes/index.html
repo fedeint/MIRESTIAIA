@@ -1,35 +1,26 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MiRest · Reportes</title>
-    <link rel="stylesheet" href="../../shared/ui/base.css" />
-    <link rel="stylesheet" href="../../shared/ui/components.css" />
-    <link rel="stylesheet" href="../../shared/ui/layout.css" />
-    <link rel="stylesheet" href="./reportes.module.css" />
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>Lovable App</title>
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
+
+    <!-- TODO: Update og:title to match your application name -->
+    <meta property="og:title" content="Lovable App" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
   </head>
+
   <body>
-    <main class="container">
-      <header class="head">
-        <h1>Reportes</h1>
-        <a class="btn" href="../../apps/web/index.html">Volver al panel</a>
-      </header>
-      <section class="card">
-        <h2>Nuevo reporte</h2>
-        <form id="form" class="form-grid">
-          <input class="input" id="titulo" placeholder="Titulo" required />
-          <input class="input" id="periodo" placeholder="Periodo" required />
-          <input class="input" id="valor" placeholder="Valor" required />
-          <button class="btn btn--primary" type="submit">Guardar</button>
-        </form>
-        <p id="status" class="status" aria-live="polite"></p>
-      </section>
-      <section class="card">
-        <h2>Listado</h2>
-        <div id="lista" class="list"></div>
-      </section>
-    </main>
-    <script type="module" src="./reportes.module.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

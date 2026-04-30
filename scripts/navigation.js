@@ -1,5 +1,4 @@
 import { APP_ROLE_TO_SHELL } from "./mirest-role-maps.js";
-import { getCachedMirestConfig } from "./mirest-app-config.js";
 
 /** Solo luna/sol para el FAB de tema: evita cargar auth-inline-icons.js en todos los módulos. */
 function iconThemeFab(isDark) {
@@ -21,7 +20,7 @@ export const MODULES = [
     label: "Proveedores",
     short: "PV",
     icon: "truck",
-    path: "mirest/src/modules/clientes/index.html",
+    path: "Clientes/proveedores.html",
     description: "Listado y gestión de proveedores vinculada a compras e inventario.",
     owner: "Gestionado con el CRM / Clientes.",
     handoff: [
@@ -34,7 +33,7 @@ export const MODULES = [
     label: "Almacen",
     short: "AL",
     icon: "package",
-    path: "mirest/src/modules/almacen/index.html",
+    path: "Almacen/almacen.html",
     description: "Control base de stock, insumos y movimientos internos.",
     owner:
       "Este entry point queda reservado para el frontend definitivo del equipo de Almacen.",
@@ -49,7 +48,7 @@ export const MODULES = [
     label: "Caja",
     short: "CJ",
     icon: "banknote",
-    path: "mirest/src/modules/caja/index.html",
+    path: "Caja/caja.html",
     description: "Apertura, cierre y flujo operativo de caja para el POS.",
     owner: "Este entry point queda reservado para el frontend definitivo del equipo de Caja.",
     handoff: [
@@ -63,7 +62,7 @@ export const MODULES = [
     label: "Cocina",
     short: "CK",
     icon: "flame",
-    path: "mirest/src/modules/cocina/index.html",
+    path: "Cocina/cocina.html",
     description: "Vista operativa para producción, cola y estado de preparación.",
     owner: "Este entry point queda reservado para el frontend definitivo del equipo de Cocina.",
     handoff: [
@@ -77,7 +76,7 @@ export const MODULES = [
     label: "Clientes",
     short: "CL",
     icon: "users",
-    path: "mirest/src/modules/clientes/index.html",
+    path: "Clientes/clientes.html",
     description: "CRM: base de contactos, campañas, lead scoring, nurturing e inbox.",
     owner:
       "Entry point al submódulo de base de datos; el resto de pantallas vive bajo Clientes/.",
@@ -92,7 +91,7 @@ export const MODULES = [
     label: "Productos",
     short: "PR",
     icon: "tag",
-    path: "mirest/src/modules/productos/index.html",
+    path: "productos/productos.html",
     description: "Gestión detallada de la carta de productos y precios.",
     owner: "Módulo de gestión de productos.",
     handoff: [
@@ -105,7 +104,7 @@ export const MODULES = [
     label: "Facturacion",
     short: "FC",
     icon: "file-text",
-    path: "mirest/src/modules/facturacion/index.html",
+    path: "Facturacion/facturacion.html",
     description: "Comprobantes y control tributario",
     owner:
       "Este entry point queda reservado para el frontend definitivo del equipo de Facturacion.",
@@ -120,7 +119,7 @@ export const MODULES = [
     label: "Pedidos",
     short: "PD",
     icon: "shopping-bag",
-    path: "mirest/src/modules/pedidos/index.html",
+    path: "Pedidos/implementacion/Pedidos.html?module=pedidos",
     description: "PWA de operación: salón, delivery, para llevar, cocina y caja en un flujo unificado.",
     owner:
       "Código y assets en Pedidos/implementacion/; manifest PWA local en esa carpeta.",
@@ -135,7 +134,7 @@ export const MODULES = [
     label: "Recetas",
     short: "RC",
     icon: "book-open",
-    path: "mirest/src/modules/recetas/index.html",
+    path: "Recetas/recetas.html",
     description: "Recetas, costos, porciones y estandarización operativa.",
     owner:
       "Este entry point queda reservado para el frontend definitivo del equipo de Recetas.",
@@ -150,7 +149,7 @@ export const MODULES = [
     label: "Reportes",
     short: "RP",
     icon: "bar-chart-2",
-    path: "mirest/src/modules/reportes/index.html",
+    path: "Reportes/reportes.html",
     description: "Análisis detallado de ventas, costos y rendimiento operativo.",
     owner:
       "Este entry point queda reservado para el frontend definitivo del equipo de Reportes.",
@@ -179,7 +178,7 @@ export const MODULES = [
     label: "Soporte",
     short: "SP",
     icon: "life-buoy",
-    path: "mirest/src/modules/soporte/index.html",
+    path: "Soporte/soporte.html",
     description: "Ayuda, contacto y recursos para resolver incidencias.",
     owner: "Canal único de soporte para equipos operativos.",
     handoff: [
@@ -192,7 +191,7 @@ export const MODULES = [
     label: "Configuración",
     short: "CF",
     icon: "settings",
-    path: "mirest/src/modules/configuracion/index.html",
+    path: "Configuracion/configuracion.html",
     description: "Centro de control del sistema, IA, alertas y permisos.",
     owner: "Administración global.",
     handoff: [
@@ -206,7 +205,7 @@ export const MODULES = [
     label: "Accesos",
     short: "AC",
     icon: "shieldCheck",
-    path: "mirest/src/modules/accesos/index.html",
+    path: "Accesos/accesos.html",
     description: "Gestión de roles y habilitación de usuarios en Supabase.",
     owner: "Módulo exclusivo de administrador.",
     handoff: [
@@ -384,178 +383,6 @@ export function getModulesByRole(role, permissions) {
   return NAV_ITEMS.filter((item) => item.key === "dashboard" || perms.includes(item.key));
 }
 
-function isModuleGloballyEnabled(key, role) {
-  if (key === "configuracion" && canAccessConfiguracion(role)) return true;
-  if (key === "accesos" && isAccesosManagerRole(role)) return true;
-  const cfg = getCachedMirestConfig();
-  const mod = cfg?.modulos;
-  if (!mod || typeof mod !== "object") return true;
-  if (!Object.prototype.hasOwnProperty.call(mod, key)) return true;
-  return mod[key] !== false;
-}
-
-export function getEffectiveNavItems(role, permissions) {
-  return getModulesByRole(role, permissions).filter((item) => {
-    if (item.key === "dashboard") return true;
-    return isModuleGloballyEnabled(item.key, role);
-  });
-}
-
-const MOBILE_SLOT_PRIORITY = {
-  /** Inicio · Mesas · Cocina · Ventas (caja); resto en «Más». */
-  superadmin: ["dashboard", "pedidos", "cocina", "caja"],
-  admin: ["dashboard", "pedidos", "caja", "reportes"],
-  caja: ["caja", "pedidos", "productos"],
-  chef: ["cocina", "pedidos", "recetas"],
-  pedidos: ["pedidos", "caja", "productos"],
-  almacen: ["almacen", "proveedores", "recetas"],
-  marketing: ["dashboard", "clientes", "reportes", "productos"],
-  demo: ["dashboard", "pedidos", "caja", "reportes"],
-};
-
-function buildMobilePrimary(role, allowed) {
-  const allowedSet = new Set(allowed.map((i) => i.key));
-  const priority = MOBILE_SLOT_PRIORITY[role] || MOBILE_SLOT_PRIORITY.demo;
-  const primary = [];
-  for (const key of priority) {
-    if (!allowedSet.has(key)) continue;
-    const it = allowed.find((x) => x.key === key);
-    if (it && !primary.some((x) => x.key === it.key)) primary.push(it);
-    if (primary.length >= 4) break;
-  }
-  if (primary.length < 4) {
-    for (const it of allowed) {
-      if (primary.some((x) => x.key === it.key)) continue;
-      primary.push(it);
-      if (primary.length >= 4) break;
-    }
-  }
-  return primary;
-}
-
-/** Etiquetas cortas del nav inferior (referencia producto); solo donde aplica. */
-function getMobileBottomLabel(item, userRole) {
-  if (userRole === "superadmin") {
-    if (item.key === "pedidos") return "Mesas";
-    if (item.key === "caja") return "Ventas";
-  }
-  return item.label;
-}
-
-function renderBottomNavItem(item, activeKey, userRole) {
-  const isActive = item.key === activeKey;
-  const label = getMobileBottomLabel(item, userRole);
-  return `
-    <a class="mirest-bottom-nav__item ${isActive ? "is-active" : ""}" href="${toHref(item.path)}" data-nav-key="${item.key}">
-      <i data-lucide="${item.icon || "circle"}" aria-hidden="true"></i>
-      <span>${label}</span>
-    </a>
-  `;
-}
-
-export function renderBottomNavigation({
-  activeKey,
-  userRole,
-  permissions,
-  onLogout,
-}) {
-  document.getElementById("mirestBottomNav")?.remove();
-  document.getElementById("mirestBottomSheet")?.remove();
-  document.getElementById("mirestBottomSheetBackdrop")?.remove();
-
-  const all = getEffectiveNavItems(userRole, permissions).filter((x) => x.key !== "accesos");
-  const primary = buildMobilePrimary(userRole, all);
-  const primarySet = new Set(primary.map((x) => x.key));
-  const secondary = all.filter((x) => !primarySet.has(x.key));
-
-  const nav = document.createElement("nav");
-  nav.id = "mirestBottomNav";
-  nav.className = "mirest-bottom-nav";
-  nav.setAttribute("aria-label", "Navegación móvil");
-  nav.innerHTML = `
-    ${primary.map((item) => renderBottomNavItem(item, activeKey, userRole)).join("")}
-    <button type="button" class="mirest-bottom-nav__item mirest-bottom-nav__item--more ${activeKey === "__more__" ? "is-active" : ""}" id="mirestBottomMoreBtn" aria-expanded="false" aria-controls="mirestBottomSheet">
-      <span class="mirest-bottom-nav__more-bubble" aria-hidden="true">
-        <i data-lucide="more-horizontal" aria-hidden="true"></i>
-      </span>
-      <span class="mirest-bottom-nav__more-label">Más</span>
-    </button>
-  `;
-  document.body.appendChild(nav);
-
-  const backdrop = document.createElement("button");
-  backdrop.type = "button";
-  backdrop.id = "mirestBottomSheetBackdrop";
-  backdrop.className = "mirest-bottom-sheet-backdrop";
-  backdrop.setAttribute("aria-label", "Cerrar menú");
-  document.body.appendChild(backdrop);
-
-  const showConfigQuick = userRole === "admin" || userRole === "superadmin";
-  const sheet = document.createElement("section");
-  sheet.id = "mirestBottomSheet";
-  sheet.className = "mirest-bottom-sheet";
-  sheet.setAttribute("role", "dialog");
-  sheet.setAttribute("aria-label", "Más opciones");
-  sheet.innerHTML = `
-    <header class="mirest-bottom-sheet__header">
-      <strong>Más módulos</strong>
-    </header>
-    <div class="mirest-bottom-sheet__list">
-      ${secondary.map((item) => `
-        <a class="mirest-bottom-sheet__link" href="${toHref(item.path)}">
-          <i data-lucide="${item.icon || "circle"}"></i>
-          <span>${item.label}</span>
-        </a>
-      `).join("")}
-    </div>
-    <footer class="mirest-bottom-sheet__footer">
-      <span class="mirest-bottom-sheet__account-title">Cuenta</span>
-      ${showConfigQuick ? `
-        <a class="mirest-bottom-sheet__link" href="${toHref("Configuracion/configuracion.html")}">
-          <i data-lucide="settings"></i>
-          <span>Configuración</span>
-        </a>
-      ` : ""}
-      <a class="mirest-bottom-sheet__link" href="${toHref("Soporte/soporte.html")}">
-        <i data-lucide="life-buoy"></i>
-        <span>Soporte</span>
-      </a>
-      <button type="button" class="mirest-bottom-sheet__link mirest-bottom-sheet__logout" id="mirestBottomSheetLogout">
-        <i data-lucide="log-out"></i>
-        <span>Cerrar sesión</span>
-      </button>
-    </footer>
-  `;
-  document.body.appendChild(sheet);
-
-  const closeSheet = () => {
-    sheet.classList.remove("is-open");
-    backdrop.classList.remove("is-open");
-    document.getElementById("mirestBottomMoreBtn")?.setAttribute("aria-expanded", "false");
-  };
-  const openSheet = () => {
-    sheet.classList.add("is-open");
-    backdrop.classList.add("is-open");
-    document.getElementById("mirestBottomMoreBtn")?.setAttribute("aria-expanded", "true");
-  };
-
-  document.getElementById("mirestBottomMoreBtn")?.addEventListener("click", () => {
-    if (sheet.classList.contains("is-open")) {
-      closeSheet();
-    } else {
-      openSheet();
-    }
-  });
-  backdrop.addEventListener("click", closeSheet);
-  sheet.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeSheet));
-  sheet.querySelector("#mirestBottomSheetLogout")?.addEventListener("click", async () => {
-    closeSheet();
-    if (typeof onLogout === "function") await onLogout();
-  });
-
-  if (window.lucide) window.lucide.createIcons();
-}
-
 export function getAssignableModules() {
   return MODULES;
 }
@@ -578,10 +405,9 @@ export function getRoleLabel(role) {
 export function renderSidebar(target, activeKey, userRole = "admin", permissions = null) {
   if (!target) return;
 
-  const allowedItems = getEffectiveNavItems(userRole, permissions);
+  const allowedItems = getModulesByRole(userRole, permissions);
   const dashboardItem = allowedItems.find(i => i.key === "dashboard");
-  const configItems = allowedItems.filter((i) => i.key === "configuracion" || i.key === "accesos");
-  const moduleItems = allowedItems.filter(i => i.key !== "dashboard" && i.key !== "configuracion" && i.key !== "accesos");
+  const moduleItems = allowedItems.filter(i => i.key !== "dashboard");
 
   target.innerHTML = `
     <section class="sidebar-group">
@@ -596,14 +422,6 @@ export function renderSidebar(target, activeKey, userRole = "admin", permissions
         ${moduleItems.map((item) => renderNavItem(item, activeKey)).join("")}
       </div>
     </section>
-    ${configItems.length > 0 ? `
-      <section class="sidebar-group">
-        <span class="sidebar-group__label">Configuración</span>
-        <div class="sidebar-list">
-          ${configItems.map((item) => renderNavItem(item, activeKey)).join("")}
-        </div>
-      </section>
-    ` : ""}
     <section class="sidebar-group">
       <span class="sidebar-group__label">Cuenta</span>
       <div class="sidebar-list">
@@ -654,22 +472,6 @@ export function initializeThemeToggle(button) {
       applyTheme(nextTheme, button);
     });
   }
-}
-
-const CONFIG_SECTION_ACCESS = {
-  "cfg-sect-dallia": ["superadmin"],
-  "cfg-sect-alertas": ["superadmin", "admin"],
-  "cfg-sect-modulos": ["superadmin", "admin"],
-  "cfg-sect-horarios": ["superadmin", "admin", "caja"],
-  "cfg-sect-tour": ["superadmin", "admin"],
-  "cfg-sect-usuarios": ["superadmin", "admin"],
-  "cfg-sect-restaurante": ["superadmin", "admin"],
-};
-
-export function canAccessConfigSection(role, sectionId) {
-  const allowed = CONFIG_SECTION_ACCESS[sectionId];
-  if (!allowed) return role === "superadmin" || role === "admin";
-  return allowed.includes(role);
 }
 
 function applyTheme(theme, button) {

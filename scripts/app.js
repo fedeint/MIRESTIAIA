@@ -8,9 +8,7 @@ import {
   isDemoRole,
   isAccesosManagerRole,
   canAccessConfiguracion,
-  canAccessConfigSection,
   renderSidebar,
-  renderBottomNavigation,
   resolveUserPermissions,
   resolveUserRole,
   toHref,
@@ -35,21 +33,6 @@ function dismissBootLoader() {
   if (!el) return;
   el.setAttribute("aria-hidden", "true");
   el.setAttribute("aria-busy", "false");
-}
-
-function isMobileViewport() {
-  return window.matchMedia("(max-width: 1023px)").matches;
-}
-
-function syncBottomNavViewportDisplay() {
-  const isMobile = isMobileViewport();
-  const nav = document.getElementById("mirestBottomNav");
-  const sheet = document.getElementById("mirestBottomSheet");
-  const backdrop = document.getElementById("mirestBottomSheetBackdrop");
-
-  if (nav) nav.style.display = isMobile ? "grid" : "none";
-  if (sheet) sheet.style.display = isMobile ? "block" : "none";
-  if (backdrop && !isMobile) backdrop.classList.remove("is-open");
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -105,28 +88,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   if (activeKey === "configuracion" && user && !canAccessConfiguracion(userRole)) {
-    window.alert("No tienes permiso para acceder a esta sección");
-    window.location.href = rootPath ? `${rootPath}/index.html` : "index.html";
-    return;
-  }
-
-  if (activeKey === "configuracion" && user) {
-    const currentSection = (window.location.hash || "").replace(/^#/, "");
-    if (currentSection && !canAccessConfigSection(userRole, currentSection)) {
-      window.alert("No tienes permiso para acceder a esta sección");
-      window.location.href = rootPath ? `${rootPath}/index.html` : "index.html";
-      return;
-    }
-    const querySection = new URLSearchParams(window.location.search).get("section");
-    if (querySection && !canAccessConfigSection(userRole, querySection)) {
-      window.alert("No tienes permiso para acceder a esta sección");
-      window.location.href = rootPath ? `${rootPath}/index.html` : "index.html";
-      return;
-    }
-  }
-
-  if (activeKey === "accesos" && user && !canAccessConfigSection(userRole, "cfg-sect-usuarios")) {
-    window.alert("No tienes permiso para acceder a esta sección");
     window.location.href = rootPath ? `${rootPath}/index.html` : "index.html";
     return;
   }
@@ -152,53 +113,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   renderSidebar(document.getElementById("sidebarNav"), activeKey, userRole, userPermissions);
-  const bottomNavOptions = {
-    activeKey,
-    userRole,
-    permissions: userPermissions,
-    onLogout: async () => {
-      try {
-        const m = await import("./mirest-presence-client.js");
-        await m.stopMirestPresence();
-      } catch {
-        /* */
-      }
-      clearTenantIdCache();
-      await supabase.auth.signOut();
-      const loginHref = resolveLoginHref(rootPath);
-      window.location.href = loginHref;
-    },
-  };
-
-  const ensureBottomNavigationMounted = () => {
-    if (!isMobileViewport()) {
-      syncBottomNavViewportDisplay();
-      return;
-    }
-    if (!document.getElementById("mirestBottomNav")) {
-      renderBottomNavigation(bottomNavOptions);
-    }
-    syncBottomNavViewportDisplay();
-  };
-
-  renderBottomNavigation(bottomNavOptions);
-  syncBottomNavViewportDisplay();
-
-  let bottomNavRaf = 0;
-  const scheduleBottomNavSync = () => {
-    if (bottomNavRaf) return;
-    bottomNavRaf = window.requestAnimationFrame(() => {
-      bottomNavRaf = 0;
-      ensureBottomNavigationMounted();
-    });
-  };
-
-  window.addEventListener("resize", scheduleBottomNavSync, { passive: true });
-  window.addEventListener("orientationchange", scheduleBottomNavSync, { passive: true });
-  window.addEventListener("pageshow", ensureBottomNavigationMounted);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") ensureBottomNavigationMounted();
-  });
   initializeThemeToggle(document.getElementById("themeToggle"));
   initializeResponsiveSidebar(pageType);
   initializePageTransitions();

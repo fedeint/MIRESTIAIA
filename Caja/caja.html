@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f07c2a" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q0F5JGJY4B"></script>
-    <script src="../scripts/gtag-config.js"></script>
+    <script defer src="../scripts/gtag-config.js"></script>
     <title>MiRest con IA | Caja</title>
     <script>
       document.documentElement.classList.add("js");
@@ -24,8 +24,8 @@
     <link rel="stylesheet" href="../styles/premium-modules.css" />
     <link rel="stylesheet" href="../styles/module-placeholder.css" />
     <link rel="stylesheet" href="../styles/mobile.css?v=20260420-mobilev1" />
-    <script src="https://cdn.lordicon.com/lordicon.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.lordicon.com/lordicon.js"></script>
+    <script defer src="https://unpkg.com/lucide@latest"></script>
 
     <style>
       /* ── Colores propios de Caja (acento naranja, verde, rojo) ── */
@@ -751,16 +751,16 @@
           <label>Método de Pago</label>
           <div class="cj-btn-group" id="incMethodGroup" style="grid-template-columns: repeat(2, 1fr);">
             <button class="cj-selectable-btn" data-value="Yape">
-              <img src="./icon/Yape_idk9LVt308_1.svg" alt="Yape"> Yape
+              <img src="./icon/Yape_idk9LVt308_1.svg" alt="Yape" width="24" height="24" loading="lazy"> Yape
             </button>
             <button class="cj-selectable-btn" data-value="Plin">
-              <img src="./icon/plin-seeklogo.png" alt="Plin"> Plin
+              <img src="./icon/plin-seeklogo.png" alt="Plin" width="24" height="24" loading="lazy"> Plin
             </button>
             <button class="cj-selectable-btn active" data-value="Efectivo">
               <i data-lucide="banknote" style="width: 24px; height: 24px; color: #f1c40f;"></i> Efectivo
             </button>
             <button class="cj-selectable-btn" data-value="Tarjeta">
-              <img src="./icon/tarjeta.png" alt="Tarjeta"> Tarjeta
+              <img src="./icon/tarjeta.png" alt="Tarjeta" width="24" height="24" loading="lazy"> Tarjeta
             </button>
           </div>
           <input type="hidden" id="incMethod" value="Efectivo">
@@ -809,6 +809,6 @@
     <!-- Shell scripts -->
     <script type="module" src="../scripts/app.js"></script>
     <script type="module" src="./caja.js"></script>
-    <script src="../scripts/dalia-widget.js"></script>
+    <script defer src="../scripts/dalia-widget.js"></script>
   </body>
 </html>

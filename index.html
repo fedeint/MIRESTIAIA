@@ -4,8 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f07c2a" />
+    
+    <!-- Preconnect para dominios externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://twneirdsvyxsdsneidhi.supabase.co" />
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    
+    <!-- Preload para recursos críticos -->
+    <link rel="preload" href="./styles/tokens.css?v=20260420-dashv2" as="style" />
+    <link rel="preload" href="./styles/base.css?v=20260422-boot-loader" as="style" />
+    <link rel="preload" href="./styles/layout.css?v=20260423-mobile-scroll" as="style" />
+    <link rel="preload" href="./styles/components.css?v=20260422-boot-loader" as="style" />
+    <link rel="preload" href="./styles/dashboard.css?v=20260426-onboarding" as="style" />
+    <link rel="preload" href="./styles/mobile.css?v=20260426-pwa-widget" as="style" />
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q0F5JGJY4B"></script>
-    <script src="./scripts/gtag-config.js"></script>
+    <script defer src="./scripts/gtag-config.js"></script>
     <title>MiRest con IA | Dashboard base</title>
     <meta
       name="description"
@@ -270,6 +285,6 @@
     </button>
 
     <script type="module" src="./scripts/app.js?v=20260422-boot-loader"></script>
-    <script src="./scripts/dalia-widget.js?v=20260430-fix-path-v2"></script>
+    <script defer src="./scripts/dalia-widget.js?v=20260430-fix-path-v3"></script>
   </body>
 </html>

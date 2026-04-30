@@ -17,8 +17,8 @@ const CORE_ASSETS = [
   "/scripts/navigation.js",
   "/Pwa/install.js",
   "/Pwa/manifest.webmanifest",
-  "/Pedidos/implementacion/assets/icons/icon-192.svg",
-  "/Pedidos/implementacion/assets/icons/icon-512.svg"
+  "./Pedidos/implementacion/assets/icons/icon-192.svg",
+  "./Pedidos/implementacion/assets/icons/icon-512.svg"
 ];
 
 self.addEventListener("install", (event) => {

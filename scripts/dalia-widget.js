@@ -622,7 +622,7 @@
   async function bootDalia() {
     try {
       // Construir ruta correcta para el módulo de visibilidad
-      const visibilityPath = ROOT + "mirest-dallia-visibility.js";
+      const visibilityPath = ROOT + "scripts/mirest-dallia-visibility.js";
       const { shouldShowDallAForCurrentPage } = await import(visibilityPath);
       const ok = await shouldShowDallAForCurrentPage();
       if (!ok) return;

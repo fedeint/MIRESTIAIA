@@ -184,11 +184,15 @@ function appendToHistory(role, content) {
 // Convierte el texto en un vector de embedding llamando al proxy backend.
 // Requirements: 2.1, 2.2, 2.4
 async function getEmbedding(text) {
+  const geminiKey = getGeminiKey();
+  console.log('[getEmbedding] text length:', text ? text.length : 'undefined');
+  console.log('[getEmbedding] has gemini key:', !!geminiKey);
+  
   const response = await fetch("/api/ai-embedding", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-gemini-key": getGeminiKey(),
+      "x-gemini-key": geminiKey,
     },
     body: JSON.stringify({ text }),
   });

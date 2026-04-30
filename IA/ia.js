@@ -187,6 +187,16 @@ async function getEmbedding(text) {
   const geminiKey = getGeminiKey();
   console.log('[getEmbedding] text length:', text ? text.length : 'undefined');
   console.log('[getEmbedding] has gemini key:', !!geminiKey);
+  console.log('[getEmbedding] text content preview:', text ? text.substring(0, 100) + '...' : 'null/undefined');
+  
+  // Validar que el texto no esté vacío antes de enviar
+  if (!text || text.trim().length === 0) {
+    console.error('[getEmbedding] Error: Texto vacío o nulo');
+    throw new Error('El texto para embedding no puede estar vacío');
+  }
+  
+  const requestBody = JSON.stringify({ text: text.trim() });
+  console.log('[getEmbedding] request body:', requestBody);
   
   const response = await fetch("/api/ai-embedding", {
     method: "POST",
@@ -194,7 +204,7 @@ async function getEmbedding(text) {
       "Content-Type": "application/json",
       "x-gemini-key": geminiKey,
     },
-    body: JSON.stringify({ text }),
+    body: requestBody,
   });
 
   const data = await response.json();

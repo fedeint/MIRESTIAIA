@@ -622,7 +622,15 @@
   async function bootDalia() {
     try {
       // Construir ruta correcta para el módulo de visibilidad
-      const visibilityPath = ROOT + "scripts/mirest-dallia-visibility.js";
+      let visibilityPath;
+      if (ROOT === "./") {
+        visibilityPath = "./scripts/mirest-dallia-visibility.js";
+      } else if (ROOT === "../") {
+        visibilityPath = "../scripts/mirest-dallia-visibility.js";
+      } else {
+        // Fallback: construir ruta dinámicamente
+        visibilityPath = ROOT.endsWith("/") ? ROOT + "scripts/mirest-dallia-visibility.js" : ROOT + "/scripts/mirest-dallia-visibility.js";
+      }
       const { shouldShowDallAForCurrentPage } = await import(visibilityPath);
       const ok = await shouldShowDallAForCurrentPage();
       if (!ok) return;

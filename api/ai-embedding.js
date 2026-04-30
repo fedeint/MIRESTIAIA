@@ -31,12 +31,19 @@ module.exports = async function handler(req, res) {
     }
 
     let parsed;
-    try { parsed = await readJsonBody(req); } catch (e) {
+    try { 
+        parsed = await readJsonBody(req); 
+        console.log('[ai-embedding] Successfully parsed body:', JSON.stringify(parsed, null, 2));
+    } catch (e) {
+        console.error('[ai-embedding] JSON parse error:', e.message);
         return res.status(400).json({ error: e.message || 'JSON inválido' });
     }
     const { text } = parsed || {};
     console.log('[ai-embedding] parsed body keys:', Object.keys(parsed || {}), '| text length:', text ? text.length : 'undefined');
+    console.log('[ai-embedding] text content preview:', text ? text.substring(0, 100) + '...' : 'null/undefined');
+    
     if (!text || text.trim().length === 0) {
+        console.error('[ai-embedding] Missing or empty text field');
         return res.status(400).json({ error: 'Missing or empty text field' });
     }
 

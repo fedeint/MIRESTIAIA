@@ -610,3 +610,7 @@ function showApiKeyModal() {
     document.getElementById("chat-input").focus();
   });
 }
+
+// Hacer las funciones disponibles globalmente para los botones en HTML
+window.showApiKeyModal = showApiKeyModal;
+window.clearGroqKey = clearGroqKey;

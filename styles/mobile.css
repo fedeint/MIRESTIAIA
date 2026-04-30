@@ -694,7 +694,7 @@ body {
   }
 
   body.has-mobile-bottom-nav .app-main {
-    padding-bottom: calc(116px + env(safe-area-inset-bottom));
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
   }
 
   body.has-mobile-bottom-nav .theme-fab {

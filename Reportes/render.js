@@ -106,15 +106,20 @@ export function initializeStats(reportesData) {
   const hoy = Math.floor(Math.random() * 5) + 1;
   const tamanoTotal = reportesData.reduce((acc, r) => acc + r.tamano, 0).toFixed(1);
 
-  document.getElementById('totalReportes').textContent = total;
-  document.getElementById('reportesDescargados').textContent = descargados;
-  document.getElementById('reportesHoy').textContent = hoy;
-  document.getElementById('tamanoTotal').textContent = tamanoTotal + ' MB';
+  const updateElement = (id, content) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = content;
+  };
 
-  document.getElementById('countTodos').textContent = total;
-  document.getElementById('countVentas').textContent = reportesData.filter(r => r.tipo === 'ventas').length;
-  document.getElementById('countProductos').textContent = reportesData.filter(r => r.tipo === 'productos').length;
-  document.getElementById('countClientes').textContent = reportesData.filter(r => r.tipo === 'clientes').length;
-  document.getElementById('countCaja').textContent = reportesData.filter(r => r.tipo === 'caja').length;
-  document.getElementById('countInventario').textContent = reportesData.filter(r => r.tipo === 'inventario').length;
+  updateElement('totalReportes', total);
+  updateElement('reportesDescargados', descargados);
+  updateElement('reportesHoy', hoy);
+  updateElement('tamanoTotal', tamanoTotal + ' MB');
+
+  updateElement('countTodos', total);
+  updateElement('countVentas', reportesData.filter(r => r.tipo === 'ventas').length);
+  updateElement('countProductos', reportesData.filter(r => r.tipo === 'productos').length);
+  updateElement('countClientes', reportesData.filter(r => r.tipo === 'clientes').length);
+  updateElement('countCaja', reportesData.filter(r => r.tipo === 'caja').length);
+  updateElement('countInventario', reportesData.filter(r => r.tipo === 'inventario').length);
 }

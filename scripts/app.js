@@ -8,6 +8,7 @@ import {
   isDemoRole,
   isAccesosManagerRole,
   canAccessConfiguracion,
+  getModulesByRole,
   renderSidebar,
   resolveUserPermissions,
   resolveUserRole,
@@ -113,6 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   renderSidebar(document.getElementById("sidebarNav"), activeKey, userRole, userPermissions);
+  initializeMobileBottomNav(activeKey, userRole, userPermissions);
   initializeThemeToggle(document.getElementById("themeToggle"));
   initializeResponsiveSidebar(pageType);
   initializePageTransitions();
@@ -372,6 +374,61 @@ function initializeResponsiveSidebar(pageType) {
   });
 
   window.addEventListener("pageshow", closeSidebar);
+}
+
+function initializeMobileBottomNav(activeKey, userRole, userPermissions) {
+  const pageType = document.body.dataset.pageType || "dashboard";
+  if (pageType !== "dashboard" && pageType !== "module") return;
+
+  const navId = "mobileBottomNav";
+  const maxItems = 5;
+  const priorityKeys = ["dashboard", "pedidos", "cocina", "caja", "almacen"];
+  const fallbackIcon = "circle";
+  const isMobileViewport = () => window.matchMedia("(max-width: 860px)").matches;
+
+  const allowed = getModulesByRole(userRole, userPermissions);
+  if (!Array.isArray(allowed) || allowed.length === 0) return;
+
+  const byKey = new Map(allowed.map((item) => [item.key, item]));
+  const preferred = priorityKeys.map((key) => byKey.get(key)).filter(Boolean);
+  const remaining = allowed.filter((item) => !priorityKeys.includes(item.key));
+  const finalItems = [...preferred, ...remaining].slice(0, maxItems);
+  if (finalItems.length === 0) return;
+
+  let nav = document.getElementById(navId);
+  if (!nav) {
+    nav = document.createElement("nav");
+    nav.id = navId;
+    nav.className = "mobile-bottom-nav";
+    nav.setAttribute("aria-label", "Navegación móvil");
+    document.body.appendChild(nav);
+  }
+
+  nav.innerHTML = finalItems
+    .map((item) => {
+      const isActive = item.key === activeKey;
+      const icon = item.icon || fallbackIcon;
+      return `
+        <a class="mobile-bottom-nav__item ${isActive ? "is-active" : ""}" href="${toHref(item.path)}" aria-current="${isActive ? "page" : "false"}">
+          <span class="mobile-bottom-nav__icon" aria-hidden="true"><i data-lucide="${icon}"></i></span>
+          <span class="mobile-bottom-nav__label">${item.label}</span>
+        </a>
+      `;
+    })
+    .join("");
+
+  const syncVisibility = () => {
+    const show = isMobileViewport();
+    nav.hidden = !show;
+    document.body.classList.toggle("has-mobile-bottom-nav", show);
+  };
+
+  syncVisibility();
+  window.addEventListener("resize", syncVisibility);
+  window.addEventListener("orientationchange", syncVisibility);
+  window.addEventListener("pageshow", syncVisibility);
+
+  if (window.lucide) window.lucide.createIcons();
 }
 
 function setSidebarState(isOpen, sidebar, toggle) {

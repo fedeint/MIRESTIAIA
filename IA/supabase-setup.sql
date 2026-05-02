@@ -12,7 +12,7 @@ create extension if not exists vector;
 create table if not exists documents (
   id          uuid primary key default gen_random_uuid(),
   content     text not null,
-  embedding   vector(768) not null,
+  embedding   vector(3072) not null,
   metadata    jsonb default '{}',
   created_at  timestamptz default now()
 );
@@ -24,7 +24,7 @@ create index on documents
 
 -- 4. Función RPC para búsqueda por similitud coseno
 create or replace function match_documents(
-  query_embedding  vector(768),
+  query_embedding  vector(3072),
   match_threshold  float,
   match_count      int
 )

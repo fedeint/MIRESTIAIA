@@ -6,14 +6,14 @@ create extension if not exists vector;
 create table if not exists documents (
   id uuid primary key default gen_random_uuid(),
   content text not null,
-  embedding vector(768), -- Optimizado para text-embedding-004 (Gemini)
+  embedding vector(3072), -- Optimizado para gemini-embedding-001 (3072 dims)
   metadata jsonb default '{}'::jsonb,
   created_at timestamptz default now()
 );
 
 -- Función RPC para búsqueda semántica (utilizada en IA/ia.js)
 create or replace function match_documents (
-  query_embedding vector(768),
+  query_embedding vector(3072),
   match_threshold float,
   match_count int
 )

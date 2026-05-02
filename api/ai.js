@@ -1,5 +1,11 @@
 const { text: streamToText } = require('node:stream/consumers');
 
+function setCors(res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-gemini-key');
+}
+
 async function readJsonBody(req) {
     let raw;
     try { raw = req.body; } catch { throw new Error('JSON inválido'); }
@@ -15,12 +21,6 @@ async function readJsonBody(req) {
     } catch { throw new Error('JSON inválido'); }
 }
 
-function setCors(res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-gemini-key');
-}
-
 module.exports = async function handler(req, res) {
     setCors(res);
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -30,33 +30,37 @@ module.exports = async function handler(req, res) {
     try { parsed = await readJsonBody(req); }
     catch (e) { return res.status(400).json({ error: e.message || 'JSON inválido' }); }
 
-    const { text } = parsed || {};
-    if (!text || text.trim().length === 0)
-        return res.status(400).json({ error: 'Missing or empty text field' });
-
+    const { model, system, messages } = parsed || {};
     const GEMINI_API_KEY = req.headers['x-gemini-key'];
     if (!GEMINI_API_KEY)
         return res.status(401).json({ error: 'API Key de usuario requerida.' });
 
     try {
+        const contents = messages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }));
+
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: "models/gemini-embedding-001",
-                    content: { parts: [{ text }] }
+                    system_instruction: { parts: [{ text: system }] },
+                    contents,
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
                 })
             }
         );
+
         const data = await response.json();
         if (!response.ok)
-            return res.status(response.status).json({ error: 'Gemini embedding API error', data });
+            return res.status(response.status).json({ error: 'Gemini API error', data });
 
-        return res.status(200).json({ ok: true, embedding: data.embedding.values });
+        return res.status(200).json({ ok: true, data });
     } catch (error) {
-        console.error('Embedding error:', error);
+        console.error('AI Proxy error:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }

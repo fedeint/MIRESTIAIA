@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     const { messages, system, tools, toolConfig, model } = payload;
 
     const finalModel = model || "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(finalModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(finalModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
     const contents = [];
     if (system) {
